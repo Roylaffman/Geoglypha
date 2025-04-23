@@ -1,0 +1,9 @@
+runtime: python39
+entrypoint: gunicorn -b :$PORT app:app
+
+env_variables:
+  BUCKET_NAME: "geoglypha1"
+
+handlers:
+- url: /.*
+  script: auto

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoMOUND Maping</title>
+    <link rel="stylesheet" href="./node_modules/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        #header {
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        #social-links {
+            text-align: center;
+            padding: 10px 0;
+        }
+        #social-links a {
+            color: #555;
+            margin: 0 10px;
+            text-decoration: none;
+        }
+        #social-links a:hover {
+            color: #007bff;
+        }
+        #map-container {
+            padding: 20px;
+        }
+        #map {
+            height: 600px;
+            width: 100%; /* Make the map responsive */
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>GeoGLYPH</h1>
+        <div id="social-links">
+            <a href="https://ryanplafferty.substack.com/"><div>Substack</div>More:</a>
+            <a href="#">[Social Media Link 2]</a>
+            <a href="#">[Social Media Link 3]</a>
+            </div>
+    </div>
+
+    <div id="map-container">
+        <div id="map"></div>
+    </div>
+
+    <script>
+        var map = L.map('map').setView([38.656, -90.063], 13); // Center around Cahokia
+    
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+    
+        // --- Load GeoJSON data ---
+        fetch('Mounds.geojson') // Replace with the actual path to your file
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    pointToLayer: function (feature, latlng) {
+                        return L.circleMarker(latlng, {
+                            radius: 8,
+                            fillColor: "#ff7800",
+                            color: "#000",
+                            weight: 1,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        }).bindPopup(feature.properties.name);
+                    }
+                }).addTo(map);
+            })
+            .catch(error => {
+                console.error("Error loading GeoJSON:", error);
+            });
+    </script>
+
+    
+    <script src="./node_modules/leaflet/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map').setView([35.6, -82.55], 12);
+
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Initial marker for Asheville
+        L.marker([35.58, -82.58]).addTo(map)
+            .bindPopup('<b>Asheville!</b><br>A vibrant city in the Blue Ridge Mountains.')
+            .openPopup();
+
+        // --- Adding more points with links ---
+
+        // Example point 1: Mount Mitchell State Park
+        //L.marker([35.7653, -82.2603]).addTo(map)
+            //.bindPopup('<a href="https://www.ncparks.gov/state-parks/mount-mitchell-state-park" target="_blank"><b>Mount Mitchell State Park</b></a><br>The highest peak east of the Mississippi River.')
+            //.on('popupopen', function() { console.log('Mount Mitchell popup opened'); }) // Example event listener
+            //.on('popupclose', function() { console.log('Mount Mitchell popup closed'); });
+
+        // Example point 2: Biltmore Estate
+        L.marker([35.5406, -82.5545]).addTo(map)
+            .bindPopup('<a href="https://www.biltmore.com/" target="_blank"><b>Biltmore Estate</b></a><br>America\'s Largest Private Home.')
+            .on('click', function() { console.log('Biltmore marker clicked'); }); // Example event listener
+
+        // Example point 3: River Arts District
+        //L.marker([35.5860, -82.5780]).addTo(map)
+            //.bindPopup('<b>River Arts District</b><br>Home to numerous artists\' studios and galleries.')
+            //.on('mouseover', function(e) { this.openPopup(); }) // Example: Open popup on hover
+            //.on('mouseout', function(e) { this.closePopup(); }); // Example: Close popup on mouseout
+
+        // You can continue adding more points in the same way
+// --- Adding a Circle ---
+var circle = L.circle([35.56, -82.53], {
+        color: 'red',
+        fillColor: '#f03',
+        fillOpacity: 0.5,
+        radius: 500 // Radius in meters
+    }).addTo(map).bindPopup("I am a circle.");
+
+  
+
+    // --- Adding another Polygon (more complex) ---
+    var complexPolygon = L.polygon([
+        [35.5, -82.65],
+        [35.55, -82.6],
+        [35.52, -82.55],
+        [35.48, -82.58],
+        [35.5, -82.65] // The last point should be the same as the first to close the polygon
+    ], {
+        color: 'green',
+        fillColor: 'lightgreen',
+        fillOpacity: 0.6
+    }).addTo(map).bindTooltip("Complex Shape"); // Using a tooltip instead of a popup
+    </script>
+</body>
+</html>

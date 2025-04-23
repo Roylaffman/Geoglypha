@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Test KML File</name>
+    <description>A test KML file with placemarks and folders</description>
+    <Folder>
+      <name>Main Locations</name>
+      <Placemark>
+        <name>Eiffel Tower</name>
+        <description>Famous landmark in Paris, France</description>
+        <Point>
+          <coordinates>2.2945,48.8584,0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Statue of Liberty</name>
+        <description>Famous landmark in New York, USA</description>
+        <Point>
+          <coordinates>-74.0445,40.6892,0</coordinates>
+        </Point>
+      </Placemark>
+      <Folder>
+        <name>Asian Landmarks</name>
+        <Placemark>
+          <name>Tokyo Tower</name>
+          <description>Famous landmark in Tokyo, Japan</description>
+          <Point>
+            <coordinates>139.7454,35.6586,0</coordinates>
+          </Point>
+        </Placemark>
+        <Placemark>
+          <name>Great Wall of China</name>
+          <description>Famous landmark in China</description>
+          <Point>
+            <coordinates>116.5704,40.4319,0</coordinates>
+          </Point>
+        </Placemark>
+      </Folder>
+    </Folder>
+    <Folder>
+      <name>Natural Wonders</name>
+      <Placemark>
+        <name>Grand Canyon</name>
+        <description>Natural wonder in Arizona, USA</description>
+        <Point>
+          <coordinates>-112.1121,36.0544,0</coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Mount Everest</name>
+        <description>Highest mountain on Earth</description>
+        <Point>
+          <coordinates>86.9250,27.9881,0</coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+  </Document>
+</kml>

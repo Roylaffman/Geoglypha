@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cahokia - Geoglypha</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #3a6351;
+            --secondary-color: #f2edd7;
+            --accent-color: #a0937d;
+            --text-color: #333;
+            --light-text: #f5f5f5;
+            --header-font: 'Georgia', serif;
+            --body-font: 'Arial', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--body-font);
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #f9f9f9;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header Styles */
+        header {
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            padding: 1rem 0;
+            position: relative;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: var(--header-font);
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .logo a {
+            color: var(--light-text);
+            text-decoration: none;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+        }
+
+        nav ul li {
+            margin-left: 1.5rem;
+        }
+
+        nav ul li a {
+            color: var(--light-text);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        nav ul li a:hover {
+            color: var(--secondary-color);
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--light-text);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Page Title Section */
+        .page-title {
+            background-color: var(--secondary-color);
+            padding: 2rem 0;
+            text-align: center;
+        }
+
+        .page-title h1 {
+            font-family: var(--header-font);
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+
+        .page-title p {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Map Container */
+        .map-container {
+            padding: 2rem 0;
+        }
+
+        #map {
+            height: 600px;
+            width: 100%;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Contact Section */
+        .contact {
+            padding: 4rem 0;
+            background-color: var(--secondary-color);
+        }
+
+        .contact-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+        }
+
+        .contact-info {
+            padding: 2rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .contact-info h3 {
+            font-family: var(--header-font);
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .contact-details {
+            margin-bottom: 2rem;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .contact-icon {
+            margin-right: 1rem;
+            font-size: 1.2rem;
+            color: var(--primary-color);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .social-link:hover {
+            background-color: var(--accent-color);
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--primary-color);
+            color: var(--light-text);
+            padding: 3rem 0 1.5rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-column h3 {
+            font-family: var(--header-font);
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-column ul li a {
+            color: var(--light-text);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .footer-column ul li a:hover {
+            color: var(--secondary-color);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            nav ul {
+                margin-top: 1rem;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            nav ul li {
+                margin: 0.5rem 0;
+            }
+
+            .contact-container {
+                grid-template-columns: 1fr;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+                position: absolute;
+                top: 1rem;
+                right: 1rem;
+            }
+
+            nav {
+                display: none;
+            }
+
+            nav.active {
+                display: block;
+            }
+
+            #map {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <a href="index.html">Geoglypha</a>
+            </div>
+            <button class="mobile-menu-btn">☰</button>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="cahokia.html">Cahokia</a></li>
+                    <li><a href="index.html#features">Topics</a></li>
+                    <li><a href="index.html#projects">Projects</a></li>
+                    <li><a href="index.html#gallery">Gallery</a></li>
+                    <li><a href="index.html#tools">Tools</a></li>
+                    <li><a href="index.html#about">About</a></li>
+                    <li><a href="index.html#contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section class="page-title">
+        <div class="container">
+            <h1>Cahokia Mounds</h1>
+            <p>Interactive mapping of North America's largest pre-Columbian city.</p>
+        </div>
+    </section>
+
+    <section class="map-container">
+        <div class="container">
+            <div id="map"></div>
+        </div>
+    </section>
+
+    <section class="contact" id="contact">
+        <div class="container">
+            <h2 class="section-title">Get In Touch</h2>
+            <div class="contact-info">
+                <h3>Connect With Us</h3>
+                <p>Follow our research and stay updated with our latest discoveries and educational content.</p>
+                <div class="social-links">
+                    <a href="https://ryanplafferty.substack.com/" class="social-link">Substack</a>
+                    <a href="https://www.facebook.com/nrrryan.nafferty1" class="social-link">Facebook</a>
+                    <a href="#" class="social-link">Twitter</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Geoglypha</h3>
+                    <p>Exploring Earth's Historical Landscapes through the lens of archaeology, history, and geography.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="cahokia.html">Cahokia</a></li>
+                        <li><a href="index.html#features">Topics</a></li>
+                        <li><a href="index.html#projects">Projects</a></li>
+                        <li><a href="index.html#gallery">Gallery</a></li>
+                        <li><a href="index.html#about">About</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="index.html#tools">Geoprocessing Tools</a></li>
+                        <li><a href="#">Educational Materials</a></li>
+                        <li><a href="#">Research Papers</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Legal</h3>
+                    <ul>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Use</a></li>
+                        <li><a href="#">Copyright Information</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; <span id="year">2025</span> Geoglypha. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Set current year in footer
+        document.getElementById('year').textContent = new Date().getFullYear();
+
+        // Mobile menu toggle
+        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+        const nav = document.querySelector('nav');
+
+        mobileMenuBtn.addEventListener('click', () => {
+            nav.classList.toggle('active');
+        });
+
+        // Initialize the map centered on Cahokia
+        var map = L.map('map').setView([38.656, -90.063], 13);
+
+        // Add the base tile layer
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // --- Load and add the Cahokia boundary GeoJSON FIRST ---
+        fetch('cahokiaboundary.geojson')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(boundaryData => {
+                console.log("Cahokia boundary GeoJSON loaded:", boundaryData);
+                L.geoJSON(boundaryData, {
+                    // You can add styling for the boundary here if you like
+                    style: {
+                        color: "#800080", // Example: purple color
+                        weight: 2,
+                        opacity: 0.7,
+                        fillOpacity: 0.1
+                    }
+                }).addTo(map);
+
+                // --- Load and add the mound points GeoJSON SECOND ---
+                fetch('cmounds.geojson')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(moundData => {
+                        console.log("Mound points GeoJSON loaded:", moundData);
+                        L.geoJSON(moundData, {
+                            pointToLayer: function (feature, latlng) {
+                                // Style points as orange circles
+                                return L.circleMarker(latlng, {
+                                    radius: 8,
+                                    fillColor: "#FFD580",
+                                    color: "#000",
+                                    weight: 1,
+                                    opacity: 1,
+                                    fillOpacity: 0.8
+                                });
+                            },
+                            onEachFeature: function (feature, layer) {
+                                // Check if feature has properties
+                                if (feature.properties) {
+                                    // Create popup content with name, description and image if they exist
+                                    let popupContent = '';
+                                    // Add name if it exists
+                                    if (feature.properties.name) {
+                                        popupContent += `<h3>${feature.properties.name}</h3>`;
+                                    }
+                                    // Add description if it exists
+                                    if (feature.properties.description) {
+                                        popupContent += `<p>${feature.properties.description}</p>`;
+                                    }
+                                    // Add image if it exists
+                                    if (feature.properties.image) {
+                                        popupContent += `<img src="${feature.properties.image}" alt="Location image" width="200">`;
+                                    }
+                                    // Only bind popup if we have content
+                                    if (popupContent) {
+                                        layer.bindPopup(popupContent);
+                                    }
+                                }
+                            }
+                        }).addTo(map);
+                    })
+                    .catch(error => {
+                        console.error("Error loading or processing mound GeoJSON:", error);
+                        alert("Could not load mound data. Check console (F12) for details.\nYou might need to run a local web server.");
+                    });
+
+            })
+            .catch(error => {
+                console.error("Error loading or processing boundary GeoJSON:", error);
+                alert("Could not load boundary data. Check console (F12) for details.\nYou might need to run a local web server.");
+            });
+    </script>
+</body>
+</html>

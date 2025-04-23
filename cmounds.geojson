@@ -1,0 +1,221 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.05355556, 38.65897222]
+        },
+        "properties": {
+          "name": "Cahokia Mound 28",
+          "description": "A significant mound at the Cahokia site, believed to have served a specific purpose (e.g., residential, ceremonial).",
+          "image": null
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06513889, 38.65980556]
+        },
+        "properties": {
+          "name": "Cahokia Mound 41",
+          "description": "This mound, designated as 41, is another notable feature within the Cahokia Mounds State Historic Site.",
+          "image": "path/to/cahokia_mound_41.png"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06805556, 38.65994444]
+        },
+        "properties": {
+          "name": "Cahokia Mound 42",
+          "description": "Mound 42 offers insights into the layout and organization of the ancient Cahokia city.",
+          "image": null 
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.07361111, 38.65977778]
+        },
+        "properties": {
+          "name": "Cahokia Mound 44",
+          "description": "Archaeological investigations have revealed details about the construction and use of Mound 44.",
+          "image": "path/to/cahokia_mound_44.jpeg"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06558333, 38.65791667]
+        },
+        "properties": {
+          "name": "Cahokia Mound 48",
+          "description": "Little is currently known about the specific function of Cahokia Mound 48.",
+          "image": null
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06313889, 38.65758333]
+        },
+        "properties": {
+          "name": "Cahokia Mound 49",
+          "description": "Cahokia Mound 49 is situated near other significant mounds in the complex.",
+          "image": "path/to/cahokia_mound_49.gif"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.05980556, 38.65833333]
+        },
+        "properties": {
+          "name": "Cahokia Mound 51",
+          "description": "Mound 51 is one of the smaller mounds at the Cahokia site.",
+          "image": null
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.05988889, 38.65625]
+        },
+        "properties": {
+          "name": "Cahokia Mound 55",
+          "description": "Cahokia Mound 55's purpose is still debated among archaeologists.",
+          "image": "path/to/cahokia_mound_55.svg"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06269444, 38.65588889]
+        },
+        "properties": {
+          "name": "Cahokia Mound 56",
+          "description": "Mound 56 is located in a specific area of the Cahokia site, suggesting a potential connection to other features.",
+          "image": null
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06444444, 38.65444444]
+        },
+        "properties": {
+          "name": "Cahokia Mound 59",
+          "description": "Cahokia Mound 59 is part of the larger landscape of the Cahokia Mounds.",
+          "image": "path/to/cahokia_mound_59.webp"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06308333, 38.65433333]
+        },
+        "properties": {
+          "name": "Cahokia Mound 60",
+          "description": "Mound 60 is situated close to other mounds, potentially forming a cluster or related group.",
+          "image": null
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06861111, 38.65275]
+        },
+        "properties": {
+          "name": "Cahokia Mound 67",
+          "description": "Cahokia Mound 67's size and location contribute to our understanding of the site's organization.",
+          "image": "path/to/cahokia_mound_67.tiff"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06877778, 38.65216667]
+        },
+        "properties": {
+          "name": "Cahokia Mound 68",
+          "description": "Mound 68 is one of the more distant mounds from the central Monks Mound.",
+          "image": null
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06372222, 38.65116667]
+        },
+        "properties": {
+          "name": "Cahokia Mound 72",
+          "description": "Excavations at Cahokia Mound 72 have revealed significant archaeological findings.",
+          "image": "path/to/cahokia_mound_72.svg"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.07502778, 38.65991667]
+        },
+        "properties": {
+          "name": "Woodhenge Circle",
+          "description": "The Woodhenge was a series of large timber circles likely used for astronomical observations.",
+          "image": "images/cahokia_woodhenge.jpg"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06207639, 38.66052083]
+        },
+        "properties": {
+          "name": "Monks Mound Terrace 3 & 4",
+          "description": "These terraces are part of the massive Monks Mound, the largest prehistoric earthwork in North America.",
+          "image": "images/monks_mound.jpg"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06213194, 38.66029861]
+        },
+        "properties": {
+          "name": "Monks Mound Terrace 3",
+          "description": "The third terrace of Monks Mound, potentially serving a specific function within the larger structure.",
+          "image": null
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06204167, 38.66075]
+        },
+        "properties": {
+          "name": "Monks Mound Terrace 4",
+          "description": "The fourth terrace of Monks Mound, offering a higher elevation and potentially different views or uses.",
+          "image": null
+        }
+      }
+    ]
+  }

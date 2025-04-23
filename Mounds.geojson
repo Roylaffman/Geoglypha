@@ -1,0 +1,185 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.05355556, 38.65897222]
+        },
+        "properties": {
+          "name": "Cahokia Mound 28"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06513889, 38.65980556]
+        },
+        "properties": {
+          "name": "Cahokia Mound 41"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06805556, 38.65994444]
+        },
+        "properties": {
+          "name": "Cahokia Mound 42"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.07361111, 38.65977778]
+        },
+        "properties": {
+          "name": "Cahokia Mound 44"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06558333, 38.65791667]
+        },
+        "properties": {
+          "name": "Cahokia Mound 48"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06313889, 38.65758333]
+        },
+        "properties": {
+          "name": "Cahokia Mound 49"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.05980556, 38.65833333]
+        },
+        "properties": {
+          "name": "Cahokia Mound 51"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.05988889, 38.65625]
+        },
+        "properties": {
+          "name": "Cahokia Mound 55"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06269444, 38.65588889]
+        },
+        "properties": {
+          "name": "Cahokia Mound 56"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06444444, 38.65444444]
+        },
+        "properties": {
+          "name": "Cahokia Mound 59"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06308333, 38.65433333]
+        },
+        "properties": {
+          "name": "Cahokia Mound 60"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06861111, 38.65275]
+        },
+        "properties": {
+          "name": "Cahokia Mound 67"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06877778, 38.65216667]
+        },
+        "properties": {
+          "name": "Cahokia Mound 68"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06372222, 38.65116667]
+        },
+        "properties": {
+          "name": "Cahokia Mound 72"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.07502778, 38.65991667]
+        },
+        "properties": {
+          "name": "Woodhenge Circle"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06207639, 38.66052083]
+        },
+        "properties": {
+          "name": "Monks Mound Terrace 3 & 4"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06213194, 38.66029861]
+        },
+        "properties": {
+          "name": "Monks Mound Terrace 3"
+        }
+      },
+      {
+        "type": "Feature",
+        "geometry": {
+          "type": "Point",
+          "coordinates": [-90.06204167, 38.66075]
+        },
+        "properties": {
+          "name": "Monks Mound Terrace 4"
+        }
+      }
+    ]
+  }
