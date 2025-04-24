@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoGlypha Mapping</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        #header {
+            background-color: #333;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        #social-links {
+            text-align: center;
+            padding: 10px 0;
+        }
+        #social-links a {
+            color: #555; /* Changed color for better visibility on white bg if needed */
+            margin: 0 10px;
+            text-decoration: none;
+        }
+        #social-links a:hover {
+            color: #007bff;
+        }
+        #map-container {
+            padding: 20px;
+        }
+        #map {
+            height: 600px;
+            width: 100%; /* Make the map responsive */
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h2>Cahokia</h2>
+         <div id="social-links">
+             <a href="https://ryanplafferty.substack.com/"><div>Substack</div></a>
+             <a href="https://www.facebook.com/nrrryan.nafferty1">Facebook</a>
+             <a href="#">[Social Media Link 3]</a>
+          </div>
+    </div>
+
+    <div id="map-container">
+        <div id="map"></div>
+    </div>
+
+    
+
+    <script>
+        // Initialize the map centered on Cahokia
+        var map = L.map('map').setView([38.656, -90.063], 13);
+
+        // Add the base tile layer
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // --- Load GeoJSON data ---
+        // Make sure 'Mounds.geojson' is in the SAME directory as your index.html
+        // OR provide the correct relative path.
+        fetch('cmounds.geojson')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`); // Add error checking for the fetch response
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("GeoJSON data loaded:", data); // Good for debugging
+                L.geoJSON(data, {
+                    pointToLayer: function (feature, latlng) {
+                        // Style points as orange circles
+                        return L.circleMarker(latlng, {
+                            radius: 8,
+                            fillColor: "#FFD580",
+                            color: "#000",
+                            weight: 1,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                        });
+                    },
+                    onEachFeature: function (feature, layer) {
+    // Check if feature has properties
+        if (feature.properties) {
+        // Create popup content with name, description and image if they exist
+        let popupContent = '';
+        // Add name if it exists
+        if (feature.properties.name) {
+            popupContent += `<h3>${feature.properties.name}</h3>`;
+        }
+        // Add description if it exists
+        if (feature.properties.description) {
+            popupContent += `<p>${feature.properties.description}</p>`;
+        }
+        // Add image if it exists
+        if (feature.properties.image) {
+            popupContent += `<img src="${feature.properties.image}" alt="Location image" width="200">`;
+        }
+        // Only bind popup if we have content
+        if (popupContent) {
+            layer.bindPopup(popupContent);
+        }
+    }
+}
+                }).addTo(map);
+            })
+            .catch(error => {
+                // This error will likely appear if you open the file directly!
+                console.error("Error loading or processing GeoJSON:", error);
+                alert("Could not load mound data. Check console (F12) for details.\nYou might need to run a local web server.");
+            });
+
+        // You could add other non-conflicting features here if needed, e.g.:
+        // L.marker([SOME_LAT, SOME_LON]).addTo(map).bindPopup("Another marker");
+        // http://localhost:8000
+
+    </script>
+
+</body>
+</html>
