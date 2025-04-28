@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuneiform Converter - Geoglypha Tools</title>
+    <link rel="stylesheet" href="cunestyles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <a href="#" class="logo">Geoglypha</a>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="https://storage.googleapis.com/geoglypha1/index.html">Home</a></li>
+                <li><a href="#">Cahokia</a></li>
+                <li><a href="#">Topics</a></li>
+                <li><a href="#">Projects</a></li>
+                <li><a href="#">Gallery</a></li>
+                <li><a href="#" class="active">Tools</a></li>
+                <li><a href="#">About</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Cuneiform Converter</h1>
+            <p>Translate English words into ancient Cuneiform symbols from Mesopotamia</p>
+        </section>
+
+        <section class="converter-container">
+            <div class="converter-box">
+                <h2>English to Cuneiform</h2>
+                <div class="input-area">
+                    <label for="english-input">Enter English text:</label>
+                    <textarea id="english-input" placeholder="Enter words like: water, sky, house, king, god..."></textarea>
+                    <button id="convert-btn">Convert to Cuneiform</button>
+                </div>
+                <div class="output-area">
+                    <label for="cuneiform-output">Cuneiform result:</label>
+                    <div id="cuneiform-output" class="cuneiform-display"></div>
+                    <div class="copy-container">
+                        <button id="copy-btn">Copy to Clipboard</button>
+                        <span id="copy-message" class="hidden">Copied!</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="info-section">
+            <h2>About Cuneiform</h2>
+            <div class="info-columns">
+                <div class="info-column">
+                    <h3>Historical Context</h3>
+                    <p>Cuneiform is one of the earliest writing systems in human history, developed in ancient Mesopotamia around 3400 BCE. The name "cuneiform" comes from the Latin word "cuneus" meaning "wedge," referring to the wedge-shaped marks made by pressing a reed stylus into clay tablets.</p>
+                    <p>Initially used for accounting and administrative purposes in the ancient city of Uruk, cuneiform evolved to record literature, scientific observations, mathematical calculations, legal codes, and religious texts across multiple languages including Sumerian, Akkadian, Babylonian, and Assyrian.</p>
+                </div>
+                <div class="info-column">
+                    <h3>Symbol Categories</h3>
+                    <p>This converter includes symbols from three Unicode Cuneiform blocks:</p>
+                    <ul>
+                        <li>Main Cuneiform (U+12000–U+123FF): Common words and concepts</li>
+                        <li>Cuneiform Numbers and Punctuation (U+12400–U+1247F): Numerical symbols and fractions</li>
+                        <li>Early Dynastic Cuneiform (U+12480–U+1254F): Additional specialized symbols</li>
+                    </ul>
+                    <p>The converter matches English words to their closest Cuneiform equivalents, with over 150 symbols available in the library.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="examples-section">
+            <h2>Common Cuneiform Symbols</h2>
+            <div class="examples-grid">
+                <div class="example-item">
+                    <div class="symbol">𒀀</div>
+                    <div class="meaning">water</div>
+                </div>
+                <div class="example-item">
+                    <div class="symbol">𒀭</div>
+                    <div class="meaning">sky/god</div>
+                </div>
+                <div class="example-item">
+                    <div class="symbol">𒂍</div>
+                    <div class="meaning">house</div>
+                </div>
+                <div class="example-item">
+                    <div class="symbol">𒆳</div>
+                    <div class="meaning">mountain</div>
+                </div>
+                <div class="example-item">
+                    <div class="symbol">𒇽</div>
+                    <div class="meaning">man</div>
+                </div>
+                <div class="example-item">
+                    <div class="symbol">𒊩</div>
+                    <div class="meaning">woman</div>
+                </div>
+                <div class="example-item">
+                    <div class="symbol">𒅗</div>
+                    <div class="meaning">mouth</div>
+                </div>
+                <div class="example-item">
+                    <div class="symbol">𒌓</div>
+                    <div class="meaning">sun</div>
+                </div>
+                <div class="example-item">
+                    <div class="symbol">𒌍</div>
+                    <div class="meaning">moon</div>
+                </div>
+                <div class="example-item">
+                    <div class="symbol">𒄞</div>
+                    <div class="meaning">ox</div>
+                </div>
+                <div class="example-item">
+                    <div class="symbol">𒊺</div>
+                    <div class="meaning">barley</div>
+                </div>
+                <div class="example-item">
+                    <div class="symbol">𒄩</div>
+                    <div class="meaning">fish</div>
+                </div>
+                <div class="example-item">
+                    <div class="symbol">𒄷</div>
+                    <div class="meaning">bird</div>
+                </div>
+                <div class="example-item">
+                    <div class="symbol">𒁺</div>
+                    <div class="meaning">to go</div>
+                </div>
+                <div class="example-item">
+                    <div class="symbol">𒌷</div>
+                    <div class="meaning">city</div>
+                </div>
+                <div class="example-item">
+                    <div class="symbol">𒃷</div>
+                    <div class="meaning">field</div>
+                </div>
+                <div class="example-item">
+                    <div class="symbol">𒈗</div>
+                    <div class="meaning">king</div>
+                </div>
+                <div class="example-item">
+                    <div class="symbol">𒉿</div>
+                    <div class="meaning">arrow</div>
+                </div>
+                <div class="example-item">
+                    <div class="symbol">𒀯</div>
+                    <div class="meaning">star</div>
+                </div>
+                <div class="example-item">
+                    <div class="symbol">𒆠</div>
+                    <div class="meaning">earth</div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2025 Geoglypha. All rights reserved.</p>
+            <p>Cuneiform Converter Tool</p>
+        </div>
+    </footer>
+
+    <script src="cunescript.js"></script>
+</body>
+</html>
