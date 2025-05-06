@@ -107,7 +107,8 @@ const cuneiformLibrary = {
     "9": "𒐝",
     "0": "𒌋𒌋",
     
-    // Additional words
+    // Additional words to find symbols
+    // potential source https://en.wikipedia.org/wiki/Cuneiform_(Unicode_block)
     "temple_complex": "𒒀",
     "offering": "𒒁",
     "ritual": "𒒂",
@@ -149,9 +150,10 @@ const cuneiformLibrary = {
     "priestess": "𒒦",
     "servant": "𒒧",
     "slave": "𒒨",
-    "palace": "𒒩",
+    "palace": "𒂍",
     "fortress": "𒒪",
-    
+    // You
+    "you": "𒋗", 
     // Common phrases
     "good day": "𒌓 𒄭",
     "thank you": "𒋗𒀀 𒀭",
@@ -165,7 +167,29 @@ const cuneiformLibrary = {
     "royal palace": "𒂍 𒈗",
     "ancient city": "𒌷 𒈬",
     "divine protection": "𒀭 𒋗",
-    "eternal life": "𒌓 𒌓"
+    "eternal life": "𒌓 𒌓",
+
+    //verbs - need to break down and add most common verb in english 
+    "to speak, to say": "𒂊",
+    "to water, to irrigate": "𒀀𒇉",
+    "to be two, to double": "𒈫",
+    "to speak, to say": "𒅗",
+    "to rise, to raise": "𒍣",
+    "to ride, to mount": "𒌋",
+    "to send, to throw": "𒊒",
+    "to grow, to sprout": "𒈬",
+    "to return, to restore": "𒄀",
+    "to release, to free": "𒁕",
+    "to place, to set": "𒆘",
+    "to go, to walk": "𒁵",
+    "to found, to establish": "𒌷 𒈬",
+    "to bring, to carry": "𒌆",
+    "to bring, to lead": "𒅔",
+    "to make, to do": "𒀀𒇉",
+    "to die, to kill": "𒍑",
+    "to equal, to compare": "𒊓",
+    "to lie down, to sleep": "𒈖",
+    "to lift, to carry": "𒅏"  
 };
 
 // Function to convert English text to Cuneiform
