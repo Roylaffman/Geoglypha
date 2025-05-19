@@ -1,0 +1,36 @@
+/* Placeholder black and white images for gallery */
+.gallery-item:nth-child(1) .gallery-image.placeholder {
+    background-image: url('images/placeholder1.png');
+    background-size: cover;
+    background-position: center;
+}
+
+.gallery-item:nth-child(2) .gallery-image.placeholder {
+    background-image: url('images/placeholder2.png');
+    background-size: cover;
+    background-position: center;
+}
+
+.gallery-item:nth-child(3) .gallery-image.placeholder {
+    background-image: url('images/placeholder3.png');
+    background-size: cover;
+    background-position: center;
+}
+
+.gallery-item:nth-child(4) .gallery-image.placeholder {
+    background-image: url('images/placeholder4.png');
+    background-size: cover;
+    background-position: center;
+}
+
+.gallery-item:nth-child(5) .gallery-image.placeholder {
+    background-image: url('images/placeholder5.png');
+    background-size: cover;
+    background-position: center;
+}
+
+.gallery-item:nth-child(6) .gallery-image.placeholder {
+    background-image: url('images/placeholder6.png');
+    background-size: cover;
+    background-position: center;
+}
