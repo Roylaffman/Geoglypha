@@ -30,7 +30,7 @@ def create_placeholder(filename, width=600, height=400, pattern_type='abstract')
     elif pattern_type == 'grid':
         # Draw a grid
         for i in range(0, width, 30):
-            draw.line([(i, 0), (i, height)], fill='black', width=2)
+            draw.line([(i, 0), (i, height)], fill='black', width=3)
         for i in range(0, height, 30):
             draw.line([(0, i), (width, i)], fill='black', width=2)
     
@@ -58,4 +58,4 @@ def create_placeholder(filename, width=600, height=400, pattern_type='abstract')
 # Create 6 different placeholder images with different patterns
 patterns = ['abstract', 'lines', 'grid', 'circles', 'diagonal', 'dots']
 for i, pattern in enumerate(patterns, 1):
-    create_placeholder(f'/home/ubuntu/geoglyfitia/images/placeholder{i}.png', pattern_type=pattern)
+    create_placeholder(f'C:/Users/royla/Documents/dev/graphita/images/placeholder{i}.png', pattern_type=pattern)
