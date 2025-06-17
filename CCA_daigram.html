@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acreage Calculation Scenarios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+        }
+        .scenario-card {
+            background-color: white;
+            border-radius: 12px; /* More rounded corners */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0; /* Light border */
+        }
+        .scenario-title {
+            font-size: 1.5rem; /* Larger title */
+            font-weight: 700;
+            color: #1e3a8a; /* Dark blue */
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #3b82f6; /* Blue underline */
+            padding-bottom: 0.5rem;
+        }
+        .scenario-description {
+            font-size: 0.9rem;
+            color: #475569; /* Slate gray */
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+        .calculation-breakdown {
+            background-color: #eef2ff; /* Lighter indigo background */
+            border-left: 4px solid #4f46e5; /* Indigo border */
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: #374151; /* Darker gray for text */
+        }
+        .calculation-breakdown p {
+            margin-bottom: 0.5rem;
+        }
+        .calculation-breakdown strong {
+            color: #312e81; /* Darker indigo */
+        }
+        .calculation-breakdown .total {
+            font-weight: bold;
+            color: #1e40af; /* Dark blue for total */
+            margin-top: 0.75rem;
+            font-size: 1rem;
+        }
+        .legend {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: #f8fafc; /* Very light gray */
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        .legend-color-box {
+            width: 20px;
+            height: 20px;
+            margin-right: 0.75rem;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        .svg-container {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background-color: #f9fafb; /* Light gray background for SVG */
+            border-radius: 8px;
+            display: flex; /* Center SVG content */
+            justify-content: center;
+            align-items: center;
+            min-height: 150px; /* Ensure some space for smaller SVGs */
+            overflow-x: auto; /* Allow horizontal scrolling for wide SVGs */
+        }
+        /* Hatch pattern for FWD */
+        .hatch-pattern {
+            fill: url(#hatch);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-3xl font-bold text-center text-slate-700 mb-8">Acreage Calculation Logic & Scenarios</h1>
+
+        <!-- Legend -->
+        <div class="legend scenario-card">
+            <h3 class="text-lg font-semibold text-slate-700 mb-3">Legend:</h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                <div class="legend-item">
+                    <div class="legend-color-box bg-blue-500"></div> Operator A Land
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color-box bg-green-500"></div> Operator B Land
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color-box" style="background-color: rgba(0,0,255,0.3);"></div> General Area / ROFR Outline
+                </div>
+                <div class="legend-item">
+                    <svg width="20" height="20" class="mr-3"><rect width="20" height="20" fill="rgba(0,128,0,0.7)" /></svg> Produced Water Dedication (PWD)
+                </div>
+                <div class="legend-item">
+                    <svg width="20" height="20" class="mr-3">
+                        <defs><pattern id="hatchLegend" patternUnits="userSpaceOnUse" width="8" height="8"><path d="M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4" stroke="rgba(255,0,0,0.7)" stroke-width="1.5"/></pattern></defs>
+                        <rect width="20" height="20" fill="url(#hatchLegend)" stroke="rgba(255,0,0,0.7)" stroke-width="1"/>
+                    </svg> Frac Water Dedication (FWD)
+                </div>
+                 <div class="legend-item">
+                    <svg width="20" height="20" class="mr-3"><rect width="20" height="20" fill="none" stroke="rgba(0,128,0,0.9)" stroke-width="2" stroke-dasharray="3,3"/></svg> Produced Water ROFR (PWROFR)
+                </div>
+                <div class="legend-item">
+                    <svg width="20" height="20" class="mr-3"><rect width="20" height="20" fill="none" stroke="rgba(255,0,0,0.9)" stroke-width="2" stroke-dasharray="5,2"/></svg> Frac Water ROFR (FWROFR)
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color-box" style="background: repeating-linear-gradient(45deg, #ccc, #ccc 5px, #eee 5px, #eee 10px);"></div> Non-Operator Owned Portion
+                </div>
+            </div>
+            <p class="mt-3 text-xs text-slate-600">Note: 1 section = 640 acres. Visuals are illustrative and may not be to exact scale but represent the relationships and quantities of sections.</p>
+        </div>
+        
+        <svg width="0" height="0" style="position:absolute;"> <!-- Define patterns globally -->
+            <defs>
+                <pattern id="hatch" patternUnits="userSpaceOnUse" width="8" height="8">
+                    <path d="M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4" stroke="red" stroke-width="1"/>
+                </pattern>
+                 <pattern id="hatchOpA" patternUnits="userSpaceOnUse" width="8" height="8">
+                    <path d="M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4" stroke="#2563eb" stroke-width="1.5"/> <!-- Blue for Op A FWD -->
+                </pattern>
+                <pattern id="hatchOpB" patternUnits="userSpaceOnUse" width="8" height="8">
+                    <path d="M-2,2 l4,-4 M0,8 l8,-8 M6,10 l4,-4" stroke="#16a34a" stroke-width="1.5"/> <!-- Green for Op B FWD -->
+                </pattern>
+            </defs>
+        </svg>
+
+        <!-- Scenario 1 -->
+        <div class="scenario-card" id="scenario1">
+            <h2 class="scenario-title">Scenario 1</h2>
+            <p class="scenario-description">Operator A gives a dedication to one of our disposal wells. The dedication is comprised of 1.5 sections. The operator has mineral rights to the full 1.5 sections of land.</p>
+            <div class="svg-container">
+                <svg width="150" height="100" viewBox="0 0 150 100">
+                    <!-- Operator A PWD -->
+                    <rect x="10" y="30" width="60" height="40" fill="#3b82f6" stroke="#1e3a8a" stroke-width="1"/> <!-- 1 section -->
+                    <rect x="75" y="30" width="30" height="40" fill="#3b82f6" stroke="#1e3a8a" stroke-width="1"/> <!-- 0.5 section -->
+                    <text x="40" y="55" font-size="10" fill="white" text-anchor="middle">1 section</text>
+                    <text x="90" y="55" font-size="10" fill="white" text-anchor="middle">0.5 s.</text>
+                    <text x="10" y="15" font-size="10" fill="#1e3a8a">Op A: PWD (1.5 sections, 100% owned)</text>
+                </svg>
+            </div>
+            <div class="calculation-breakdown">
+                <p>Produced Water Dedication (PWD) = 1.5 sections * 640 acres/section * 100% owned = <strong>960 acres</strong></p>
+                <p>Frac Water Dedication (FWD) = <strong>0 acres</strong></p>
+                <p class="total">Total = 960 acres</p>
+            </div>
+        </div>
+
+        <!-- Scenario 2 -->
+        <div class="scenario-card" id="scenario2">
+            <h2 class="scenario-title">Scenario 2</h2>
+            <p class="scenario-description">Operator A gives a produced water dedication to one of our recycling facilities. The dedication area is comprised of 20 sections. The operator currently has mineral rights for 40% of the land.</p>
+            <div class="svg-container">
+                <svg width="200" height="120" viewBox="0 0 200 120">
+                    <!-- Total Area (20 sections) -->
+                    <rect x="10" y="25" width="180" height="80" fill="#bfdbfe" stroke="#60a5fa" stroke-width="1"/> 
+                    <!-- Operator A Owned PWD (40%) -->
+                    <rect x="10" y="25" width="72" height="80" fill="#3b82f6" stroke="#1e3a8a" stroke-width="1"/> <!-- 40% of 180 width -->
+                    <text x="100" y="15" font-size="10" fill="#1e3a8a">Op A: PWD (20 sections total, 40% owned)</text>
+                    <text x="46" y="65" font-size="10" fill="white" text-anchor="middle">Owned (40%)</text>
+                    <text x="120" y="65" font-size="10" fill="#1e3a8a" text-anchor="middle">Unowned (60%)</text>
+                </svg>
+            </div>
+            <div class="calculation-breakdown">
+                <p>Produced Water Dedication (PWD) = 20 sections * 640 acres/section * 40% owned = <strong>5120 acres</strong></p>
+                <p>Frac Water Dedication (FWD) = <strong>0 acres</strong></p>
+                <p class="total">Total = 5120 acres</p>
+            </div>
+        </div>
+
+        <!-- Scenario 2 (update) -->
+        <div class="scenario-card" id="scenario2_update">
+            <h2 class="scenario-title">Scenario 2 (Update)</h2>
+            <p class="scenario-description">Operator A gives a produced water dedication. The dedication area is 20 sections. Operator acquires mineral rights for an additional 40%, totaling 80% of the dedication area.</p>
+             <div class="svg-container">
+                <svg width="200" height="120" viewBox="0 0 200 120">
+                    <!-- Total Area (20 sections) -->
+                    <rect x="10" y="25" width="180" height="80" fill="#bfdbfe" stroke="#60a5fa" stroke-width="1"/> 
+                    <!-- Operator A Owned PWD (80%) -->
+                    <rect x="10" y="25" width="144" height="80" fill="#3b82f6" stroke="#1e3a8a" stroke-width="1"/> <!-- 80% of 180 width -->
+                    <text x="100" y="15" font-size="10" fill="#1e3a8a">Op A: PWD (20 sections total, 80% owned)</text>
+                    <text x="82" y="65" font-size="10" fill="white" text-anchor="middle">Owned (80%)</text>
+                    <text x="162" y="65" font-size="10" fill="#1e3a8a" text-anchor="middle">Unowned (20%)</text>
+                </svg>
+            </div>
+            <div class="calculation-breakdown">
+                <p>Produced Water Dedication (PWD) = 20 sections * 640 acres/section * 80% owned = <strong>10240 acres</strong></p>
+                <p>Frac Water Dedication (FWD) = <strong>0 acres</strong></p>
+                <p class="total">Total = 10240 acres</p>
+            </div>
+        </div>
+
+        <!-- Scenario 3 -->
+        <div class="scenario-card" id="scenario3">
+            <h2 class="scenario-title">Scenario 3</h2>
+            <p class="scenario-description">Operator A gives a produced and frac water dedication for the same 20 sections of land. Operator currently has mineral rights for 40% of the land. Acreage is counted twice.</p>
+            <div class="svg-container">
+                <svg width="220" height="140" viewBox="0 0 220 140">
+                    <!-- Total Area (20 sections) -->
+                    <rect x="10" y="30" width="200" height="90" fill="#bfdbfe" stroke="#60a5fa" stroke-width="1"/>
+                    <!-- Operator A Owned PWD (40%) -->
+                    <rect x="10" y="30" width="80" height="90" fill="#3b82f6" stroke="#1e3a8a" stroke-width="1"/> <!-- 40% of 200 width -->
+                    <!-- Operator A Owned FWD (40%) - visually distinct but same area -->
+                    <rect x="10" y="30" width="80" height="90" fill="url(#hatchOpA)" stroke="#dc2626" stroke-width="1.5"/>
+                    <text x="110" y="15" font-size="10" fill="#1e3a8a">Op A: PWD & FWD (20 sections total, 40% owned each)</text>
+                    <text x="50" y="75" font-size="9" fill="white" text-anchor="middle" style="paint-order: stroke; stroke: black; stroke-width: 0.5px;">Owned PWD (40%)</text>
+                    <text x="50" y="90" font-size="9" fill="white" text-anchor="middle" style="paint-order: stroke; stroke: black; stroke-width: 0.5px;">Owned FWD (40%)</text>
+                    <text x="145" y="75" font-size="10" fill="#1e3a8a" text-anchor="middle">Unowned (60%)</text>
+                </svg>
+            </div>
+            <div class="calculation-breakdown">
+                <p>Produced Water Dedication (PWD) = 20 sections * 640 acres/section * 40% owned = <strong>5120 acres</strong></p>
+                <p>Frac Water Dedication (FWD) = 20 sections * 640 acres/section * 40% owned = <strong>5120 acres</strong> (counted again)</p>
+                <p class="total">Total = 10240 acres</p>
+            </div>
+        </div>
+
+        <!-- Scenario 4 -->
+        <div class="scenario-card" id="scenario4">
+            <h2 class="scenario-title">Scenario 4</h2>
+            <p class="scenario-description">Operator A: PWD (10 sections, 50% owned) and PWROFR (20 sections). All dedicated area exists within the ROFR area.</p>
+            <div class="svg-container">
+                <svg width="250" height="150" viewBox="0 0 250 150">
+                    <!-- PWROFR Area (20 sections) -->
+                    <rect x="10" y="25" width="200" height="100" fill="rgba(59,130,246,0.2)" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5,3" />
+                    <text x="110" y="15" font-size="10" fill="#1e3a8a">Op A: PWROFR (20 sections)</text>
+                    <!-- PWD Area (10 sections, 50% owned, inside ROFR) -->
+                    <rect x="30" y="45" width="100" height="60" fill="rgba(59,130,246,0.3)" stroke="#1e40af" stroke-width="1"/> <!-- Full PWD area -->
+                    <rect x="30" y="45" width="50" height="60" fill="#3b82f6" stroke="#1e40af" stroke-width="1"/> <!-- Owned PWD portion -->
+                    <text x="80" y="75" font-size="9" fill="white" text-anchor="middle">PWD (10s total, 50% owned)</text>
+                </svg>
+            </div>
+            <div class="calculation-breakdown">
+                <p>Produced Water Dedication (PWD) = 10 sections * 640 acres/section * 50% owned = <strong>3200 acres</strong></p>
+                <p>Frac Water Dedication (FWD) = <strong>0 acres</strong></p>
+                <p>Produced Water ROFR (PWROFR) = (20 sections ROFR * 640) - (10 sections PWD * 640 * 50% owned) = 12800 - 3200 = <strong>9600 acres</strong></p>
+                <p>Frac Water ROFR (FWROFR) = <strong>0 acres</strong></p>
+                <p class="total">Total = 12800 acres</p>
+            </div>
+        </div>
+
+        <!-- Scenario 5 -->
+        <div class="scenario-card" id="scenario5">
+            <h2 class="scenario-title">Scenario 5</h2>
+            <p class="scenario-description">Operator A: PWD (10 sections, 50% owned) and PWROFR (20 sections). Dedicated area is adjacent to ROFR, no overlap.</p>
+            <div class="svg-container">
+                <svg width="300" height="150" viewBox="0 0 300 150">
+                    <!-- PWD Area (10 sections, 50% owned) -->
+                    <rect x="10" y="45" width="100" height="60" fill="rgba(59,130,246,0.3)" stroke="#1e40af" stroke-width="1"/>
+                    <rect x="10" y="45" width="50" height="60" fill="#3b82f6" stroke="#1e40af" stroke-width="1"/>
+                    <!--Blue Text -->
+                    <text x="20" y="35" font-size="10" fill="#1e3a8a">PWD (10s, 50% own)</text>
+                    <text x="35" y="75" font-size="9" fill="white">Owned</text>
+                    <!-- PWROFR Area (20 sections) - Adjacent -->
+                    <rect x="120" y="25" width="150" height="100" fill="rgba(59,130,246,0.2)" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5,3" />
+                    <text x="195" y="15" font-size="10" fill="#1e3a8a" text-anchor="middle">PWROFR (20s)</text>
+                </svg>
+            </div>
+            <div class="calculation-breakdown">
+                <p>Produced Water Dedication (PWD) = 10 sections * 640 acres/section * 50% owned = <strong>3200 acres</strong></p>
+                <p>Frac Water Dedication (FWD) = <strong>0 acres</strong></p>
+                <p>Produced Water ROFR (PWROFR) = 20 sections * 640 acres/section = <strong>12800 acres</strong> (no deduction as PWD is not within it)</p>
+                <p>Frac Water ROFR (FWROFR) = <strong>0 acres</strong></p>
+                <p class="total">Total = 16000 acres</p>
+            </div>
+        </div>
+
+        <!-- Scenario 6 -->
+        <div class="scenario-card" id="scenario6">
+            <h2 class="scenario-title">Scenario 6</h2>
+            <p class="scenario-description">Operator A: PWROFR (20 sections) and FWROFR (30 sections). 10 sections overlap. Operator owns 50% of mineral rights (not used for ROFR acreage calc).</p>
+            <div class="svg-container">
+                <svg width="350" height="180" viewBox="0 0 350 180">
+                    <!-- PWROFR (20 sections) -->
+                    <rect x="10" y="40" width="150" height="100" fill="rgba(59,130,246,0.1)" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5,3" />
+                    <text x="85" y="30" font-size="10" fill="#1e3a8a" text-anchor="middle">PWROFR (20s)</text>
+                    <!-- FWROFR (30 sections), 10s overlap -->
+                    <!-- Overlapping part (10s) of FWROFR -->
+                    <rect x="110" y="40" width="50" height="100" fill="rgba(239,68,68,0.1)" stroke="#dc2626" stroke-width="2" stroke-dasharray="6,2" />
+                     <!-- Non-overlapping part of FWROFR (20s) -->
+                    <rect x="160" y="40" width="150" height="100" fill="rgba(239,68,68,0.1)" stroke="#dc2626" stroke-width="2" stroke-dasharray="6,2" />
+                    <text x="210" y="30" font-size="10" fill="#dc2626" text-anchor="middle">FWROFR (30s total)</text>
+                    <text x="135" y="149" font-size="9" fill="#7f1d1d" text-anchor="middle">Overlap = 10s</text>
+                </svg>
+            </div>
+            <div class="calculation-breakdown">
+                <p>Produced Water Dedication (PWD) = <strong>0 acres</strong></p>
+                <p>Frac Water Dedication (FWD) = <strong>0 acres</strong></p>
+                <p>Produced Water ROFR (PWROFR) = 20 sections * 640 acres/section = <strong>12800 acres</strong></p>
+                <p>Frac Water ROFR (FWROFR) = 30 sections * 640 acres/section = <strong>19200 acres</strong></p>
+                <p class="total">Total = 32000 acres</p>
+                <p class="text-xs mt-2 text-slate-500">*Operator ownership % within ROFR areas (50%) is noted but doesn't change the gross ROFR acreage calculation here.</p>
+            </div>
+        </div>
+
+        <!-- Scenario 7 -->
+        <div class="scenario-card" id="scenario7">
+            <h2 class="scenario-title">Scenario 7</h2>
+            <p class="scenario-description">Operator A: PWD (10 sections, 50% owned) and FWROFR (20 sections). PWD area is entirely within FWROFR perimeter.</p>
+            <div class="svg-container">
+                <svg width="250" height="150" viewBox="0 0 250 150">
+                    <!-- FWROFR Area (20 sections) -->
+                    <rect x="10" y="25" width="200" height="100" fill="rgba(239,68,68,0.1)" stroke="#dc2626" stroke-width="2" stroke-dasharray="6,2" />
+                    <text x="110" y="15" font-size="10" fill="#dc2626" text-anchor="middle">Op A: FWROFR (20 sections)</text>
+                    <!-- PWD Area (10 sections, 50% owned, inside FWROFR) -->
+                    <rect x="30" y="45" width="100" height="60" fill="rgba(59,130,246,0.3)" stroke="#1e40af" stroke-width="1"/> <!-- Full PWD area -->
+                    <rect x="30" y="45" width="50" height="60" fill="#3b82f6" stroke="#1e40af" stroke-width="1"/> <!-- Owned PWD portion -->
+                    <text x="80" y="114" font-size="9" fill="black" text-anchor="middle">PWD (10s total, 50% owned)</text>
+                </svg>
+            </div>
+            <div class="calculation-breakdown">
+                <p>Produced Water Dedication (PWD) = 10 sections * 640 acres/section * 50% owned = <strong>3200 acres</strong></p>
+                <p>Frac Water Dedication (FWD) = <strong>0 acres</strong></p>
+                <p>Produced Water ROFR (PWROFR) = <strong>0 acres</strong></p>
+                <p>Frac Water ROFR (FWROFR) = 20 sections * 640 acres/section = <strong>12800 acres</strong> (PWD is different fluid type, so no deduction from FWROFR)</p>
+                <p class="total">Total = 16000 acres</p>
+            </div>
+        </div>
+        
+        <!-- Scenario 8 -->
+        <div class="scenario-card" id="scenario8">
+            <h2 class="scenario-title">Scenario 8</h2>
+            <p class="scenario-description">Operator A: PWD (10s, 50% owned), PWROFR (20s, adjacent to PWD), FWROFR (30s, overlaps both PWD & PWROFR entirely).</p>
+            <div class="svg-container">
+                <svg width="400" height="200" viewBox="0 0 400 200">
+                    <!-- FWROFR (30 sections) - outermost -->
+                    <rect x="10" y="20" width="380" height="160" fill="rgba(239,68,68,0.1)" stroke="#dc2626" stroke-width="2" stroke-dasharray="6,2" />
+                    <text x="200" y="15" font-size="10" fill="#dc2626" text-anchor="middle">FWROFR (30s)</text>
+
+                    <!-- PWD Area (10 sections, 50% owned) -->
+                    <g transform="translate(30, 50)">
+                        <rect x="0" y="0" width="100" height="60" fill="rgba(59,130,246,0.3)" stroke="#1e40af" stroke-width="1"/>
+                        <rect x="0" y="0" width="50" height="60" fill="#3b82f6" stroke="#1e40af" stroke-width="1"/>
+                        <text x="50" y="-5" font-size="9" fill="#1e3a8a" text-anchor="middle">PWD (10s, 50% own)</text>
+                        <text x="25" y="30" font-size="9" fill="white">Owned</text>
+                    </g>
+
+                    <!-- PWROFR Area (20 sections) - Adjacent to PWD -->
+                    <g transform="translate(140, 40)">
+                         <rect x="0" y="0" width="150" height="100" fill="rgba(59,130,246,0.2)" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5,3" />
+                         <text x="75" y="-5" font-size="9" fill="#1e3a8a" text-anchor="middle">PWROFR (20s)</text>
+                    </g>
+                </svg>
+            </div>
+            <div class="calculation-breakdown">
+                <p>Produced Water Dedication (PWD) = 10 sections * 640 acres/section * 50% owned = <strong>3200 acres</strong></p>
+                <p>Frac Water Dedication (FWD) = <strong>0 acres</strong></p>
+                <p>Produced Water ROFR (PWROFR) = 20 sections * 640 = <strong>12800 acres</strong> (PWD is not within this PWROFR)</p>
+                <p>Frac Water ROFR (FWROFR) = 30 sections * 640 = <strong>19200 acres</strong> (PWD & PWROFR are different fluid types, so no deduction)</p>
+                <p class="total">Total = 35200 acres</p>
+            </div>
+        </div>
+         <!-- Scenario 9 -->
+        <div class="scenario-card" id="scenario9">
+            <h2 class="scenario-title">Scenario 9</h2>
+            <p class="scenario-description">Op A: PWD (5s, 100% owned), PWROFR (50s). Op B: FWD (5s, 60% owned), FWROFR (30s). Op A's PWD, Op B's FWD, and Op B's FWROFR are all inside Op A's PWROFR. Op A & B PWD/FWD overlap by 2s. Op B's FWD is outside its own FWROFR.</p>
+            <div class="svg-container">
+                <svg width="450" height="250" viewBox="0 0 450 250">
+                    <!-- Blue Rectangle Op A (5s, 100% owned) -->
+                    <!-- Op A PWROFR (50 sections) - Outermost for relevant items -->
+                    <rect x="10" y="20" width="430" height="210" fill="rgba(59,130,246,0.1)" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5,3" />
+                    <text x="225" y="15" font-size="10" fill="#1e3a8a" text-anchor="middle">Op A: PWROFR (50s)</text>
+
+                    <!-- Op A PWD (5s, 100% owned) - inside Op A PWROFR -->
+                    <rect x="30" y="40" width="70" height="50" fill="rgba(59, 130, 246, 1)" stroke="#1e3a8a" stroke-width="1"/>
+                    <text x="65" y="30" font-size="9" fill="#1e3a8a" text-anchor="middle">Op A PWD ('5s, 100%')</text>
+
+                    <!-- Op B FWD (5s, 60% owned) - inside Op A PWROFR, overlaps Op A PWD by 2s -->
+                    <rect x="80" y="60" width="70" height="50" fill="rgba(22,163,74,0.3)" stroke="#16a34a" stroke-width="1"/> <!-- Total FWD area OUTLINE -->
+                    <rect x="80" y="60" width="42" height="50" fill="url(#hatchOpB)" stroke="#16a34a" stroke-width="1.5"/> <!-- Owned FWD portion HATCHED-->
+                    <text x="115" y="50" font-size="9" fill="#16a34a" text-anchor="right">Op B FWD (5s, 60%)</text>
+                    <text x="91" y="101" font-size="8" fill="white">Owned</text> <!-- Owned Label -->
+                    <text x="50" y="120" font-size="8" fill="black" style="font-style:italic;">(2s overlap with Op A PWD)</text>
+
+
+                    <!-- Op B FWROFR (30 sections) - inside Op A PWROFR -->
+                    <rect x="170" y="80" width="200" height="120" fill="rgba(22,163,74,0.1)" stroke="#16a34a" stroke-width="2" stroke-dasharray="6,2"/>
+                    <text x="270" y="70" font-size="9" fill="#16a34a" text-anchor="middle">Op B FWROFR (30s)</text>
+                    <text x="270" y="210" font-size="8" fill="black" style="font-style:italic;">(Op B FWD is outside this)</text>
+                </svg>
+                <!--Calculation Breakdown: Senario 9-->
+            </div>
+            <div class="calculation-breakdown">
+                <p class="font-semibold text-indigo-700">Operator A:</p>
+                <p>PWD = 5 sections * 640 * 100% = <strong>3200 acres</strong></p>
+                <p>FWD = <strong>0 acres</strong></p>
+                <p>PWROFR = (50s * 640) - (5s PWD * 640 * 100%) = 32000 - 3200 = <strong>28800 acres</strong></p>
+                <p>FWROFR = <strong>0 acres</strong></p>
+                <p>Operator A Total = <strong>32,000 acres</strong></p>
+
+                <p class="font-semibold text-emerald-700 mt-4">Operator B:</p>
+                <p>PWD = <strong>0 acres</strong></p>
+                <p>FWD = 5 sections * 640 * 60% = <strong>1920 acres</strong></p>
+                <p>PWROFR = <strong>0 acres</strong></p>
+                <p>FWROFR = 30 sections * 640 = <strong>19200 acres</strong> (Op B FWD is outside this ROFR)</p>
+                <p>Operator B Total = <strong>21,120 acres</strong></p>
+
+                <p class="font-semibold text-slate-700 mt-4">Combined:</p>
+                <p>PWD = <strong>3200 acres</strong> (from Op A)</p>
+                <p>FWD = <strong>1920 acres</strong> (from Op B)</p>
+                <p>PWROFR = (50s total unique PWROFR land * 640) - (Op A PWD of 3200) = 32000 - 3200 = <strong>28800 acres</strong></p>
+                <p>FWROFR = (30s total unique FWROFR land * 640) - 0 (no FWD within it) = <strong>19200 acres</strong></p>
+                <p class="total">Combined Total = 53,120 acres</p>
+            </div>
+        </div>
+        
+        <!-- Scenario 10 -->
+        <div class="scenario-card" id="scenario10">
+            <h2 class="scenario-title">Scenario 10</h2>
+            <p class="scenario-description">Op A: PWD & FWD (5s each, 100% owned, same land), PWROFR & FWROFR (50s each, same perimeter). Op B: FWD (5s, 60% owned), FWROFR (50s). Op A & B ROFRs overlap entirely. Dedications are within respective ROFRs. Op A & B dedications overlap by 2s.</p>
+            <div class="svg-container">
+                 <svg width="450" height="280" viewBox="0 0 450 280">
+                    <!-- Common ROFR Area (50 sections for PW-ROFR A, FW-ROFR A, FW-ROFR B) -->
+                    <rect x="10" y="20" width="430" height="240" fill="rgba(128,0,128,0.1)" stroke="#800080" stroke-width="2" stroke-dasharray="7,3" />
+                    <text x="225" y="15" font-size="10" fill="#800080" text-anchor="middle">Shared ROFR Perimeter (50s)</text>
+                    <text x="225" y="35" font-size="8" fill="#800080" text-anchor="middle">(OpA PWROFR, OpA FWROFR, OpB FWROFR)</text>
+
+                    <!-- Op A PWD & FWD (5s, 100% owned, same land) -->
+                    <rect x="30" y="50" width="90" height="70" fill="#3b82f6" stroke="#1e3a8a" stroke-width="1"/> <!-- PWD -->
+                    <rect x="30" y="50" width="90" height="70" fill="url(#hatchOpA)" stroke="#2563eb" stroke-width="1.5"/> <!-- FWD on same land -->
+                    <!-- Blue Text-->
+                    <text x="75" y="45" font-size="9" fill="#1e3a8a" text-anchor="middle">Op A PWD & FWD (5s, 100%)</text>
+
+                    <!-- Op B FWD (5s, 60% owned) - overlaps Op A's dedication area -->
+                    <rect x="90" y="100" width="90" height="70" fill="rgba(22,163,74,0.3)" stroke="#15803d" stroke-width="1"/> <!-- Total FWD area Op B -->
+                    <rect x="90" y="100" width="54" height="70" fill="url(#hatchOpB)" stroke="#16a34a" stroke-width="1.5"/> <!-- Owned FWD Op B -->
+                    <!-- Green Tex: Op B FWD (5s, 60%)%)-->
+                    <text x="100" y="180" font-size="9" fill="#16a34a" text-anchor="right">Op B FWD (5s, 60%)</text>
+                    <text x="107" y="165" font-size="9" fill="white">Owned</text>
+                    <text x="124" y="89" font-size="8" fill="black" style="font-style:italic;">(2s overlap Ded A & Ded B)</text>
+                </svg>
+            </div>
+            <div class="calculation-breakdown">
+                <p class="font-semibold text-indigo-700">Operator A:</p>
+                <p>PWD = 5s * 640 * 100% = <strong>3200 acres</strong></p>
+                <p>FWD = 5s * 640 * 100% = <strong>3200 acres</strong> (double count, same land as PWD)</p>
+                <p>PWROFR = (50s ROFR * 640) - (5s PWD * 640 * 100%) = 32000 - 3200 = <strong>28800 acres</strong></p>
+                <p>FWROFR = (50s ROFR * 640) - (5s FWD * 640 * 100%) = 32000 - 3200 = <strong>28800 acres</strong></p>
+                <p>Operator A Total = <strong>64,000 acres</strong></p>
+
+                <p class="font-semibold text-emerald-700 mt-4">Operator B:</p>
+                <p>PWD = <strong>0 acres</strong></p>
+                <p>FWD = 5s * 640 * 60% = <strong>1920 acres</strong></p>
+                <p>PWROFR = <strong>0 acres</strong></p>
+                <p>FWROFR = (50s ROFR * 640) - (5s FWD * 640 * 60%) = 32000 - 1920 = <strong>30080 acres</strong></p>
+                <p>Operator B Total = <strong>32,000 acres</strong></p>
+
+                <p class="font-semibold text-slate-700 mt-4">Combined:</p>
+                <p>PWD = <strong>3200 acres</strong> (Op A PWD)</p>
+                <p>FWD = (Op A FWD 3200) + (Op B FWD 1920) = <strong>5120 acres</strong></p>
+                <p>PWROFR = (50s unique PWROFR land * 640) - (Op A PWD 3200) = 32000 - 3200 = <strong>28800 acres</strong></p>
+                <p>FWROFR = (50s unique FWROFR land * 640) - (Op A FWD 3200 + Op B FWD 1920) = 32000 - 5120 = <strong>26880 acres</strong></p>
+                <p class="total">Combined Total = 64,000 acres</p>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
