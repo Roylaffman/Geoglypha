@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
+      
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'SF Pro Display', sans-serif;
+        color: #3C3C3C;
+      }
+      
+      .slide-container {
+        width: 1280px;
+        min-height: 720px;
+        background: #FFFFFF;
+        display: flex;
+        flex-direction: column;
+        padding: 40px;
+      }
+      
+      .title {
+        font-family: 'Inter', sans-serif;
+        font-size: 36px;
+        font-weight: 600;
+        color: #111111;
+        margin-bottom: 20px;
+      }
+      
+      .content-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        flex: 1;
+      }
+      
+      .text-container {
+        width: 30%;
+        padding-right: 20px;
+      }
+      
+      .chart-container {
+        width: 70%;
+        min-height: 500px;
+      }
+      
+      .description {
+        font-size: 20px;
+        line-height: 1.5;
+        margin-bottom: 20px;
+      }
+      
+      .highlight {
+        font-weight: 600;
+        color: #CEC5BB;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="slide-container">
+      <h1 class="title">Wind Speed Analysis</h1>
+      
+      <div class="content-container">
+        <div class="text-container">
+          <p class="description">
+            Wind speeds in Asheville showed dramatic variations during the storm system, with peak gusts reaching <span class="highlight">50.3 km/h</span> on September 27th.
+          </p>
+          <p class="description">
+            The most significant wind activity occurred between 9:00 and 15:00 on September 27th, coinciding with the storm's center passage.
+          </p>
+          <p class="description">
+            Wind speeds returned to normal levels (5-15 km/h) after the storm system moved through the area.
+          </p>
+        </div>
+        
+        <div class="chart-container">
+          <canvas id="windSpeedChart"></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <script>
+      // Process the data for the chart
+      const weatherData = [
+        {
+            "time": "2024-09-25T00:00",
+            "temperature": 20.9,
+            "pressure": 1012.0,
+            "wind_speed": 6.7,
+            "precipitation": 0.0
+        },
+        {
+            "time": "2024-09-25T06:00",
+            "temperature": 19.1,
+            "pressure": 1013.6,
+            "wind_speed": 8.3,
+            "precipitation": 0.0
+        },
+        {
+            "time": "2024-09-25T12:00",
+            "temperature": 19.9,
+            "pressure": 1013.4,
+            "wind_speed": 2.8,
+            "precipitation": 0.0
+        },
+        {
+            "time": "2024-09-25T18:00",
+            "temperature": 23.7,
+            "pressure": 1013.7,
+            "wind_speed": 13.6,
+            "precipitation": 0.0
+        },
+        {
+            "time": "2024-09-26T00:00",
+            "temperature": 17.5,
+            "pressure": 1012.1,
+            "wind_speed": 11.0,
+            "precipitation": 11.8
+        },
+        {
+            "time": "2024-09-26T06:00",
+            "temperature": 17.2,
+            "pressure": 1011.5,
+            "wind_speed": 12.9,
+            "precipitation": 5.3
+        },
+        {
+            "time": "2024-09-26T12:00",
+            "temperature": 17.8,
+            "pressure": 1010.8,
+            "wind_speed": 9.9,
+            "precipitation": 1.5
+        },
+        {
+            "time": "2024-09-26T18:00",
+            "temperature": 19.9,
+            "pressure": 1010.5,
+            "wind_speed": 13.1,
+            "precipitation": 1.0
+        },
+        {
+            "time": "2024-09-27T00:00",
+            "temperature": 18.8,
+            "pressure": 1006.8,
+            "wind_speed": 19.5,
+            "precipitation": 1.0
+        },
+        {
+            "time": "2024-09-27T06:00",
+            "temperature": 19.8,
+            "pressure": 1001.2,
+            "wind_speed": 19.3,
+            "precipitation": 1.8
+        },
+        {
+            "time": "2024-09-27T09:00",
+            "temperature": 20.2,
+            "pressure": 994.6,
+            "wind_speed": 33.1,
+            "precipitation": 3.5
+        },
+        {
+            "time": "2024-09-27T12:00",
+            "temperature": 20.8,
+            "pressure": 983.5,
+            "wind_speed": 44.8,
+            "precipitation": 13.7
+        },
+        {
+            "time": "2024-09-27T13:00",
+            "temperature": 20.5,
+            "pressure": 980.7,
+            "wind_speed": 50.3,
+            "precipitation": 18.0
+        },
+        {
+            "time": "2024-09-27T15:00",
+            "temperature": 19.8,
+            "pressure": 986.5,
+            "wind_speed": 33.7,
+            "precipitation": 0.8
+        },
+        {
+            "time": "2024-09-27T18:00",
+            "temperature": 19.3,
+            "pressure": 994.0,
+            "wind_speed": 25.9,
+            "precipitation": 0.3
+        },
+        {
+            "time": "2024-09-28T00:00",
+            "temperature": 18.3,
+            "pressure": 1001.4,
+            "wind_speed": 7.0,
+            "precipitation": 0.0
+        },
+        {
+            "time": "2024-09-28T06:00",
+            "temperature": 16.9,
+            "pressure": 1004.9,
+            "wind_speed": 5.4,
+            "precipitation": 0.0
+        },
+        {
+            "time": "2024-09-28T12:00",
+            "temperature": 16.2,
+            "pressure": 1005.6,
+            "wind_speed": 4.7,
+            "precipitation": 0.0
+        },
+        {
+            "time": "2024-09-28T18:00",
+            "temperature": 19.9,
+            "pressure": 1006.4,
+            "wind_speed": 15.0,
+            "precipitation": 0.0
+        },
+        {
+            "time": "2024-09-29T00:00",
+            "temperature": 18.3,
+            "pressure": 1009.2,
+            "wind_speed": 5.2,
+            "precipitation": 0.0
+        },
+        {
+            "time": "2024-09-29T06:00",
+            "temperature": 16.7,
+            "pressure": 1008.8,
+            "wind_speed": 5.3,
+            "precipitation": 0.0
+        },
+        {
+            "time": "2024-09-29T12:00",
+            "temperature": 15.4,
+            "pressure": 1009.5,
+            "wind_speed": 8.4,
+            "precipitation": 0.0
+        },
+        {
+            "time": "2024-09-29T18:00",
+            "temperature": 22.4,
+            "pressure": 1010.0,
+            "wind_speed": 10.0,
+            "precipitation": 0.0
+        }
+      ];
+      
+      // Extract labels and data for the chart
+      const labels = weatherData.map(item => {
+        const date = new Date(item.time);
+        return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:00`;
+      });
+      
+      const windSpeedData = weatherData.map(item => item.wind_speed);
+      
+      // Create background colors array to highlight Sep 27 peak
+      const backgroundColors = weatherData.map(item => {
+        const date = new Date(item.time);
+        const day = date.getDate();
+        // Highlight September 27th data points
+        if (day === 27) {
+          return '#CEC5BB';
+        }
+        return 'rgba(206, 197, 187, 0.5)';
+      });
+      
+      // Create the chart
+      const ctx = document.getElementById('windSpeedChart').getContext('2d');
+      const windSpeedChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Wind Speed (km/h)',
+            data: windSpeedData,
+            backgroundColor: backgroundColors,
+            borderColor: '#CEC5BB',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                font: {
+                  family: 'SF Pro Display',
+                  size: 14
+                }
+              }
+            },
+            title: {
+              display: true,
+              text: 'Wind Speed in Asheville (September 25-29, 2024)',
+              font: {
+                family: 'Inter',
+                size: 16,
+                weight: 'bold'
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: {
+                display: false
+              },
+              ticks: {
+                font: {
+                  family: 'SF Pro Display',
+                  size: 12
+                },
+                maxRotation: 45,
+                minRotation: 45
+              }
+            },
+            y: {
+              grid: {
+                color: '#DFDFCE'
+              },
+              ticks: {
+                font: {
+                  family: 'SF Pro Display',
+                  size: 12
+                }
+              },
+              title: {
+                display: true,
+                text: 'Wind Speed (km/h)',
+                font: {
+                  family: 'SF Pro Display',
+                  size: 14
+                }
+              },
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
+

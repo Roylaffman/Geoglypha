@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
+      
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'SF Pro Display', sans-serif;
+        color: #3C3C3C;
+      }
+      
+      .slide-container {
+        width: 1280px;
+        min-height: 720px;
+        background: #FFFFFF;
+        display: flex;
+        flex-direction: column;
+        padding: 40px;
+      }
+      
+      .title {
+        font-family: 'Inter', sans-serif;
+        font-size: 36px;
+        font-weight: 600;
+        color: #111111;
+        margin-bottom: 20px;
+      }
+      
+      .content-container {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        flex: 1;
+      }
+      
+      .text-container {
+        width: 30%;
+        padding-right: 20px;
+      }
+      
+      .chart-container {
+        width: 70%;
+        min-height: 500px;
+        position: relative;
+      }
+      
+      .description {
+        font-size: 20px;
+        line-height: 1.5;
+        margin-bottom: 20px;
+      }
+      
+      .highlight {
+        font-weight: 600;
+        color: #DFDFCE;
+      }
+      
+      .tooltip {
+        position: absolute;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid #DFDFCE;
+        border-radius: 4px;
+        pointer-events: none;
+        font-family: 'SF Pro Display', sans-serif;
+        font-size: 12px;
+        font-weight: 500;
+        color: #3C3C3C;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        opacity: 0;
+        transition: opacity 0.2s;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="slide-container">
+      <h1 class="title">Precipitation Analysis</h1>
+      
+      <div class="content-container">
+        <div class="text-container">
+          <p class="description">
+            Precipitation in Asheville reached its peak during September 26-27, 2024, with the most significant rainfall occurring during the storm system.
+          </p>
+          <p class="description">
+            The maximum hourly precipitation of <span class="highlight">18.0 mm</span> was recorded at 13:00 on September 27th, coinciding with the lowest barometric pressure and highest wind speeds.
+          </p>
+          <p class="description">
+            Total precipitation during this 48-hour period was <span class="highlight">107.3 mm</span>, accounting for 95% of the total rainfall during the entire 5-day period.
+          </p>
+        </div>
+        
+        <div class="chart-container" id="precipitation-viz">
+          <!-- D3.js visualization will be rendered here -->
+        </div>
+      </div>
+    </div>
+    
+    <script>
+      // Weather data focusing on September 26-27
+      const weatherData = [
+        {"time": "2024-09-25T21:00", "precipitation": 1.8, "day": 25},
+        {"time": "2024-09-25T22:00", "precipitation": 1.1, "day": 25},
+        {"time": "2024-09-25T23:00", "precipitation": 1.9, "day": 25},
+        {"time": "2024-09-26T00:00", "precipitation": 11.8, "day": 26},
+        {"time": "2024-09-26T01:00", "precipitation": 1.5, "day": 26},
+        {"time": "2024-09-26T02:00", "precipitation": 0.5, "day": 26},
+        {"time": "2024-09-26T03:00", "precipitation": 1.8, "day": 26},
+        {"time": "2024-09-26T04:00", "precipitation": 1.1, "day": 26},
+        {"time": "2024-09-26T05:00", "precipitation": 1.1, "day": 26},
+        {"time": "2024-09-26T06:00", "precipitation": 5.3, "day": 26},
+        {"time": "2024-09-26T07:00", "precipitation": 1.0, "day": 26},
+        {"time": "2024-09-26T08:00", "precipitation": 8.0, "day": 26},
+        {"time": "2024-09-26T09:00", "precipitation": 1.2, "day": 26},
+        {"time": "2024-09-26T10:00", "precipitation": 4.4, "day": 26},
+        {"time": "2024-09-26T11:00", "precipitation": 1.8, "day": 26},
+        {"time": "2024-09-26T12:00", "precipitation": 1.5, "day": 26},
+        {"time": "2024-09-26T13:00", "precipitation": 1.5, "day": 26},
+        {"time": "2024-09-26T14:00", "precipitation": 1.0, "day": 26},
+        {"time": "2024-09-26T15:00", "precipitation": 0.7, "day": 26},
+        {"time": "2024-09-26T16:00", "precipitation": 0.9, "day": 26},
+        {"time": "2024-09-26T17:00", "precipitation": 0.9, "day": 26},
+        {"time": "2024-09-26T18:00", "precipitation": 1.0, "day": 26},
+        {"time": "2024-09-26T19:00", "precipitation": 1.9, "day": 26},
+        {"time": "2024-09-26T20:00", "precipitation": 3.8, "day": 26},
+        {"time": "2024-09-26T21:00", "precipitation": 1.6, "day": 26},
+        {"time": "2024-09-26T22:00", "precipitation": 1.7, "day": 26},
+        {"time": "2024-09-26T23:00", "precipitation": 1.4, "day": 26},
+        {"time": "2024-09-27T00:00", "precipitation": 1.0, "day": 27},
+        {"time": "2024-09-27T01:00", "precipitation": 1.3, "day": 27},
+        {"time": "2024-09-27T02:00", "precipitation": 2.8, "day": 27},
+        {"time": "2024-09-27T03:00", "precipitation": 1.0, "day": 27},
+        {"time": "2024-09-27T04:00", "precipitation": 2.9, "day": 27},
+        {"time": "2024-09-27T05:00", "precipitation": 2.5, "day": 27},
+        {"time": "2024-09-27T06:00", "precipitation": 1.8, "day": 27},
+        {"time": "2024-09-27T07:00", "precipitation": 5.3, "day": 27},
+        {"time": "2024-09-27T08:00", "precipitation": 7.0, "day": 27},
+        {"time": "2024-09-27T09:00", "precipitation": 3.5, "day": 27},
+        {"time": "2024-09-27T10:00", "precipitation": 4.8, "day": 27},
+        {"time": "2024-09-27T11:00", "precipitation": 5.2, "day": 27},
+        {"time": "2024-09-27T12:00", "precipitation": 13.7, "day": 27},
+        {"time": "2024-09-27T13:00", "precipitation": 18.0, "day": 27},
+        {"time": "2024-09-27T14:00", "precipitation": 5.3, "day": 27},
+        {"time": "2024-09-27T15:00", "precipitation": 0.8, "day": 27},
+        {"time": "2024-09-27T16:00", "precipitation": 0.6, "day": 27},
+        {"time": "2024-09-27T17:00", "precipitation": 0.0, "day": 27},
+        {"time": "2024-09-27T18:00", "precipitation": 0.3, "day": 27}
+      ];
+      
+      // Set up the D3.js visualization
+      const margin = {top: 40, right: 30, bottom: 60, left: 50};
+      const width = 800 - margin.left - margin.right;
+      const height = 450 - margin.top - margin.bottom;
+      
+      // Create SVG element
+      const svg = d3.select("#precipitation-viz")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+      
+      // Add title
+      svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", -15)
+        .attr("text-anchor", "middle")
+        .style("font-family", "Inter, sans-serif")
+        .style("font-size", "16px")
+        .style("font-weight", "bold")
+        .text("Hourly Precipitation in Asheville (September 25-29, 2024)");
+      
+      // Create scales
+      const x = d3.scaleBand()
+        .domain(weatherData.map((d, i) => i))
+        .range([0, width])
+        .padding(0.1);
+      
+      const y = d3.scaleLinear()
+        .domain([0, d3.max(weatherData, d => d.precipitation) * 1.1])
+        .range([height, 0]);
+      
+      // Create tooltip
+      const tooltip = d3.select("#precipitation-viz")
+        .append("div")
+        .attr("class", "tooltip");
+      
+      // Create custom droplet path generator
+      function dropletPath(x, y, size) {
+        const scale = size / 20;
+        return `
+          M ${x},${y}
+          c ${-5 * scale},${-10 * scale} ${-10 * scale},${-5 * scale} ${-10 * scale},${5 * scale}
+          c 0,${10 * scale} ${10 * scale},${15 * scale} ${10 * scale},${15 * scale}
+          c ${10 * scale},0 ${10 * scale},${-5 * scale} ${10 * scale},${-15 * scale}
+          c 0,${-10 * scale} ${-5 * scale},${-15 * scale} ${-10 * scale},${-5 * scale}
+          Z
+        `;
+      }
+      
+      // Create droplets for precipitation
+      svg.selectAll(".precipitation-droplet")
+        .data(weatherData)
+        .enter()
+        .append("path")
+        .attr("class", "precipitation-droplet")
+        .attr("d", (d, i) => {
+          const xPos = x(i) + x.bandwidth() / 2;
+          const yPos = y(d.precipitation);
+          const size = Math.max(5, Math.sqrt(d.precipitation) * 3);
+          return dropletPath(xPos, yPos, size);
+        })
+        .attr("fill", d => {
+          if (d.precipitation === 18.0) {
+            return "#FF9A73"; // Peak value
+          }
+          if (d.day === 26 || d.day === 27) {
+            return "#DFDFCE"; // Highlight Sep 26-27
+          }
+          return "rgba(206, 197, 187, 0.5)"; // Other days
+        })
+        .attr("stroke", "#CEC5BB")
+        .attr("stroke-width", 1)
+        .attr("transform", (d, i) => {
+          const xPos = x(i) + x.bandwidth() / 2;
+          const yPos = y(d.precipitation);
+          return `rotate(180 ${xPos} ${yPos})`;
+        })
+        .on("mouseover", function(event, d) {
+          d3.select(this)
+            .attr("stroke-width", 2);
+            
+          tooltip.transition()
+            .duration(200)
+            .style("opacity", 1);
+            
+          const date = new Date(d.time);
+          tooltip.html(`${date.toLocaleDateString()}, ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}<br/>${d.precipitation} mm`)
+            .style("left", (event.pageX - document.querySelector("#precipitation-viz").getBoundingClientRect().left + 10) + "px")
+            .style("top", (event.pageY - document.querySelector("#precipitation-viz").getBoundingClientRect().top - 28) + "px");
+        })
+        .on("mouseout", function() {
+          d3.select(this)
+            .attr("stroke-width", 1);
+            
+          tooltip.transition()
+            .duration(500)
+            .style("opacity", 0);
+        });
+      
+      // Add peak marker
+      svg.selectAll(".peak-marker")
+        .data(weatherData.filter(d => d.precipitation === 18.0))
+        .enter()
+        .append("text")
+        .attr("class", "peak-marker")
+        .attr("x", (d, i) => {
+          const dataIndex = weatherData.findIndex(item => item.time === d.time);
+          return x(dataIndex) + x.bandwidth() / 2;
+        })
+        .attr("y", d => y(d.precipitation) - 15)
+        .attr("text-anchor", "middle")
+        .style("font-family", "SF Pro Display, sans-serif")
+        .style("font-size", "12px")
+        .style("font-weight", "bold")
+        .style("fill", "#FF9A73")
+        .text("Peak: 18.0 mm");
+      
+      // Add X axis
+      svg.append("g")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x)
+          .tickFormat((d, i) => {
+            if (i % 6 === 0) {
+              const date = new Date(weatherData[i].time);
+              return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:00`;
+            }
+            return "";
+          })
+        )
+        .selectAll("text")
+        .style("font-family", "SF Pro Display, sans-serif")
+        .style("font-size", "12px")
+        .style("text-anchor", "end")
+        .attr("dx", "-.8em")
+        .attr("dy", ".15em")
+        .attr("transform", "rotate(-45)");
+      
+      // Add Y axis
+      svg.append("g")
+        .call(d3.axisLeft(y).ticks(5))
+        .selectAll("text")
+        .style("font-family", "SF Pro Display, sans-serif")
+        .style("font-size", "12px");
+      
+      // Add Y axis label
+      svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -40)
+        .attr("x", -height / 2)
+        .attr("text-anchor", "middle")
+        .style("font-family", "SF Pro Display, sans-serif")
+        .style("font-size", "14px")
+        .text("Precipitation (mm)");
+      
+      // Style axis lines
+      svg.selectAll(".domain")
+        .style("stroke", "#CEC5BB");
+      
+      svg.selectAll(".tick line")
+        .style("stroke", "#DFDFCE");
+      
+      // Add horizontal grid lines
+      svg.append("g")
+        .attr("class", "grid")
+        .call(d3.axisLeft(y)
+          .tickSize(-width)
+          .tickFormat("")
+          .ticks(5)
+        )
+        .selectAll("line")
+        .style("stroke", "#DFDFCE")
+        .style("stroke-opacity", 0.5);
+      
+      // Remove grid domain line
+      svg.select(".grid .domain").remove();
+    </script>
+  </body>
+</html>
+

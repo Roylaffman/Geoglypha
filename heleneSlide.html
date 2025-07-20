@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helene Weather API</title>
+    <style>
+        :root {
+            --primary-color: #3a6351;
+            --secondary-color: #f2edd7;
+            --accent-color: #a0937d;
+            --text-color: #333;
+            --light-text: #f5f5f5;
+            --header-font: 'Georgia', serif;
+            --body-font: 'Arial', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--body-font);
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #e8dcc6 100%);
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .header-section {
+            background: var(--primary-color);
+            color: var(--light-text);
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-family: var(--header-font);
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .description {
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto 1.5rem;
+            opacity: 0.95;
+        }
+
+        .api-link {
+            display: inline-block;
+            background: var(--accent-color);
+            color: var(--light-text);
+            padding: 0.5rem 1rem;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .api-link:hover {
+            background: var(--secondary-color);
+            color: var(--text-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .content-wrapper {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .info-section {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 2px solid var(--accent-color);
+        }
+
+        .info-section p {
+            font-size: 1rem;
+            margin-bottom: 0.8rem;
+            color: var(--text-color);
+        }
+
+        .slideshow-container {
+            width: 100%;
+            max-width: 1280px;
+            margin: 2rem auto;
+            border: 3px solid var(--primary-color);
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(58, 99, 81, 0.2);
+            background: var(--light-text);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .slideshow-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(58, 99, 81, 0.3);
+        }
+
+        .slide-header {
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            color: var(--light-text);
+            padding: 1rem;
+            font-family: var(--header-font);
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        iframe {
+            width: 100%;
+            height: 720px;
+            border: none;
+            display: block;
+            overflow: hidden;
+            scrolling: no;
+        }
+
+        .slide-titles {
+            background: var(--secondary-color);
+            color: var(--text-color);
+            padding: 0.8rem;
+            text-align: center;
+            font-weight: bold;
+            border-top: 2px solid var(--accent-color);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .slideshow-container {
+                margin: 1rem auto;
+            }
+
+            iframe {
+                height: 500px;
+            }
+
+            .content-wrapper {
+                padding: 0 0.5rem;
+            }
+        }
+
+        /* Animation for smooth loading */
+        .slideshow-container {
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="header-section">
+    <h1>Using a Weather API to Analyze Hurricane Helene</h1>
+    <p class="description">Visualizing data from Hurricane Helene using iframe and Visual Crossing's weather data API</p>
+    <a href="https://www.visualcrossing.com/resources/documentation/weather-api/overview/" class="api-link" target="_blank">Visual Crossing Weather API</a>
+</div>
+
+<div class="content-wrapper">
+    <div class="info-section">
+        <p><strong>About this visualization:</strong> This presentation uses iframe technology to display interactive weather data charts within embedded windows, allowing each slide to maintain unique CSS styling and user interactions while presenting comprehensive Hurricane Helene analysis.</p>
+    </div>
+
+    <!-- Intro slide -->
+    <div class="slideshow-container">
+
+        <iframe src="weather/slide.html" title="Asheville Weather Presentation" scrolling="no"></iframe>
+    </div>
+
+    <!-- Temp slide -->
+    <div class="slideshow-container">
+
+        <iframe src="weather/temperature_chart.html" title="Temperature Chart" scrolling="no"></iframe>
+    </div>
+
+    <!-- wind speed slide -->
+    <div class="slideshow-container">
+
+        <iframe src="weather/wind_speed_chart.html" title="Wind Speed Chart" scrolling="no"></iframe>
+    </div>
+
+    <!-- barometric pressure slide -->
+    <div class="slideshow-container">
+
+        <iframe src="weather/barometric_pressure_chart.html" title="Barometric Pressure Chart" scrolling="no"></iframe>
+    </div>
+
+    <!-- precipitation slide -->
+    <div class="slideshow-container">
+
+        <iframe src="weather/precipitation_chart.html" title="Precipitation Chart" scrolling="no"></iframe>
+    </div>
+</div>
+</body>
+,<footer>
+    <div class="header-section">
+        <h3>Quick Links</h3>
+        <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="cahokia.html">Cahokia</a></li>
+            <li><a href="https://storage.googleapis.com/geoglypha1/graphita/graphitia.html">Gallery</a></li>
+
+        </ul>
+    </div>
+
+</footer>
+</html>
