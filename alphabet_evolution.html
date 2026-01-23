@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alphabet Evolution</title>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            background: linear-gradient(135deg, #f5e6d3 0%, #e8d4c0 100%);
+            padding: 40px 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #5a3a5a;
+            margin-bottom: 50px;
+            font-size: 2.5em;
+        }
+        .evolution-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #faf7f5;
+            border-radius: 10px;
+            align-items: center;
+        }
+        .letter-box {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .period-label {
+            font-size: 0.9em;
+            color: #8a6a8a;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .letter {
+            font-size: 3.5em;
+            color: #5a3a5a;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .phoenician {
+            font-family: 'Noto Sans Phoenician', serif;
+            font-size: 4em;
+        }
+        .early-greek {
+            font-style: italic;
+            transform: scaleX(0.9);
+        }
+        .letter-name {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 10px;
+        }
+        .arrow {
+            font-size: 2em;
+            color: #b89a8a;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .note {
+            background: #fff9e6;
+            padding: 15px;
+            border-left: 4px solid #d4a574;
+            margin-top: 30px;
+            border-radius: 5px;
+        }
+        .note-title {
+            font-weight: bold;
+            color: #8a6a4a;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Evolution of the Alphabet</h1>
+        
+        <!-- Header Row -->
+        <div class="evolution-row" style="background: #5a3a5a; color: white; font-weight: bold;">
+            <div style="text-align: center;">Phoenician<br>(~1050 BCE)</div>
+            <div style="text-align: center;">Early Greek<br>(~750 BCE)</div>
+            <div style="text-align: center;">Latin<br>(~600 BCE)</div>
+            <div style="text-align: center;">Modern<br>English</div>
+        </div>
+
+        <!-- A / Aleph / Alpha -->
+        <div class="evolution-row">
+            <div class="letter-box">
+                <div class="letter" style="transform: rotate(90deg);">𐤀</div>
+                <div class="letter-name">aleph (ox)</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter early-greek">Α</div>
+                <div class="letter-name">alpha</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter">A</div>
+                <div class="letter-name">a</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter">A</div>
+                <div class="letter-name">a</div>
+            </div>
+        </div>
+
+        <!-- B / Beth / Beta -->
+        <div class="evolution-row">
+            <div class="letter-box">
+                <div class="letter">𐤁</div>
+                <div class="letter-name">beth (house)</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter early-greek">Β</div>
+                <div class="letter-name">beta</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter">B</div>
+                <div class="letter-name">b</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter">B</div>
+                <div class="letter-name">b</div>
+            </div>
+        </div>
+
+        <!-- G / Gimel / Gamma -->
+        <div class="evolution-row">
+            <div class="letter-box">
+                <div class="letter">𐤂</div>
+                <div class="letter-name">gimel (camel)</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter early-greek">Γ</div>
+                <div class="letter-name">gamma</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter">C</div>
+                <div class="letter-name">c (also G later)</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter">C / G</div>
+                <div class="letter-name">c, g</div>
+            </div>
+        </div>
+
+        <!-- D / Daleth / Delta -->
+        <div class="evolution-row">
+            <div class="letter-box">
+                <div class="letter">𐤃</div>
+                <div class="letter-name">daleth (door)</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter early-greek">Δ</div>
+                <div class="letter-name">delta</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter">D</div>
+                <div class="letter-name">d</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter">D</div>
+                <div class="letter-name">d</div>
+            </div>
+        </div>
+
+        <!-- K / Kaph / Kappa -->
+        <div class="evolution-row">
+            <div class="letter-box">
+                <div class="letter">𐤊</div>
+                <div class="letter-name">kaph (palm)</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter early-greek">Κ</div>
+                <div class="letter-name">kappa</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter">C</div>
+                <div class="letter-name">c (k sound)</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter">K</div>
+                <div class="letter-name">k</div>
+            </div>
+        </div>
+
+        <!-- M / Mem / Mu -->
+        <div class="evolution-row">
+            <div class="letter-box">
+                <div class="letter">𐤌</div>
+                <div class="letter-name">mem (water)</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter early-greek">Μ</div>
+                <div class="letter-name">mu</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter">M</div>
+                <div class="letter-name">m</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter">M</div>
+                <div class="letter-name">m</div>
+            </div>
+        </div>
+
+        <!-- N / Nun / Nu -->
+        <div class="evolution-row">
+            <div class="letter-box">
+                <div class="letter">𐤍</div>
+                <div class="letter-name">nun (fish)</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter early-greek">Ν</div>
+                <div class="letter-name">nu</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter">N</div>
+                <div class="letter-name">n</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter">N</div>
+                <div class="letter-name">n</div>
+            </div>
+        </div>
+
+        <!-- P / Pe / Pi -->
+        <div class="evolution-row">
+            <div class="letter-box">
+                <div class="letter">𐤐</div>
+                <div class="letter-name">pe (mouth)</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter early-greek">Π</div>
+                <div class="letter-name">pi</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter">P</div>
+                <div class="letter-name">p</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter">P</div>
+                <div class="letter-name">p</div>
+            </div>
+        </div>
+
+        <!-- R / Resh / Rho -->
+        <div class="evolution-row">
+            <div class="letter-box">
+                <div class="letter">𐤓</div>
+                <div class="letter-name">resh (head)</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter early-greek">Ρ</div>
+                <div class="letter-name">rho</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter">R</div>
+                <div class="letter-name">r</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter">R</div>
+                <div class="letter-name">r</div>
+            </div>
+        </div>
+
+        <!-- S / Shin / Sigma -->
+        <div class="evolution-row">
+            <div class="letter-box">
+                <div class="letter">𐤔</div>
+                <div class="letter-name">shin (tooth)</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter early-greek">Σ</div>
+                <div class="letter-name">sigma</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter">S</div>
+                <div class="letter-name">s</div>
+            </div>
+            <div class="letter-box">
+                <div class="letter">S</div>
+                <div class="letter-name">s</div>
+            </div>
+        </div>
+
+        <div class="note">
+            <div class="note-title">Historical Notes:</div>
+            <p><strong>Phoenician:</strong> Written right-to-left, consonantal alphabet with no vowels. Letter names often derived from objects (aleph = ox, beth = house).</p>
+            <p><strong>Greek:</strong> Adapted Phoenician around 800 BCE, adding vowels. Early Greek was sometimes written right-to-left or boustrophedon (alternating directions).</p>
+            <p><strong>Latin:</strong> Borrowed from Greek via Etruscan around 700 BCE. Originally used C for both /k/ and /g/ sounds; G was added later (~300 BCE) as a modification of C. The letter K was rarely used, appearing mainly in a few archaic words.</p>
+        </div>
+    </div>
+</body>
+</html>

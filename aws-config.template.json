@@ -1,0 +1,40 @@
+{
+  "bucketName": "geoglypha-website",
+  "region": "us-east-1",
+  "profile": "default",
+  "cloudfront": {
+    "distributionId": "",
+    "domainName": "",
+    "comment": "Geoglypha Website CDN Distribution"
+  },
+  "s3": {
+    "websiteEndpoint": "",
+    "bucketArn": ""
+  },
+  "deployment": {
+    "excludePatterns": [
+      ".git/*",
+      ".kiro/*",
+      ".vscode/*",
+      "node_modules/*",
+      "*.ps1",
+      "*.md",
+      "*.json",
+      "*.yaml",
+      "*.yml",
+      ".gitignore"
+    ],
+    "cacheControl": {
+      "html": "max-age=3600, must-revalidate",
+      "css": "max-age=604800, public",
+      "js": "max-age=604800, public",
+      "images": "max-age=2592000, public",
+      "data": "max-age=3600, must-revalidate"
+    }
+  },
+  "notes": {
+    "setup": "Run aws-setup.ps1 to create infrastructure",
+    "deploy": "Run deploy-to-aws.ps1 to upload files",
+    "customDomain": "Configure Route 53 for custom domain (optional)"
+  }
+}

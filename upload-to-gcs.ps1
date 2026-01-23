@@ -1,0 +1,1 @@
+gsutil -m rsync -r . gs://geoglypha1/
