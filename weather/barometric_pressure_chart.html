@@ -18,13 +18,71 @@
         color: #3C3C3C;
       }
       
+      .weather-nav {
+        position: sticky;
+        top: 0;
+        background-color: #3a6351;
+        padding: 0.75rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        z-index: 100;
+        flex-wrap: wrap;
+      }
+
+      .weather-nav a {
+        color: #f5f5f5;
+        text-decoration: none;
+        font-family: 'SF Pro Display', sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        transition: color 0.3s;
+      }
+
+      .weather-nav a:hover {
+        color: #f2edd7;
+      }
+
+      .weather-nav .nav-brand {
+        font-weight: 700;
+        font-size: 16px;
+        margin-right: auto;
+      }
+
       .slide-container {
-        width: 1280px;
+        width: 100%;
+        max-width: 1280px;
         min-height: 720px;
+        margin: 0 auto;
         background: #FFFFFF;
         display: flex;
         flex-direction: column;
         padding: 40px;
+        box-sizing: border-box;
+      }
+
+      @media (max-width: 900px) {
+        .content-container {
+          flex-direction: column;
+        }
+        .text-container {
+          width: 100%;
+          padding-right: 0;
+          margin-bottom: 20px;
+        }
+        .chart-container {
+          width: 100%;
+        }
+        .slide-container {
+          padding: 20px;
+          min-height: auto;
+        }
+        .title {
+          font-size: 28px;
+        }
+        .description {
+          font-size: 16px;
+        }
       }
       
       .title {
@@ -65,6 +123,14 @@
     </style>
   </head>
   <body>
+    <nav class="weather-nav">
+      <a href="https://www.geoglypha1.org" class="nav-brand">Geoglypha</a>
+      <a href="index.html">Overview</a>
+      <a href="temperature_chart.html">Temperature</a>
+      <a href="precipitation_chart.html">Precipitation</a>
+      <a href="wind_speed_chart.html">Wind</a>
+      <a href="barometric_pressure_chart.html">Pressure</a>
+    </nav>
     <div class="slide-container">
       <h1 class="title">Barometric Pressure Trends</h1>
       

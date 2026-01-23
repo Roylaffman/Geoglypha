@@ -322,14 +322,14 @@
     <header>
         <div class="container header-content">
             <div class="logo">
-                <a href="https://storage.googleapis.com/geoglypha1/index.html">Geoglypha</a>
+                <a href="https://www.geoglypha1.org">Geoglypha</a>
             </div>
             <button class="mobile-menu-btn">☰</button>
             <nav>
                 <ul>
-                    <li><a href="https://storage.googleapis.com/geoglypha1/index.html">Home</a></li>
+                    <li><a href="https://www.geoglypha1.org">Home</a></li>
                     <li><a href="#">Tools</a></li>
-                    <li><a href="https://storage.googleapis.com/geoglypha1/index.html">About</a></li>
+                    <li><a href="https://www.geoglypha1.org">About</a></li>
                 </ul>
             </nav>
         </div>
@@ -512,7 +512,7 @@
             formData.append('file', file);
             
             // Send file to server
-            fetch('/upload', {
+            fetch('https://tools.geoglypha1.org/upload', {
                 method: 'POST',
                 body: formData
             })
@@ -561,7 +561,7 @@
         downloadBtn.addEventListener('click', function() {
             if (!geojsonData) return;
             
-            fetch('/download', {
+            fetch('https://tools.geoglypha1.org/download', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

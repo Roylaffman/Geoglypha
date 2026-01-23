@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Geoglypha is a full-stack web application combining a static front-end (HTML/CSS/JavaScript) with a Python Flask backend. It focuses on archaeology, history, and geography, featuring interactive Leaflet.js maps and a KML/KMZ to GeoJSON file conversion service.
+Geoglypha is a full-stack web application combining a static front-end (HTML/CSS/JavaScript) with a Python Flask backend. It focuses on archaeology, history, and geography, featuring interactive Leaflet.js maps and a KML/KMZ to GeoJSON file conversion service. currently this is running from a GCS bucket named: www.geoglypha1.org - it is connected to cloundflare and I would liek to realize man of the started projects within this directory. It needs to be fully looked through as many parts of it are in development and ONLY the static pages hosted through www.geoglypha1.org are working currently. 
+
+I want to add applications as subdomains hosted by either AWS or Google Cloud Platform. I would like to have the contents of the weather folder acessable from the homepage. I would like to fix how the headers and styles of the staic front end appears on phones makign sure text is not overlapping. As of now the Python flask backend is not fuctional and I would like to have the Flask app working and connected thought iindex.html and hosted on AWS
 
 ## Development Commands
 
@@ -61,12 +63,13 @@ npm install   # Installs Leaflet.js
 
 ### Subdirectories
 - `graphita/` — Graphite artwork gallery
-- `weather/` — Weather visualization charts (barometric pressure, precipitation, temperature, wind)
+- `weather/` — Weather visualization charts (barometric pressure, precipitation, temperature, wind) These should connect to homepage in meaningful way
 - `images/` — Project images
 
 ## Infrastructure
 
-- **Current production**: Google App Engine (Python 3.9 runtime, `app.yaml`)
+- **Current production**: www.geoglypha1.org with cloudflare through a google bucket with the same name.
+**Desired app set up**: Google App Engine (Python 3.9 runtime, `app.yaml`) to run addtional webmaps and Google Earth engine additions.
 - **AWS migration in progress**: S3 static hosting + CloudFront CDN
 - Bucket name: `geoglypha1` (GCS) / `geoglypha-website` (AWS S3)
 - AWS config template in `aws-config.template.json`

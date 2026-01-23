@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asheville Weather Analysis - Geoglypha</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+      :root {
+        --primary-color: #3a6351;
+        --secondary-color: #f2edd7;
+        --accent-color: #a0937d;
+        --text-color: #333;
+        --light-text: #f5f5f5;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        color: var(--text-color);
+        background-color: #f9f9f9;
+      }
+
+      .weather-nav {
+        position: sticky;
+        top: 0;
+        background-color: var(--primary-color);
+        padding: 0.75rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        z-index: 100;
+        flex-wrap: wrap;
+      }
+
+      .weather-nav a {
+        color: var(--light-text);
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        transition: color 0.3s;
+      }
+
+      .weather-nav a:hover {
+        color: var(--secondary-color);
+      }
+
+      .weather-nav .nav-brand {
+        font-weight: 700;
+        font-size: 16px;
+        margin-right: auto;
+      }
+
+      .hero {
+        background-color: var(--primary-color);
+        color: var(--light-text);
+        padding: 4rem 2rem;
+        text-align: center;
+      }
+
+      .hero-icon {
+        font-size: 48px;
+        color: #FF9A73;
+        margin-bottom: 1rem;
+      }
+
+      .hero h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+      }
+
+      .hero p {
+        font-size: 1.1rem;
+        max-width: 700px;
+        margin: 0 auto;
+        opacity: 0.9;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 3rem 2rem;
+      }
+
+      .section-title {
+        font-size: 1.8rem;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 2rem;
+        text-align: center;
+      }
+
+      .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .card {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transition: transform 0.3s, box-shadow 0.3s;
+        text-decoration: none;
+        color: var(--text-color);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      }
+
+      .card-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .card-icon.temp { color: #FF9A73; }
+      .card-icon.precip { color: #5b9bd5; }
+      .card-icon.wind { color: #CEC5BB; }
+      .card-icon.pressure { color: #7a9a8a; }
+
+      .card h3 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--primary-color);
+      }
+
+      .card p {
+        font-size: 0.9rem;
+        line-height: 1.5;
+        color: #666;
+      }
+
+      .context {
+        max-width: 800px;
+        margin: 0 auto 2rem;
+        text-align: center;
+        line-height: 1.7;
+        color: #555;
+      }
+
+      @media (max-width: 600px) {
+        .hero h1 {
+          font-size: 1.8rem;
+        }
+        .hero p {
+          font-size: 1rem;
+        }
+        .cards-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="weather-nav">
+      <a href="https://www.geoglypha1.org" class="nav-brand">Geoglypha</a>
+      <a href="index.html">Overview</a>
+      <a href="temperature_chart.html">Temperature</a>
+      <a href="precipitation_chart.html">Precipitation</a>
+      <a href="wind_speed_chart.html">Wind</a>
+      <a href="barometric_pressure_chart.html">Pressure</a>
+    </nav>
+
+    <section class="hero">
+      <i class="fas fa-cloud-sun hero-icon"></i>
+      <h1>Asheville Weather Analysis</h1>
+      <p>A detailed look at weather patterns in Asheville, North Carolina during the significant storm system of September 25-29, 2024. Explore temperature swings, record precipitation, extreme winds, and barometric pressure changes.</p>
+    </section>
+
+    <div class="container">
+      <p class="context">This analysis covers a 5-day period that included a major storm system passing through the Asheville area. The event brought sustained winds exceeding 50 km/h, over 107 mm of rainfall in 48 hours, and a barometric pressure drop to 980.7 hPa.</p>
+
+      <h2 class="section-title">Explore the Data</h2>
+
+      <div class="cards-grid">
+        <a href="temperature_chart.html" class="card">
+          <i class="fas fa-thermometer-half card-icon temp"></i>
+          <h3>Temperature</h3>
+          <p>Fluctuations between 15.4 and 23.7 degrees C, with a notable drop during the storm passage.</p>
+        </a>
+
+        <a href="precipitation_chart.html" class="card">
+          <i class="fas fa-cloud-rain card-icon precip"></i>
+          <h3>Precipitation</h3>
+          <p>Peak hourly rainfall of 18.0 mm on September 27th, with 95% of total rainfall in a 48-hour window.</p>
+        </a>
+
+        <a href="wind_speed_chart.html" class="card">
+          <i class="fas fa-wind card-icon wind"></i>
+          <h3>Wind Speed</h3>
+          <p>Dramatic gusts reaching 50.3 km/h during the storm center passage on September 27th.</p>
+        </a>
+
+        <a href="barometric_pressure_chart.html" class="card">
+          <i class="fas fa-tachometer-alt card-icon pressure"></i>
+          <h3>Barometric Pressure</h3>
+          <p>A significant pressure drop to 980.7 hPa coinciding with peak wind and precipitation.</p>
+        </a>
+      </div>
+    </div>
+  </body>
+</html>
