@@ -228,7 +228,7 @@ geoglypha-website/
 #### CloudFront Distribution
 
 **Configuration**:
-- Origin: S3 bucket website endpoint
+- Origin: GCS bucket website endpoint
 - Viewer Protocol Policy: Redirect HTTP to HTTPS
 - Allowed HTTP Methods: GET, HEAD, OPTIONS
 - Compress Objects Automatically: Yes
