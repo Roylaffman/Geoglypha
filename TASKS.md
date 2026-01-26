@@ -20,7 +20,7 @@ Last updated: 2026-01-24
 
 ### Deployment & Infrastructure
 
-- [ ] **Republish files to GCS bucket** — Update live www.geoglypha1.org site via gcloud commands (walk through manually next session)
+- [x] **Republish files to GCS bucket** — Deployed to gs://www.geoglypha1.org/ using `gsutil cp` commands
 - [ ] **Get Flask backend working** — KML/KMZ to GeoJSON converter currently non-functional; connect through index.html
 - [ ] **Host Flask app on cloud** — Deploy to AWS EC2 or GCS/Cloud Run as subdomain (e.g., api.geoglypha1.org)
 - [ ] **Set up subdomain routing** — Configure Cloudflare to route traffic to cloud-hosted applications
@@ -50,6 +50,7 @@ Task: Republish files to GCS bucket using gcloud commands (manual walkthrough)
 Bucket: www.geoglypha1.org
 Goal: Push new dashboard and updated files to live Cloudflare site
 Files ready to deploy:
+
 
 weather/dashboard.html (new)
 weather/index.html (updated nav + card)

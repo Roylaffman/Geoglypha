@@ -122,26 +122,26 @@
       .current-conditions {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 1rem;
+        gap: 0.75rem;
       }
 
       .condition-item {
         text-align: center;
-        padding: 0.75rem;
+        padding: 0.5rem;
         background: #f9f9f9;
         border-radius: 8px;
       }
 
       .condition-item .value {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
         font-weight: 700;
         color: var(--primary-color);
       }
 
       .condition-item .label {
-        font-size: 0.75rem;
+        font-size: 0.7rem;
         color: #666;
-        margin-top: 0.25rem;
+        margin-top: 0.15rem;
       }
 
       .forecast-list {
@@ -240,6 +240,41 @@
         border-radius: 50%;
       }
 
+      .station-select {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        margin-bottom: 0.5rem;
+        background: white;
+      }
+
+      .station-info {
+        font-size: 0.8rem;
+        color: #666;
+        padding: 0.5rem;
+        background: #f0f7f4;
+        border-radius: 6px;
+        margin-top: 0.5rem;
+      }
+
+      .station-info strong {
+        color: var(--primary-color);
+      }
+
+      .radius-indicator {
+        font-size: 0.75rem;
+        color: #888;
+        margin-top: 0.25rem;
+      }
+
+      .active-station {
+        background: #e8f5e9;
+        border-left: 3px solid var(--primary-color);
+        padding-left: 0.5rem;
+      }
+
       @media (max-width: 900px) {
         .dashboard-container {
           grid-template-columns: 1fr;
@@ -278,7 +313,7 @@
 
     <section class="hero">
       <h1><i class="fas fa-map-marked-alt"></i> Live Weather Dashboard</h1>
-      <p>Real-time and historic weather data for Asheville, NC using Open-Meteo and NWS APIs</p>
+      <p>Real-time and historic weather data for West Asheville, NC using Open-Meteo and NWS APIs</p>
     </section>
 
     <div class="dashboard-container">
@@ -286,11 +321,20 @@
 
       <div class="sidebar">
         <div class="info-card">
+          <h3><i class="fas fa-broadcast-tower"></i> Weather Stations</h3>
+          <select id="station-select" class="station-select">
+            <option value="">Loading stations...</option>
+          </select>
+          <p class="radius-indicator">Showing stations within 2.5 miles of West Asheville (Haywood Rd)</p>
+          <div id="station-info" class="station-info" style="display: none;"></div>
+        </div>
+
+        <div class="info-card">
           <h3><i class="fas fa-cloud-sun"></i> Current Conditions</h3>
           <div id="current-weather" class="current-conditions">
             <div class="loading"><i class="fas fa-spinner"></i> Loading...</div>
           </div>
-          <p class="data-source">Source: Open-Meteo API</p>
+          <p class="data-source">Source: <span id="current-source">Open-Meteo API</span></p>
         </div>
 
         <div class="info-card">
@@ -300,22 +344,15 @@
           </div>
           <p class="data-source">Source: NWS Weather.gov</p>
         </div>
-
-        <div class="info-card">
-          <h3><i class="fas fa-info-circle"></i> About This Dashboard</h3>
-          <p style="font-size: 0.85rem; line-height: 1.5; color: #666;">
-            This dashboard displays live weather data centered on Asheville, NC (35.5951°N, 82.5515°W).
-            Historic data from the past 7 days is shown in the chart below. Click markers on the map for station details.
-          </p>
-        </div>
       </div>
 
       <div class="chart-container">
-        <h3><i class="fas fa-chart-line"></i> Past 7 Days - Hourly Data</h3>
+        <h3><i class="fas fa-chart-line"></i> Past 7 Days — <span id="chart-station-name">West Asheville (default)</span></h3>
         <div class="legend">
           <div class="legend-item"><span class="legend-dot" style="background: #FF9A73;"></span> Temperature (°C)</div>
           <div class="legend-item"><span class="legend-dot" style="background: #5b9bd5;"></span> Precipitation (mm)</div>
           <div class="legend-item"><span class="legend-dot" style="background: #7a9a8a;"></span> Wind Speed (km/h)</div>
+          <div class="legend-item"><span class="legend-dot" style="background: #9b59b6;"></span> Pressure (hPa)</div>
         </div>
         <div class="chart-wrapper">
           <canvas id="historyChart"></canvas>
@@ -325,29 +362,68 @@
     </div>
 
     <script>
-      // Asheville, NC coordinates
-      const ASHEVILLE_LAT = 35.5951;
-      const ASHEVILLE_LON = -82.5515;
+      // West Asheville coordinates (center point for station search)
+      const WEST_ASHEVILLE_LAT = 35.57876574204799;
+      const WEST_ASHEVILLE_LON = -82.59477296025109;
 
-      // Initialize map
-      const map = L.map('map').setView([ASHEVILLE_LAT, ASHEVILLE_LON], 10);
+      // Default display location (can be changed by station selection)
+      let currentLat = WEST_ASHEVILLE_LAT;
+      let currentLon = WEST_ASHEVILLE_LON;
+      let currentStationName = 'West Asheville (default)';
+
+      // 2.5 mile radius in meters
+      const SEARCH_RADIUS_MILES = 2.5;
+      const SEARCH_RADIUS_METERS = SEARCH_RADIUS_MILES * 1609.34;
+
+      // Store station data
+      let stationsData = [];
+      let stationMarkers = [];
+
+      // Initialize map centered on West Asheville (zoom 13 for 2.5-mile radius)
+      const map = L.map('map').setView([WEST_ASHEVILLE_LAT, WEST_ASHEVILLE_LON], 13);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       }).addTo(map);
 
-      // Add Asheville marker
-      const ashevilleMarker = L.marker([ASHEVILLE_LAT, ASHEVILLE_LON])
-        .addTo(map)
-        .bindPopup('<strong>Asheville, NC</strong><br>Loading weather data...');
+      // Add West Asheville center marker
+      const centerMarker = L.marker([WEST_ASHEVILLE_LAT, WEST_ASHEVILLE_LON], {
+        icon: L.divIcon({
+          className: 'center-marker',
+          html: '<div style="background: var(--primary-color); width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+          iconSize: [12, 12]
+        })
+      }).addTo(map).bindPopup('<strong>West Asheville</strong><br>Haywood Road Area<br>Search center point');
+
+      // Add 5-mile radius circle
+      const radiusCircle = L.circle([WEST_ASHEVILLE_LAT, WEST_ASHEVILLE_LON], {
+        radius: SEARCH_RADIUS_METERS,
+        color: '#3a6351',
+        fillColor: '#3a6351',
+        fillOpacity: 0.1,
+        weight: 2,
+        dashArray: '5, 5'
+      }).addTo(map);
 
       // Chart instance
       let historyChart = null;
 
-      // Fetch current weather from Open-Meteo
-      async function fetchCurrentWeather() {
+      // Calculate distance between two points in miles
+      function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 3959; // Earth's radius in miles
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+      }
+
+      // Fetch current weather from Open-Meteo (includes pressure)
+      async function fetchCurrentWeather(lat = currentLat, lon = currentLon) {
         try {
-          const url = `https://api.open-meteo.com/v1/forecast?latitude=${ASHEVILLE_LAT}&longitude=${ASHEVILLE_LON}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,weather_code&temperature_unit=celsius&wind_speed_unit=kmh&timezone=America/New_York`;
+          const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,surface_pressure,weather_code&temperature_unit=celsius&wind_speed_unit=kmh&timezone=America/New_York`;
 
           const response = await fetch(url);
           const data = await response.json();
@@ -373,17 +449,15 @@
                 <div class="value">${current.precipitation}</div>
                 <div class="label">Precip (mm)</div>
               </div>
+              <div class="condition-item">
+                <div class="value">${Math.round(current.surface_pressure)}</div>
+                <div class="label">Pressure (hPa)</div>
+              </div>
+              <div class="condition-item">
+                <div class="value">${weatherDesc}</div>
+                <div class="label">Conditions</div>
+              </div>
             `;
-
-            // Update marker popup
-            ashevilleMarker.setPopupContent(`
-              <strong>Asheville, NC</strong><br>
-              <strong>${weatherDesc}</strong><br>
-              Temp: ${current.temperature_2m}°C<br>
-              Humidity: ${current.relative_humidity_2m}%<br>
-              Wind: ${current.wind_speed_10m} km/h<br>
-              Precip: ${current.precipitation} mm
-            `);
           }
         } catch (error) {
           console.error('Error fetching current weather:', error);
@@ -393,16 +467,14 @@
       }
 
       // Fetch forecast from NWS API
-      async function fetchNWSForecast() {
+      async function fetchNWSForecast(lat = currentLat, lon = currentLon) {
         try {
-          // First get the grid point
-          const pointsUrl = `https://api.weather.gov/points/${ASHEVILLE_LAT},${ASHEVILLE_LON}`;
+          const pointsUrl = `https://api.weather.gov/points/${lat},${lon}`;
           const pointsResponse = await fetch(pointsUrl, {
             headers: { 'User-Agent': 'Geoglypha Weather Dashboard' }
           });
           const pointsData = await pointsResponse.json();
 
-          // Then get the forecast
           const forecastUrl = pointsData.properties.forecast;
           const forecastResponse = await fetch(forecastUrl, {
             headers: { 'User-Agent': 'Geoglypha Weather Dashboard' }
@@ -426,17 +498,16 @@
         }
       }
 
-      // Fetch historical data from Open-Meteo
-      async function fetchHistoricalData() {
+      // Fetch historical data from Open-Meteo (includes pressure)
+      async function fetchHistoricalData(lat = currentLat, lon = currentLon) {
         try {
-          // Get dates for past 7 days
           const endDate = new Date();
           const startDate = new Date();
           startDate.setDate(startDate.getDate() - 7);
 
           const formatDate = (d) => d.toISOString().split('T')[0];
 
-          const url = `https://api.open-meteo.com/v1/forecast?latitude=${ASHEVILLE_LAT}&longitude=${ASHEVILLE_LON}&hourly=temperature_2m,precipitation,wind_speed_10m&start_date=${formatDate(startDate)}&end_date=${formatDate(endDate)}&temperature_unit=celsius&wind_speed_unit=kmh&timezone=America/New_York`;
+          const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation,wind_speed_10m,surface_pressure&start_date=${formatDate(startDate)}&end_date=${formatDate(endDate)}&temperature_unit=celsius&wind_speed_unit=kmh&timezone=America/New_York`;
 
           const response = await fetch(url);
           const data = await response.json();
@@ -449,15 +520,15 @@
         }
       }
 
-      // Render the history chart
+      // Render the history chart with pressure
       function renderHistoryChart(hourlyData) {
         const ctx = document.getElementById('historyChart').getContext('2d');
 
-        // Sample every 3 hours to reduce data points
         const labels = [];
         const temps = [];
         const precip = [];
         const wind = [];
+        const pressure = [];
 
         for (let i = 0; i < hourlyData.time.length; i += 3) {
           const date = new Date(hourlyData.time[i]);
@@ -465,6 +536,7 @@
           temps.push(hourlyData.temperature_2m[i]);
           precip.push(hourlyData.precipitation[i]);
           wind.push(hourlyData.wind_speed_10m[i]);
+          pressure.push(hourlyData.surface_pressure[i]);
         }
 
         if (historyChart) {
@@ -499,6 +571,14 @@
                 backgroundColor: 'rgba(122, 154, 138, 0.1)',
                 tension: 0.3,
                 yAxisID: 'y'
+              },
+              {
+                label: 'Pressure (hPa)',
+                data: pressure,
+                borderColor: '#9b59b6',
+                backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                tension: 0.3,
+                yAxisID: 'y2'
               }
             ]
           },
@@ -538,7 +618,20 @@
                 position: 'right',
                 title: {
                   display: true,
-                  text: 'Precipitation (mm)',
+                  text: 'Precip (mm)',
+                  font: { size: 10 }
+                },
+                grid: {
+                  drawOnChartArea: false
+                }
+              },
+              y2: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                title: {
+                  display: true,
+                  text: 'Pressure (hPa)',
                   font: { size: 10 }
                 },
                 grid: {
@@ -553,68 +646,267 @@
       // Weather code to description
       function getWeatherDescription(code) {
         const codes = {
-          0: 'Clear sky',
-          1: 'Mainly clear',
-          2: 'Partly cloudy',
+          0: 'Clear',
+          1: 'Mostly Clear',
+          2: 'Partly Cloudy',
           3: 'Overcast',
           45: 'Foggy',
-          48: 'Depositing rime fog',
-          51: 'Light drizzle',
-          53: 'Moderate drizzle',
-          55: 'Dense drizzle',
-          61: 'Slight rain',
-          63: 'Moderate rain',
-          65: 'Heavy rain',
-          71: 'Slight snow',
-          73: 'Moderate snow',
-          75: 'Heavy snow',
-          80: 'Slight rain showers',
-          81: 'Moderate rain showers',
-          82: 'Violent rain showers',
+          48: 'Rime Fog',
+          51: 'Light Drizzle',
+          53: 'Drizzle',
+          55: 'Heavy Drizzle',
+          61: 'Light Rain',
+          63: 'Rain',
+          65: 'Heavy Rain',
+          71: 'Light Snow',
+          73: 'Snow',
+          75: 'Heavy Snow',
+          80: 'Rain Showers',
+          81: 'Mod. Showers',
+          82: 'Heavy Showers',
           95: 'Thunderstorm',
-          96: 'Thunderstorm with hail'
+          96: 'T-Storm + Hail'
         };
         return codes[code] || 'Unknown';
       }
 
-      // Add nearby NWS observation stations to map
-      async function addNWSStations() {
+      // Fetch latest observation from a single NWS station
+      async function fetchStationObservation(stationId) {
         try {
-          const url = `https://api.weather.gov/points/${ASHEVILLE_LAT},${ASHEVILLE_LON}/stations`;
+          const url = `https://api.weather.gov/stations/${stationId}/observations/latest`;
+          const response = await fetch(url, {
+            headers: { 'User-Agent': 'Geoglypha Weather Dashboard' }
+          });
+          const data = await response.json();
+          const props = data.properties;
+
+          return {
+            temperature: props.temperature?.value !== null
+              ? (props.temperature.value * 9/5 + 32).toFixed(1) + '°F'
+              : 'N/A',
+            temperatureC: props.temperature?.value !== null
+              ? props.temperature.value.toFixed(1) + '°C'
+              : 'N/A',
+            windSpeed: props.windSpeed?.value !== null
+              ? (props.windSpeed.value * 0.621371).toFixed(1) + ' mph'
+              : 'N/A',
+            humidity: props.relativeHumidity?.value !== null
+              ? Math.round(props.relativeHumidity.value) + '%'
+              : 'N/A',
+            pressure: props.barometricPressure?.value !== null
+              ? (props.barometricPressure.value / 100).toFixed(1) + ' hPa'
+              : 'N/A',
+            description: props.textDescription || 'N/A',
+            timestamp: props.timestamp
+              ? new Date(props.timestamp).toLocaleString('en-US', {
+                  month: 'short', day: 'numeric',
+                  hour: 'numeric', minute: '2-digit'
+                })
+              : 'N/A'
+          };
+        } catch (error) {
+          console.error(`Error fetching observations for ${stationId}:`, error);
+          return null;
+        }
+      }
+
+      // Fetch and display NWS observation stations within radius
+      async function fetchNWSStations() {
+        try {
+          const url = `https://api.weather.gov/points/${WEST_ASHEVILLE_LAT},${WEST_ASHEVILLE_LON}/stations`;
           const response = await fetch(url, {
             headers: { 'User-Agent': 'Geoglypha Weather Dashboard' }
           });
           const data = await response.json();
 
           if (data.features) {
-            data.features.slice(0, 5).forEach(station => {
+            // Filter stations within 2.5-mile radius
+            stationsData = data.features.filter(station => {
+              const coords = station.geometry.coordinates;
+              const distance = calculateDistance(
+                WEST_ASHEVILLE_LAT, WEST_ASHEVILLE_LON,
+                coords[1], coords[0]
+              );
+              station.distance = distance;
+              return distance <= SEARCH_RADIUS_MILES;
+            }).sort((a, b) => a.distance - b.distance);
+
+            // If fewer than 3 stations found, expand to include nearest ones
+            if (stationsData.length < 3) {
+              const allSorted = data.features.map(station => {
+                const coords = station.geometry.coordinates;
+                station.distance = calculateDistance(
+                  WEST_ASHEVILLE_LAT, WEST_ASHEVILLE_LON,
+                  coords[1], coords[0]
+                );
+                return station;
+              }).sort((a, b) => a.distance - b.distance);
+              stationsData = allSorted.slice(0, 5);
+            }
+
+            // Update dropdown
+            const select = document.getElementById('station-select');
+            select.innerHTML = '<option value="">Select a weather station...</option>';
+
+            stationsData.forEach((station, index) => {
+              const name = station.properties.name;
+              const distance = station.distance.toFixed(1);
+              select.innerHTML += `<option value="${index}">${name} (${distance} mi)</option>`;
+            });
+
+            // Fetch observations and add markers for each station
+            for (let index = 0; index < stationsData.length; index++) {
+              const station = stationsData[index];
               const coords = station.geometry.coordinates;
               const name = station.properties.name;
+              const stationId = station.properties.stationIdentifier;
+              const distance = station.distance.toFixed(1);
 
-              L.circleMarker([coords[1], coords[0]], {
-                radius: 6,
+              // Fetch live observations for this station
+              const obs = await fetchStationObservation(stationId);
+              station.latestObs = obs;
+
+              let popupContent = `
+                <div style="min-width: 200px;">
+                  <strong style="font-size: 14px;">${name}</strong><br>
+                  <span style="color: #666; font-size: 11px;">ID: ${stationId} | ${distance} miles away</span>
+                  <hr style="margin: 6px 0; border: none; border-top: 1px solid #ddd;">
+              `;
+
+              if (obs) {
+                popupContent += `
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 12px;">
+                    <div><strong>Temp:</strong> ${obs.temperatureC}</div>
+                    <div><strong>Wind:</strong> ${obs.windSpeed}</div>
+                    <div><strong>Humidity:</strong> ${obs.humidity}</div>
+                    <div><strong>Pressure:</strong> ${obs.pressure}</div>
+                  </div>
+                  <div style="font-size: 11px; margin-top: 4px; color: #555;">
+                    ${obs.description}
+                  </div>
+                  <div style="font-size: 10px; color: #999; margin-top: 4px;">
+                    Last updated: ${obs.timestamp}
+                  </div>
+                `;
+              } else {
+                popupContent += `<div style="font-size: 12px; color: #999;">No observation data available</div>`;
+              }
+
+              popupContent += `
+                  <button onclick="selectStation(${index})"
+                    style="margin-top: 8px; width: 100%; padding: 6px; background: #3a6351; color: white;
+                           border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                    View 7-Day Chart
+                  </button>
+                </div>
+              `;
+
+              const marker = L.circleMarker([coords[1], coords[0]], {
+                radius: 8,
                 fillColor: '#5b9bd5',
                 color: '#fff',
                 weight: 2,
                 fillOpacity: 0.8
               })
               .addTo(map)
-              .bindPopup(`<strong>${name}</strong><br>NWS Observation Station`);
-            });
+              .bindPopup(popupContent, { maxWidth: 250 });
+
+              marker.on('click', () => {
+                document.getElementById('station-select').value = index;
+              });
+
+              stationMarkers.push(marker);
+            }
+
+            if (stationsData.length === 0) {
+              select.innerHTML = '<option value="">No stations found nearby</option>';
+            }
           }
         } catch (error) {
           console.error('Error fetching NWS stations:', error);
+          document.getElementById('station-select').innerHTML =
+            '<option value="">Error loading stations</option>';
         }
       }
+
+      // Select a station and fetch its data
+      async function selectStation(index) {
+        if (index === '' || index === null) {
+          // Reset to default location
+          currentLat = WEST_ASHEVILLE_LAT;
+          currentLon = WEST_ASHEVILLE_LON;
+          currentStationName = 'West Asheville (default)';
+          document.getElementById('station-info').style.display = 'none';
+          document.getElementById('current-source').textContent = 'Open-Meteo API';
+        } else {
+          const station = stationsData[index];
+          const coords = station.geometry.coordinates;
+          currentLat = coords[1];
+          currentLon = coords[0];
+          currentStationName = station.properties.name;
+
+          // Show station info
+          const stationInfo = document.getElementById('station-info');
+          stationInfo.style.display = 'block';
+
+          let infoHTML = `
+            <strong>${station.properties.name}</strong><br>
+            ID: ${station.properties.stationIdentifier}<br>
+            Distance: ${station.distance.toFixed(1)} miles from center
+          `;
+
+          if (station.latestObs) {
+            const obs = station.latestObs;
+            infoHTML += `<br><span style="font-size: 0.75rem;">
+              ${obs.temperatureC} | ${obs.pressure} | ${obs.description}
+            </span>`;
+          }
+
+          stationInfo.innerHTML = infoHTML;
+
+          document.getElementById('current-source').textContent =
+            `Open-Meteo API (${station.properties.name})`;
+
+          // Pan map to station
+          map.panTo([currentLat, currentLon]);
+
+          // Highlight selected station marker
+          stationMarkers.forEach((m, i) => {
+            if (i === parseInt(index)) {
+              m.setStyle({ fillColor: '#e74c3c', radius: 10 });
+            } else {
+              m.setStyle({ fillColor: '#5b9bd5', radius: 8 });
+            }
+          });
+        }
+
+        // Update chart label
+        document.getElementById('chart-station-name').textContent = currentStationName;
+
+        // Refresh all data for the selected location
+        await Promise.all([
+          fetchCurrentWeather(currentLat, currentLon),
+          fetchNWSForecast(currentLat, currentLon),
+          fetchHistoricalData(currentLat, currentLon)
+        ]);
+      }
+
+      // Handle dropdown change
+      document.getElementById('station-select').addEventListener('change', (e) => {
+        selectStation(e.target.value);
+      });
+
+      // Make selectStation available globally for popup button
+      window.selectStation = selectStation;
 
       // Initialize dashboard
       fetchCurrentWeather();
       fetchNWSForecast();
       fetchHistoricalData();
-      addNWSStations();
+      fetchNWSStations();
 
       // Refresh current conditions every 5 minutes
-      setInterval(fetchCurrentWeather, 5 * 60 * 1000);
+      setInterval(() => fetchCurrentWeather(currentLat, currentLon), 5 * 60 * 1000);
     </script>
   </body>
 </html>
