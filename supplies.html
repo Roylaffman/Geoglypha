@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Productivity & Art Supplies | Geoglypha</title>
+    <style>
+        :root {
+            --purple-dark: #4C1D95;
+            --purple-primary: #7C3AED;
+            --purple-mid: #8B5CF6;
+            --purple-light: #EDE9FE;
+            --purple-faint: #F5F3FF;
+            --accent-gold: #F59E0B;
+            --accent-gold-hover: #D97706;
+            --text-color: #1F2937;
+            --text-muted: #6B7280;
+            --white: #ffffff;
+            --header-font: 'Georgia', serif;
+            --body-font: 'Arial', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--body-font);
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--purple-faint);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--purple-dark);
+            color: var(--white);
+            padding: 1rem 0;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: var(--header-font);
+            font-size: 1.6rem;
+            font-weight: bold;
+        }
+
+        .logo a {
+            color: var(--white);
+            text-decoration: none;
+        }
+
+        .logo span {
+            font-size: 0.85rem;
+            font-weight: normal;
+            opacity: 0.8;
+            display: block;
+            letter-spacing: 0.05em;
+        }
+
+        .back-link {
+            color: var(--purple-light);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: var(--white);
+        }
+
+        /* Hero Banner */
+        .hero {
+            background: linear-gradient(135deg, var(--purple-dark) 0%, var(--purple-primary) 50%, var(--purple-mid) 100%);
+            color: var(--white);
+            padding: 3rem 0;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-family: var(--header-font);
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .hero p {
+            font-size: 1.15rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Products Section */
+        .products {
+            padding: 3rem 0;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .product-card {
+            background-color: var(--white);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.2);
+        }
+
+        .product-img {
+            width: 100%;
+            height: 220px;
+            background-color: var(--purple-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+
+        .product-body {
+            padding: 1.25rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-category {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--purple-primary);
+            font-weight: bold;
+            margin-bottom: 0.4rem;
+        }
+
+        .product-body h3 {
+            font-family: var(--header-font);
+            font-size: 1.2rem;
+            color: var(--purple-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .product-body p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 1.25rem;
+            flex: 1;
+        }
+
+        .shop-btn {
+            display: inline-block;
+            background-color: var(--accent-gold);
+            color: var(--text-color);
+            padding: 0.7rem 1.25rem;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+
+        .shop-btn:hover {
+            background-color: var(--accent-gold-hover);
+        }
+
+        /* Back to Geoglypha Section */
+        .back-section {
+            padding: 3rem 0;
+            text-align: center;
+        }
+
+        .back-section p {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .home-btn {
+            display: inline-block;
+            background-color: var(--purple-primary);
+            color: var(--white);
+            padding: 0.8rem 2rem;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .home-btn:hover {
+            background-color: var(--purple-dark);
+        }
+
+        /* Affiliate Disclosure */
+        .disclosure {
+            background-color: var(--purple-light);
+            border-top: 2px solid var(--purple-primary);
+            padding: 2rem 0;
+        }
+
+        .disclosure-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .disclosure-content h4 {
+            font-family: var(--header-font);
+            color: var(--purple-dark);
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+        }
+
+        .disclosure-content p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            line-height: 1.7;
+        }
+
+        /* Footer */
+        footer {
+            background-color: var(--purple-dark);
+            color: var(--white);
+            padding: 1.5rem 0;
+            text-align: center;
+        }
+
+        footer p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        footer a {
+            color: var(--purple-light);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            color: var(--white);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+
+            .product-img {
+                height: 160px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                width: 95%;
+                padding: 0 10px;
+            }
+
+            .hero {
+                padding: 2rem 0;
+            }
+
+            .hero h1 {
+                font-size: 1.5rem;
+            }
+
+            .products-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .product-img {
+                height: 200px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <a href="index.html">Geoglypha</a>
+                <span>Productivity &amp; Art Supplies</span>
+            </div>
+            <a href="index.html" class="back-link">&larr; Back to Main Site</a>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="container">
+            <h1>Productivity &amp; Art Supplies</h1>
+            <p>Curated tools for sketching, fieldwork, journaling, and creative projects. Gear we actually use and recommend.</p>
+        </div>
+    </section>
+
+    <!-- Products -->
+    <section class="products">
+        <div class="container">
+            <div class="products-grid">
+
+                <!-- Foldable Scissors -->
+                <div class="product-card">
+                    <div class="product-img">&#9986;</div>
+                    <div class="product-body">
+                        <span class="product-category">Field Gear</span>
+                        <h3>Foldable Scissors</h3>
+                        <p>Compact, travel-friendly scissors that fold flat. Perfect for fieldwork, journaling, and keeping in your everyday carry.</p>
+                        <a href="https://amzn.to/4kF78js" class="shop-btn">Shop on Amazon</a>
+                    </div>
+                </div>
+
+                <!-- Orgbro Mini Thermal Printer -->
+                <div class="product-card">
+                    <div class="product-img">&#128424;</div>
+                    <div class="product-body">
+                        <span class="product-category">Tech</span>
+                        <h3>Orgbro Mini Thermal Printer</h3>
+                        <p>Portable Bluetooth thermal printer for quick prints on the go. Great for labels, notes, and lo-fi art projects.</p>
+                        <a href="#" class="shop-btn">Shop on Amazon</a>
+                    </div>
+                </div>
+
+                <!-- Field Notes Notebooks -->
+                <div class="product-card">
+                    <div class="product-img">&#128211;</div>
+                    <div class="product-body">
+                        <span class="product-category">Notebooks</span>
+                        <h3>Field Notes Notebooks</h3>
+                        <p>Rugged, pocket-sized memo books built for documenting observations in the field. The original everyday carry notebook.</p>
+                        <a href="#" class="shop-btn">Shop on Amazon</a>
+                    </div>
+                </div>
+
+                <!-- Micron Pens -->
+                <div class="product-card">
+                    <div class="product-img">&#9999;</div>
+                    <div class="product-body">
+                        <span class="product-category">Pens &amp; Ink</span>
+                        <h3>Micron Pens</h3>
+                        <p>Archival-quality, fade-resistant pigment ink pens. Industry standard for technical drawing, illustration, and detailed linework.</p>
+                        <a href="#" class="shop-btn">Shop on Amazon</a>
+                    </div>
+                </div>
+
+                <!-- Le Pen Colored Pens -->
+                <div class="product-card">
+                    <div class="product-img">&#127912;</div>
+                    <div class="product-body">
+                        <span class="product-category">Pens &amp; Ink</span>
+                        <h3>Le Pen Colored Pens</h3>
+                        <p>Smooth, fine-point markers in vibrant colors. Ideal for color-coding notes, adding detail to sketches, and journaling.</p>
+                        <a href="#" class="shop-btn">Shop on Amazon</a>
+                    </div>
+                </div>
+
+                <!-- Mr Pen French Curve & Template Ruler -->
+                <div class="product-card">
+                    <div class="product-img">&#128208;</div>
+                    <div class="product-body">
+                        <span class="product-category">Drafting Tools</span>
+                        <h3>Mr Pen French Curve &amp; Template Ruler</h3>
+                        <p>Precision drafting templates for smooth curves and technical shapes. Essential for cartography, design, and architectural sketches.</p>
+                        <a href="#" class="shop-btn">Shop on Amazon</a>
+                    </div>
+                </div>
+
+                <!-- Beta Curve Original Inkless Pen -->
+                <div class="product-card">
+                    <div class="product-img">&#10002;</div>
+                    <div class="product-body">
+                        <span class="product-category">Pens &amp; Ink</span>
+                        <h3>Beta Curve Original Inkless Pen</h3>
+                        <p>A metal-tip pen that never runs out. Writes with a fine silver line by depositing a small amount of metal alloy on paper.</p>
+                        <a href="#" class="shop-btn">Shop on Amazon</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Back to Main Site -->
+    <section class="back-section">
+        <div class="container">
+            <p>Explore history, archaeology, and interactive maps on our main site.</p>
+            <a href="index.html" class="home-btn">Visit Geoglypha</a>
+        </div>
+    </section>
+
+    <!-- Affiliate Disclosure -->
+    <section class="disclosure">
+        <div class="container disclosure-content">
+            <h4>Affiliate Disclosure</h4>
+            <p>Geoglypha is a participant in the Amazon Services LLC Associates Program, an affiliate advertising program designed to provide a means for sites to earn advertising fees by advertising and linking to Amazon.com. As an Amazon Associate, we earn from qualifying purchases. This comes at no additional cost to you. We only recommend products we genuinely use and believe in. Thank you for supporting Geoglypha!</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; <span id="year">2025</span> Geoglypha. All rights reserved. | <a href="index.html">Home</a></p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+
+</body>
+</html>

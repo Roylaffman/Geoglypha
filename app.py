@@ -57,17 +57,22 @@ if db_host and USING_DB:
 
 # Configure storage - either local or GCS
 if USING_GCP:
-    storage_client = storage.Client()
-    bucket_name = os.environ.get('BUCKET_NAME')
-    if bucket_name:
-        bucket = storage_client.bucket(bucket_name)
-    else:
-        print("Warning: BUCKET_NAME environment variable not set")
+    try:
+        storage_client = storage.Client()
+        bucket_name = os.environ.get('BUCKET_NAME')
+        if bucket_name:
+            bucket = storage_client.bucket(bucket_name)
+        else:
+            print("Warning: BUCKET_NAME environment variable not set")
+            USING_GCP = False
+    except Exception as e:
+        print(f"Warning: Could not initialize GCS client: {e}")
         USING_GCP = False
 
 # Fall back to local storage if GCS is not configured
 if not USING_GCP:
     app.config['UPLOAD_FOLDER'] = tempfile.gettempdir()
+    print("Using local temp storage for uploads")
 
 
 @app.route('/')
