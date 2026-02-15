@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>History - Geoglypha</title>
+    <title>Geography - Geoglypha</title>
     <style>
         :root {
             --primary-color: #3a6351;
@@ -118,7 +118,7 @@
             gap: 2rem;
         }
 
-        .history-card {
+        .geo-card {
             background: white;
             border-radius: 8px;
             overflow: hidden;
@@ -126,7 +126,7 @@
             transition: transform 0.3s, box-shadow 0.3s;
         }
 
-        .history-card:hover {
+        .geo-card:hover {
             transform: translateY(-8px);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
         }
@@ -264,12 +264,13 @@
             <div class="logo">
                 <a href="index.html">Geoglypha</a>
             </div>
-            <button class="mobile-menu-btn">☰</button>
+            <button class="mobile-menu-btn">&#9776;</button>
             <nav>
                 <ul>
                     <li><a href="index.html">Home</a></li>
                     <li><a href="cahokia.html">Cahokia</a></li>
                     <li><a href="history.html">History</a></li>
+                    <li><a href="geography.html">Geography</a></li>
                     <li><a href="https://www.geoglypha1.org/weather">Weather</a></li>
                     <li><a href="https://tools.geoglypha1.org">Tools</a></li>
                     <li><a href="index.html#about">About</a></li>
@@ -280,41 +281,61 @@
 
     <section class="page-hero">
         <div class="container">
-            <h1>History & Archaeology</h1>
-            <p>Explore the development of human civilization through writing systems, ancient practices, and monumental architecture.</p>
+            <h1>Geography & Maps</h1>
+            <p>Interactive maps and spatial analysis exploring landscapes, environments, and the geographic forces that shape our world.</p>
         </div>
     </section>
 
     <section class="content-section">
         <div class="container">
             <div class="cards-grid">
-                <div class="history-card">
-                    <div class="card-img" style="background-image: url('images/phoenician-writing-9th-century.webp');"></div>
+                <div class="geo-card">
+                    <div class="card-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/greenmap.jpg');"></div>
                     <div class="card-body">
-                        <span class="card-badge">Writing Systems</span>
-                        <h3>Alphabet Evolution</h3>
-                        <p>Trace the development of writing systems from Phoenician to Greek alphabets and beyond. An interactive visualization of how letterforms evolved across cultures and centuries.</p>
-                        <a href="alphabet_evolution.html" class="btn">Explore</a>
+                        <span class="card-badge">Interactive Map</span>
+                        <h3>Cahokia Mounds</h3>
+                        <p>Interactive Leaflet.js map of North America's largest pre-Columbian settlement, featuring mound locations and boundary overlays.</p>
+                        <a href="cahokia.html" class="btn">Explore Map</a>
                     </div>
                 </div>
 
-                <div class="history-card">
-                    <div class="card-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/cuneiform.jpg');"></div>
+                <div class="geo-card">
+                    <div class="card-img" style="background-image: url('https://storage.googleapis.com/www.geoglypha1.org/Lithium-Traditonal%20Sources.png');"></div>
                     <div class="card-body">
-                        <span class="card-badge">Ancient Practices</span>
-                        <h3>Ceremonial Magic</h3>
-                        <p>An exploration of ceremonial practices across ancient civilizations, examining the intersection of ritual, astronomy, and early science.</p>
-                        <a href="ceremonial_magic.html" class="btn">Explore</a>
+                        <span class="card-badge">Geopolitics</span>
+                        <h3>The Lithium Standoff</h3>
+                        <p>Mapping the geopolitics, ecology, and physics of the global lithium race across continents.</p>
+                        <a href="https://storage.googleapis.com/www.geoglypha1.org/lithium_analysis.html" class="btn">Explore</a>
                     </div>
                 </div>
 
-                <div class="history-card">
-                    <div class="card-img" style="background-image: url('stonehengess.jpg');"></div>
+                <div class="geo-card">
+                    <div class="card-img" style="background-color: var(--accent-color);"></div>
                     <div class="card-body">
-                        <span class="card-badge">3D Model</span>
-                        <h3>Treasury of Atreus</h3>
-                        <p>A 3D reconstruction of the Treasury of Atreus (Tomb of Agamemnon), one of the most impressive tholos tombs of the Mycenaean world.</p>
-                        <a href="treasury-atreus-3d.html" class="btn">Explore</a>
+                        <span class="card-badge">Quarto Report</span>
+                        <h3>Florida Everglades</h3>
+                        <p>Spatial analysis and mapping of the Florida Everglades ecosystem using Quarto and interactive visualizations.</p>
+                        <a href="#" class="btn btn-disabled">Coming Soon</a>
+                    </div>
+                </div>
+
+                <div class="geo-card">
+                    <div class="card-img" style="background-color: var(--accent-color);"></div>
+                    <div class="card-body">
+                        <span class="card-badge">Quarto Report</span>
+                        <h3>Map of Rome</h3>
+                        <p>An interactive map of ancient and modern Rome, built with Quarto for spatial storytelling.</p>
+                        <a href="#" class="btn btn-disabled">Coming Soon</a>
+                    </div>
+                </div>
+
+                <div class="geo-card">
+                    <div class="card-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/spider-nasca.jpg');"></div>
+                    <div class="card-body">
+                        <span class="card-badge">Machine Learning</span>
+                        <h3>Fazenda Colorada Geoglyphs</h3>
+                        <p>Using machine learning to identify and map Amazonian geoglyphs from satellite imagery.</p>
+                        <a href="geoglyph_visualization.html" class="btn">Explore</a>
                     </div>
                 </div>
             </div>

@@ -66,6 +66,22 @@ npm install   # Installs Leaflet.js
 - `weather/` — Weather visualization charts (barometric pressure, precipitation, temperature, wind) These should connect to homepage in meaningful way
 - `images/` — Project images
 
+### Supplies / Affiliate Page (`supplies.html`)
+- Amazon Associates affiliate landing page with purple theme (separate from main green branding)
+- Traffic routed from Instagram and TikTok bios
+- Product images hosted in GCS bucket `gs://www.geoglypha1.org/` (e.g., `Scissors.jpg`, `Orgbro.jpg`, `LePen_color.jpg`, `everlasting_pencil.jpg`)
+- Affiliate links use Amazon short links (`amzn.to/...`) — replace `href="#"` placeholders as links are obtained
+- Linked from index.html nav (purple-tinted link) and footer
+- Includes required Amazon Associates disclosure at the bottom
+
+## Upcoming Tasks
+
+- **Streamline supplies workflow**: Create a repeatable process for adding new product cards (image upload to GCS + card HTML + affiliate link)
+- **Professionalize the site**: Fill empty/placeholder image slots across all pages, replace `via.placeholder.com` URLs with real images
+- **Fix project card routing on index.html**: Ensure all Featured Projects cards link to correct, working pages (audit broken links, missing pages)
+- **Fix history.html routing**: Verify the History nav link points to a real page
+- **Mobile polish**: Continued testing of header/nav overlap issues on phones
+
 ## Infrastructure
 
 - **Current production**: www.geoglypha1.org with cloudflare through a google bucket with the same name.

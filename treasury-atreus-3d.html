@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive 3D Treasury of Atreus Model</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e2e8f0;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        #info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(22, 33, 62, 0.9);
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 350px;
+            border: 1px solid rgba(100, 120, 180, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease;
+        }
+        #info-panel.minimized {
+            transform: translateX(-100%);
+        }
+        .toggle-panel-btn {
+            position: absolute;
+            top: 50%;
+            right: -40px;
+            transform: translateY(-50%);
+            background: rgba(22, 33, 62, 0.9);
+            border: 1px solid rgba(100, 120, 180, 0.3);
+            color: #f0ad4e;
+            padding: 12px 8px;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .toggle-panel-btn:hover {
+            background: rgba(32, 43, 82, 0.95);
+        }
+        h1 {
+            margin-top: 0;
+            font-size: 1.5rem;
+            color: #f0ad4e;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #cbd5e0;
+            margin: 8px 0;
+        }
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(100, 120, 180, 0.2);
+        }
+        .stat-label {
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+        .stat-value {
+            color: #f0ad4e;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(22, 33, 62, 0.9);
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(100, 120, 180, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease;
+        }
+        #controls.minimized {
+            transform: translateX(-50%) translateY(100%);
+        }
+        #controls .toggle-panel-btn {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            right: auto;
+            border-radius: 8px 8px 0 0;
+            padding: 8px 12px;
+        }
+        button {
+            background: linear-gradient(135deg, #5e72e4 0%, #825ee4 100%);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(94, 114, 228, 0.3);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(94, 114, 228, 0.5);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        button.active {
+            background: linear-gradient(135deg, #f0ad4e 0%, #e89b3c 100%);
+            box-shadow: 0 4px 12px rgba(240, 173, 78, 0.4);
+        }
+        #view-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(22, 33, 62, 0.9);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(100, 120, 180, 0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease;
+        }
+        #view-selector.minimized {
+            transform: translateX(100%);
+        }
+        #view-selector .toggle-panel-btn {
+            right: auto;
+            left: -40px;
+            border-radius: 8px 0 0 8px;
+        }
+        .view-btn {
+            display: block;
+            width: 100%;
+            margin: 6px 0;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(22, 33, 62, 0.95);
+            padding: 30px 50px;
+            border-radius: 12px;
+            border: 1px solid rgba(100, 120, 180, 0.3);
+            text-align: center;
+            font-size: 1.2rem;
+            color: #f0ad4e;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="loading">Building Treasury of Atreus...</div>
+
+    <div id="info-panel" style="display:none;">
+        <button class="toggle-panel-btn" onclick="togglePanel('info-panel')">◀</button>
+        <h1>Treasury of Atreus</h1>
+        <p style="margin-bottom: 15px;">c. 1250 BCE, Mycenae, Greece</p>
+        <div class="stat">
+            <span class="stat-label">Dome Diameter:</span>
+            <span class="stat-value">14.5 m</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Interior Height:</span>
+            <span class="stat-value">13.2 m</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Stone Courses:</span>
+            <span class="stat-value">33 layers</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Dromos Length:</span>
+            <span class="stat-value">36 m</span>
+        </div>
+        <div class="stat">
+            <span class="stat-label">Lintel Weight:</span>
+            <span class="stat-value">~120 tons</span>
+        </div>
+        <p style="margin-top: 15px; font-size: 0.8rem; color: #94a3b8;">
+            Drag to rotate • Right-click to pan • Scroll to zoom
+        </p>
+    </div>
+
+    <div id="view-selector" style="display:none;">
+        <button class="toggle-panel-btn" onclick="togglePanel('view-selector')">▶</button>
+        <button class="view-btn" onclick="setView('exterior')">Exterior View</button>
+        <button class="view-btn" onclick="setView('interior')">Interior View</button>
+        <button class="view-btn" onclick="setView('entrance')">Entrance View</button>
+        <button class="view-btn" onclick="setView('cutaway')">Cutaway View</button>
+    </div>
+
+    <div id="controls" style="display:none;">
+        <button class="toggle-panel-btn" onclick="togglePanel('controls')">▼</button>
+        <button id="toggle-mound-btn">Toggle Earth Mound</button>
+        <button id="toggle-rosettes-btn">Toggle Rosettes</button>
+        <button id="toggle-chamber-btn">Show Side Chamber</button>
+        <button id="lighting-btn">Day/Night Cycle</button>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- SCENE SETUP ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a2e);
+        scene.fog = new THREE.Fog(0x1a1a2e, 50, 200);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 500);
+        camera.position.set(40, 20, 40);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.2;
+        document.body.appendChild(renderer.domElement);
+
+        // --- CONTROLS ---
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.minDistance = 5;
+        controls.maxDistance = 150;
+        controls.maxPolarAngle = Math.PI / 2 - 0.05;
+        controls.target.set(0, 6, 0);
+
+        // --- LIGHTING ---
+        const ambientLight = new THREE.AmbientLight(0xb39872, 0.4);
+        scene.add(ambientLight);
+
+        const sunLight = new THREE.DirectionalLight(0xffd8a8, 1.2);
+        sunLight.position.set(30, 40, 30);
+        sunLight.castShadow = true;
+        sunLight.shadow.mapSize.width = 2048;
+        sunLight.shadow.mapSize.height = 2048;
+        sunLight.shadow.camera.near = 1;
+        sunLight.shadow.camera.far = 150;
+        sunLight.shadow.camera.left = -50;
+        sunLight.shadow.camera.right = 50;
+        sunLight.shadow.camera.top = 50;
+        sunLight.shadow.camera.bottom = -50;
+        scene.add(sunLight);
+
+        // Interior lighting
+        const interiorLight = new THREE.PointLight(0xffd8a8, 0.3, 30);
+        interiorLight.position.set(0, 6, 0);
+        scene.add(interiorLight);
+
+        // Entrance light
+        const entranceLight = new THREE.SpotLight(0xffd8a8, 0.8, 50, Math.PI / 6, 0.5);
+        entranceLight.position.set(0, 10, 25);
+        entranceLight.target.position.set(0, 3, 0);
+        scene.add(entranceLight);
+        scene.add(entranceLight.target);
+
+        // --- GROUND ---
+        const groundGeometry = new THREE.PlaneGeometry(200, 200);
+        const groundMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0x8b7355, 
+            roughness: 0.9,
+            metalness: 0.1 
+        });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // --- MATERIALS ---
+        const stoneMaterial = new THREE.MeshStandardMaterial({
+            color: 0xa89478,
+            roughness: 0.85,
+            metalness: 0.1
+        });
+
+        const interiorStoneMaterial = new THREE.MeshStandardMaterial({
+            color: 0xb5a08a,
+            roughness: 0.7,
+            metalness: 0.15
+        });
+
+        const earthMaterial = new THREE.MeshStandardMaterial({
+            color: 0x6b5d4f,
+            roughness: 0.95,
+            metalness: 0.05
+        });
+
+        // --- HELPER FUNCTIONS ---
+        function createStoneBlock(width, height, depth) {
+            const geometry = new THREE.BoxGeometry(width, height, depth, 2, 2, 2);
+            const position = geometry.getAttribute('position');
+            
+            for (let i = 0; i < position.count; i++) {
+                const x = position.getX(i);
+                const y = position.getY(i);
+                const z = position.getZ(i);
+                
+                // Add subtle randomness
+                if (Math.abs(y - height/2) < 0.01) continue; // Don't displace top
+                const noise = (Math.random() - 0.5) * 0.02;
+                position.setXYZ(i, x + noise * width, y, z + noise * depth);
+            }
+            
+            geometry.computeVertexNormals();
+            return geometry;
+        }
+
+        // --- BUILD TREASURY OF ATREUS ---
+        const structureGroup = new THREE.Group();
+        const domeGroup = new THREE.Group();
+        const earthMoundGroup = new THREE.Group();
+        const rosettesGroup = new THREE.Group();
+        const sideChamberGroup = new THREE.Group();
+
+        // 1. THOLOS DOME - 33 courses with corbelling
+        const domeDiameter = 14.5;
+        const domeHeight = 13.2;
+        const numCourses = 33;
+        const baseRadius = domeDiameter / 2;
+
+        for (let course = 0; course < numCourses; course++) {
+            const t = course / numCourses;
+            
+            // Parabolic curve for dome shape
+            const currentRadius = baseRadius * (1 - Math.pow(t, 1.3));
+            const courseHeight = domeHeight * t;
+            const blockHeight = 0.4 + Math.random() * 0.2;
+            
+            if (currentRadius < 0.5) continue;
+            
+            const numBlocks = Math.max(8, Math.floor(currentRadius * 8));
+            
+            for (let i = 0; i < numBlocks; i++) {
+                const angle = (i / numBlocks) * Math.PI * 2;
+                const x = Math.cos(angle) * currentRadius;
+                const z = Math.sin(angle) * currentRadius;
+                
+                const blockWidth = (2 * Math.PI * currentRadius) / numBlocks * 0.95;
+                const blockDepth = 0.8 + Math.random() * 0.4;
+                
+                const geometry = createStoneBlock(blockWidth, blockHeight, blockDepth);
+                const material = course < 5 ? stoneMaterial : interiorStoneMaterial;
+                const block = new THREE.Mesh(geometry, material);
+                
+                block.position.set(x, courseHeight, z);
+                block.rotation.y = angle;
+                block.castShadow = true;
+                block.receiveShadow = true;
+                
+                domeGroup.add(block);
+            }
+        }
+
+        // Capstone
+        const capstoneGeometry = new THREE.CylinderGeometry(1.5, 1.5, 0.5, 16);
+        const capstone = new THREE.Mesh(capstoneGeometry, stoneMaterial);
+        capstone.position.set(0, domeHeight, 0);
+        capstone.castShadow = true;
+        capstone.receiveShadow = true;
+        domeGroup.add(capstone);
+
+        structureGroup.add(domeGroup);
+
+        // 2. DROMOS (Entrance Passage)
+        const dromosLength = 36;
+        const dromosWidth = 6;
+        const dromosHeight = 5.4;
+        
+        // Dromos walls
+        for (let side = 0; side < 2; side++) {
+            const xOffset = side === 0 ? -dromosWidth/2 : dromosWidth/2;
+            
+            for (let z = 0; z < dromosLength; z += 2) {
+                const wallHeight = dromosHeight * (1 - z / dromosLength * 0.3);
+                const geometry = createStoneBlock(0.8, wallHeight, 2);
+                const wall = new THREE.Mesh(geometry, stoneMaterial);
+                wall.position.set(xOffset, wallHeight/2, z + 15);
+                wall.castShadow = true;
+                wall.receiveShadow = true;
+                structureGroup.add(wall);
+            }
+        }
+
+        // Dromos floor
+        const dromosFloorGeometry = new THREE.PlaneGeometry(dromosWidth, dromosLength);
+        const dromosFloor = new THREE.Mesh(dromosFloorGeometry, groundMaterial);
+        dromosFloor.rotation.x = -Math.PI / 2;
+        dromosFloor.position.set(0, 0.01, 15 + dromosLength/2);
+        dromosFloor.receiveShadow = true;
+        structureGroup.add(dromosFloor);
+
+        // 3. ENTRANCE DOORWAY
+        const doorwayHeight = 5.4;
+        const doorwayWidth = 2.7;
+        
+        // Door jambs
+        for (let side = 0; side < 2; side++) {
+            const xOffset = side === 0 ? -doorwayWidth/2 - 0.4 : doorwayWidth/2 + 0.4;
+            const geometry = createStoneBlock(0.8, doorwayHeight, 1);
+            const jamb = new THREE.Mesh(geometry, stoneMaterial);
+            jamb.position.set(xOffset, doorwayHeight/2, baseRadius + 0.5);
+            jamb.castShadow = true;
+            jamb.receiveShadow = true;
+            structureGroup.add(jamb);
+        }
+
+        // Massive lintel
+        const lintelGeometry = createStoneBlock(8, 1.2, 1.2);
+        const lintel = new THREE.Mesh(lintelGeometry, stoneMaterial);
+        lintel.position.set(0, doorwayHeight + 0.6, baseRadius + 0.5);
+        lintel.castShadow = true;
+        lintel.receiveShadow = true;
+        structureGroup.add(lintel);
+
+        // Relieving triangle
+        const triangleShape = new THREE.Shape();
+        triangleShape.moveTo(0, 0);
+        triangleShape.lineTo(-doorwayWidth/2, 0);
+        triangleShape.lineTo(0, 3);
+        triangleShape.lineTo(doorwayWidth/2, 0);
+        triangleShape.lineTo(0, 0);
+
+        const triangleGeometry = new THREE.ExtrudeGeometry(triangleShape, {
+            depth: 0.8,
+            bevelEnabled: false
+        });
+        const relievingTriangle = new THREE.Mesh(triangleGeometry, stoneMaterial);
+        relievingTriangle.position.set(0, doorwayHeight + 1.2, baseRadius + 0.5);
+        relievingTriangle.castShadow = true;
+        relievingTriangle.receiveShadow = true;
+        structureGroup.add(relievingTriangle);
+
+        // 4. BRONZE ROSETTES (decorative holes)
+        const rosetteGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.2, 8);
+        const rosetteMaterial = new THREE.MeshStandardMaterial({
+            color: 0x8b6914,
+            roughness: 0.3,
+            metalness: 0.8
+        });
+
+        const numRosettes = 100;
+        for (let i = 0; i < numRosettes; i++) {
+            const course = Math.floor(Math.random() * 20) + 5;
+            const t = course / numCourses;
+            const radius = baseRadius * (1 - Math.pow(t, 1.3));
+            const angle = Math.random() * Math.PI * 2;
+            const height = domeHeight * t;
+            
+            if (radius < 1) continue;
+            
+            const rosette = new THREE.Mesh(rosetteGeometry, rosetteMaterial);
+            rosette.position.set(
+                Math.cos(angle) * radius * 0.98,
+                height,
+                Math.sin(angle) * radius * 0.98
+            );
+            rosette.rotation.z = Math.PI / 2;
+            rosette.lookAt(0, height, 0);
+            
+            rosettesGroup.add(rosette);
+        }
+        rosettesGroup.visible = true;
+        structureGroup.add(rosettesGroup);
+
+        // 5. SIDE CHAMBER
+        const chamberLength = 8.3;
+        const chamberWidth = 4;
+        const chamberHeight = 5.5;
+        const chamberX = -baseRadius - 2;
+        const chamberZ = 0;
+
+        // Chamber walls
+        const chamberWalls = new THREE.BoxGeometry(chamberWidth, chamberHeight, chamberLength);
+        const chamberMesh = new THREE.Mesh(chamberWalls, stoneMaterial);
+        chamberMesh.position.set(chamberX, chamberHeight/2, chamberZ);
+        chamberMesh.castShadow = true;
+        chamberMesh.receiveShadow = true;
+        sideChamberGroup.add(chamberMesh);
+
+        // Chamber doorway opening (subtract from tholos wall)
+        const chamberDoorGeometry = new THREE.BoxGeometry(1.4, 2.4, 2);
+        const chamberDoor = new THREE.Mesh(chamberDoorGeometry, interiorStoneMaterial);
+        chamberDoor.position.set(-baseRadius * 0.7, 1.2, 0);
+        sideChamberGroup.add(chamberDoor);
+
+        sideChamberGroup.visible = false;
+        structureGroup.add(sideChamberGroup);
+
+        // 6. EARTH MOUND
+        const moundRadius = 15;
+        const moundHeight = 15;
+        const moundGeometry = new THREE.SphereGeometry(moundRadius, 32, 32, 0, Math.PI * 2, 0, Math.PI / 2);
+        const earthMound = new THREE.Mesh(moundGeometry, earthMaterial);
+        earthMound.position.set(0, 0, 0);
+        earthMound.castShadow = true;
+        earthMound.receiveShadow = true;
+        earthMoundGroup.add(earthMound);
+        earthMoundGroup.visible = true;
+        structureGroup.add(earthMoundGroup);
+
+        scene.add(structureGroup);
+
+        // Add human scale reference
+        const humanGeometry = new THREE.CapsuleGeometry(0.3, 1.4, 4, 8);
+        const humanMaterial = new THREE.MeshStandardMaterial({ color: 0x3a3a3a });
+        const human = new THREE.Mesh(humanGeometry, humanMaterial);
+        human.position.set(3, 0.9, baseRadius + 8);
+        human.castShadow = true;
+        structureGroup.add(human);
+
+        // --- INTERACTIVITY ---
+        let isDayCycle = true;
+
+        document.getElementById('toggle-mound-btn').addEventListener('click', function() {
+            earthMoundGroup.visible = !earthMoundGroup.visible;
+            this.classList.toggle('active');
+        });
+
+        document.getElementById('toggle-rosettes-btn').addEventListener('click', function() {
+            rosettesGroup.visible = !rosettesGroup.visible;
+            this.classList.toggle('active');
+        });
+
+        document.getElementById('toggle-chamber-btn').addEventListener('click', function() {
+            sideChamberGroup.visible = !sideChamberGroup.visible;
+            this.classList.toggle('active');
+            this.textContent = sideChamberGroup.visible ? 'Hide Side Chamber' : 'Show Side Chamber';
+        });
+
+        document.getElementById('lighting-btn').addEventListener('click', function() {
+            isDayCycle = !isDayCycle;
+            
+            if (isDayCycle) {
+                sunLight.intensity = 1.2;
+                ambientLight.intensity = 0.4;
+                scene.background = new THREE.Color(0x1a1a2e);
+                scene.fog.color = new THREE.Color(0x1a1a2e);
+                this.textContent = 'Day/Night Cycle';
+            } else {
+                sunLight.intensity = 0.3;
+                ambientLight.intensity = 0.15;
+                scene.background = new THREE.Color(0x0a0a15);
+                scene.fog.color = new THREE.Color(0x0a0a15);
+                this.textContent = 'Day/Night Cycle';
+            }
+        });
+
+        // View presets
+        window.setView = function(viewType) {
+            switch(viewType) {
+                case 'exterior':
+                    camera.position.set(40, 20, 40);
+                    controls.target.set(0, 6, 0);
+                    earthMoundGroup.visible = true;
+                    break;
+                case 'interior':
+                    camera.position.set(0, 6, 0.1);
+                    controls.target.set(0, 10, 0);
+                    earthMoundGroup.visible = false;
+                    break;
+                case 'entrance':
+                    camera.position.set(0, 4, 30);
+                    controls.target.set(0, 3, baseRadius);
+                    earthMoundGroup.visible = true;
+                    break;
+                case 'cutaway':
+                    camera.position.set(25, 15, 25);
+                    controls.target.set(0, 6, 0);
+                    earthMoundGroup.visible = false;
+                    break;
+            }
+            controls.update();
+        };
+
+        // Toggle panel visibility
+        window.togglePanel = function(panelId) {
+            const panel = document.getElementById(panelId);
+            const btn = panel.querySelector('.toggle-panel-btn');
+            panel.classList.toggle('minimized');
+            
+            if (panelId === 'info-panel') {
+                btn.textContent = panel.classList.contains('minimized') ? '▶' : '◀';
+            } else if (panelId === 'view-selector') {
+                btn.textContent = panel.classList.contains('minimized') ? '◀' : '▶';
+            } else if (panelId === 'controls') {
+                btn.textContent = panel.classList.contains('minimized') ? '▲' : '▼';
+            }
+        };
+
+        // --- ANIMATION LOOP ---
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resizing
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Hide loading, show UI - all panels minimized by default
+        setTimeout(() => {
+            document.getElementById('loading').style.display = 'none';
+            const infoPanel = document.getElementById('info-panel');
+            const viewSelector = document.getElementById('view-selector');
+            const controls = document.getElementById('controls');
+            
+            infoPanel.style.display = 'block';
+            viewSelector.style.display = 'block';
+            controls.style.display = 'flex';
+            
+            // Minimize all panels by default
+            infoPanel.classList.add('minimized');
+            viewSelector.classList.add('minimized');
+            controls.classList.add('minimized');
+            
+            // Update button arrows
+            infoPanel.querySelector('.toggle-panel-btn').textContent = '▶';
+            viewSelector.querySelector('.toggle-panel-btn').textContent = '◀';
+            controls.querySelector('.toggle-panel-btn').textContent = '▲';
+        }, 1000);
+
+        animate();
+    </script>
+</body>
+</html>
