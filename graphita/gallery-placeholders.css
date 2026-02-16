@@ -24,7 +24,7 @@
 }
 
 .gallery-item:nth-child(5) .gallery-image.placeholder {
-    background-image: url('images/placeholder5.png');
+    background-image: url('images/ironworks.jpg');
     background-size: cover;
     background-position: center;
 }

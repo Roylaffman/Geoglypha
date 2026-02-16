@@ -189,6 +189,23 @@ nav ul li a:hover {
     color: var(--secondary-color);
 }
 
+/* Color gallery section */
+.color-gallery {
+    background-color: var(--light-gray);
+}
+
+.color-gallery h2:after {
+    background: linear-gradient(90deg, #3a6351, #a0937d);
+}
+
+.color-item .gallery-image {
+    background-color: #ddd;
+}
+
+.color-item .gallery-image:after {
+    content: none;
+}
+
 /* About section */
 .about-section {
     padding: 4rem 5%;
