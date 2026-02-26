@@ -1,8 +1,8 @@
-runtime: python39
+runtime: python312
 entrypoint: gunicorn -b :$PORT app:app
 
 env_variables:
-  BUCKET_NAME: "geoglypha1"
+  BUCKET_NAME: "www.geoglypha1.org"
 
 handlers:
 - url: /.*
