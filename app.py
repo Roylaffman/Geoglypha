@@ -172,8 +172,16 @@ HOMEPAGE_HTML = """<!DOCTYPE html>
             <nav>
                 <ul>
                     <li><a href="https://www.geoglypha1.org">Home</a></li>
+                    <li><a href="https://www.geoglypha1.org/geography.html">Geography</a></li>
+                    <li><a href="https://www.geoglypha1.org/history.html">History</a></li>
+                    <li><a href="https://www.geoglypha1.org/#projects">Projects</a></li>
+                    <li><a href="https://www.geoglypha1.org/weather">Weather</a></li>
+                    <li><a href="https://www.geoglypha1.org/graphita/graphitia.html">Gallery</a></li>
                     <li><a href="/">Tools</a></li>
-                    <li><a href="https://www.geoglypha1.org/supplies.html">Supplies</a></li>
+                    <li><a href="https://www.geoglypha1.org/supplies.html" style="color:#D8B4FE;">Supplies</a></li>
+                    <li><a href="https://www.geoglypha1.org/stack.html" style="color:#86EFAC;">Stack</a></li>
+                    <li><a href="https://www.geoglypha1.org/#about">About</a></li>
+                    <li><a href="https://www.geoglypha1.org/#contact">Contact</a></li>
                 </ul>
             </nav>
         </div>
