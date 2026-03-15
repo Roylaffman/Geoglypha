@@ -1,0 +1,766 @@
+---
+title: "The Sentinel of the Streams"
+subtitle: "Rana boylii: Foothill Yellow-legged Frog of California"
+author: "Ryan Lafferty"
+date: last-modified
+format:
+  html:
+    theme: [cosmo, rana-boylii.scss]
+    toc: true
+    toc-location: left
+    toc-depth: 3
+    code-fold: true
+    code-summary: "Show code"
+    embed-resources: true
+    smooth-scroll: true
+    fig-cap-location: bottom
+jupyter: python3
+execute:
+  cache: false
+  warning: false
+  message: false
+---
+
+```{python}
+#| label: setup
+#| echo: false
+
+import sys
+import platform
+import warnings
+from pathlib import Path
+
+warnings.filterwarnings("ignore")
+
+import pandas as pd
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+from matplotlib.lines import Line2D
+import folium
+from folium.plugins import HeatMap, Fullscreen
+
+# Resolve shared helpers from quarto-gis
+QUARTO_GIS = Path("C:/Users/royla/Documents/quarto-gis/research")
+sys.path.append(str(QUARTO_GIS))
+
+from db_connection import query_to_geodataframe, query_to_dataframe
+from map_builder import create_base_map, finalize_map
+
+# farm.geojson — personal sighting, lives in the old analysis folder
+FARM_PATH = QUARTO_GIS / "analysis" / "farm.geojson"
+```
+
+## The Sentinel of the Streams
+
+There is a frog in California that refuses to wander. While most amphibians cycle freely between ponds and upland scrub, *Rana boylii*, the Foothill Yellow-legged Frog, is so deeply bound to moving water that it will not reproduce anywhere else. Not a pond, not a reservoir, not a slow creek. It needs a specific kind of stream: cobbled riffles with partial sun overhead, water that rises hard in winter and retreats slowly through summer, an uninterrupted seasonal pulse that California's rivers delivered reliably for tens of thousands of years.
+
+That pulse is what's broken now.
+
+*Rana boylii* once traced a long arc down the Pacific Coast, from the Willamette River valley in Oregon through every major California drainage system to the San Gabriel Mountains east of Los Angeles. Biologists call it an "ecological sentinel": a species so tightly calibrated to lotic (flowing water) ecosystems that its disappearance signals something fundamental has shifted in the watershed. For the past 80 years, the signal has been getting louder. An estimated 45 to 55 percent of its historical range is gone. In the Sierra Nevada, roughly two-thirds of historic populations have been lost. South of the Tehachapis, the frog is essentially absent.
+
+In 2023 and 2024, the U.S. Fish and Wildlife Service made it federal: distinct population segments of *Rana boylii* are now listed as Endangered or Threatened under the Endangered Species Act. The maps in this document record that decline and mark the strongholds where it's still holding on.
+
+## Data and Setup
+
+```{python}
+#| label: load-data
+
+# Boundary and spatial layers from PostGIS
+california = query_to_geodataframe("""
+	SELECT geom
+	FROM california_boundary
+""", geom_col="geom", crs=4326)
+
+frog_range = query_to_geodataframe("""
+	SELECT "CName", "SName", geom
+	FROM rana_boylii_range
+""", geom_col="geom", crs=4326)
+
+clades = query_to_geodataframe("""
+	SELECT "Clade", geom
+	FROM rana_boylii_clades
+""", geom_col="geom", crs=4326)
+
+ecoregions = query_to_geodataframe("""
+	SELECT "US_L3NAME", geom
+	FROM ca_ecoregions
+""", geom_col="geom", crs=4326)
+
+# Occurrences from PostGIS
+occ_df = query_to_dataframe("""
+	SELECT lat, lon, year, month
+	FROM rana_boylii_occurrences
+	WHERE lat IS NOT NULL AND lon IS NOT NULL
+""")
+
+occ_gdf = gpd.GeoDataFrame(
+	occ_df,
+	geometry=gpd.points_from_xy(occ_df["lon"], occ_df["lat"]),
+	crs="EPSG:4326",
+)
+
+# Simplify heavy polygon layers for web rendering
+frog_range_simple = frog_range.copy()
+frog_range_simple["geometry"] = frog_range_simple.geometry.simplify(0.005)
+clades_simple = clades.copy()
+clades_simple["geometry"] = clades_simple.geometry.simplify(0.005)
+eco_simple = ecoregions.copy()
+eco_simple["geometry"] = eco_simple.geometry.simplify(0.005)
+
+# Personal sighting — local GeoJSON
+farm = gpd.read_file(str(FARM_PATH)).to_crs(epsg=4326)
+farm_lat = farm.geometry.iloc[0].y
+farm_lon = farm.geometry.iloc[0].x
+
+print(f"California boundary:       {len(california)} feature")
+print(f"Frog range (ds589):        {len(frog_range)} feature ({frog_range['CName'].iloc[0]})")
+print(f"Management clades (ds2865):{len(clades)} clades")
+print(f"EPA Level III ecoregions:  {len(ecoregions)} ecoregions")
+print(f"GBIF occurrence points:    {len(occ_gdf):,}")
+print(f"Documented sighting:       lat={farm_lat:.4f}, lon={farm_lon:.4f}")
+```
+
+## The Habitat: Where *Rana boylii* Lives
+
+Walk a Sierra Nevada foothill stream in late April. The water is still cold from snowmelt, running fast enough to move sand and rearrange the smaller cobbles but not so heavy that it flattens the riffles. Find a stretch where the channel widens slightly, where boulders have piled gravel into a shallow crossing, and where the oak canopy breaks and afternoon light hits the water. If this drainage is intact, with no dams upstream and no introduced bullfrogs, there is a reasonable chance *Rana boylii* is using it.
+
+The habitat requirements are precise:
+
+**Substrate.** Shallow, rocky stream margins with coarse, unconsolidated pebble and cobble. The specific grain size matters: eggs are attached directly to submerged rocks. Too much fine sediment, from erosion, logging roads, or upstream disturbance, smothers the egg masses or reduces oxygen exchange.
+
+**Flow regime.** Eggs go in during the seasonal window when flows are declining from peak snowmelt. The timing has to be right. A late storm or unexpected dam release sends a pulse of cold water through the riffle and scours egg masses off the rocks before they hatch. Tadpoles require stable, shallow, warming water through a long summer. If drought hits early or dam operators cut releases, they're stranded.
+
+**Light.** Tadpoles graze algae and diatoms growing on submerged rock surfaces. Those algae need sunlight. Dense riparian canopy is bad; so is complete deforestation. The frog needs that narrow-band middle condition: a partly open canopy that lets afternoon sun reach the streambed without cooking it.
+
+**Connectivity.** Unlike many California frogs, *Rana boylii* does not make long overland migrations. But it does move within a drainage, upstream to spawn and downstream after breeding, and it needs those corridors unblocked by impassable barriers or completely unfavorable reaches.
+
+## Range and Management Units
+
+### Distinct Population Segments
+
+Under the Endangered Species Act, a Distinct Population Segment is the smallest unit of a vertebrate species that can receive independent federal protection. A population has to be both discrete (physically, geographically, or genetically separated) and significant (losing it would leave a meaningful gap in the species' range or substantially diminish its genetic diversity).
+
+For *Rana boylii*, DPS designations are practically necessary. The frog might be doing reasonably well in the intact river canyons of the Klamath and Trinity while simultaneously in freefall in the dam-fragmented streams of the southern Sierra. The DPS framework lets the Endangered Species Act apply exactly where it's needed. The Northern Populations appear "Not Listed" in the table below because their watersheds are intact enough that the emergency threshold has not been crossed. For now.
+
+### Management Clades
+
+A clade is a group of organisms descending from a common ancestor. CDFW uses management clades to identify genetically distinct lineages within *Rana boylii* that carry different evolutionary histories and local adaptations. These lineages cannot substitute for one another in recovery planning.
+
+California's geology has been doing this work for a long time. The Sierra Nevada, the Transverse Ranges, and the deep canyons of the North Coast Ranges have repeatedly isolated groups of frogs from each other. A population cut off from interbreeding for thousands of years develops specific timing cues, specific thermal tolerances, specific responses to its local snowmelt pulse. A South Sierra frog is not a good stand-in for a North Coast frog; the adaptations that make it thrive in one place are specifically wrong for the other. CDFW draws its six management clade boundaries along these genetic fault lines.
+
+```{python}
+#| label: esa-status-table
+
+ESA_STATUS = {
+	"Southwest/South Coast":                        ("Endangered", "South Coast DPS"),
+	"East/Southern Sierra":                         ("Endangered", "South Sierra DPS"),
+	"NF Feather and Upper Feather River Watershed": ("Threatened", "North Feather River DPS"),
+	"West/Central Coast":                           ("Threatened", "Central California Coast DPS"),
+	"Northwest/North Coast":                        ("Not Listed", "Northern Populations"),
+	"Northeast/Northern Sierra":                    ("Not Listed", "Northern Populations"),
+}
+
+clade_table = clades[["Clade"]].copy()
+clade_table["ESA Status"] = clade_table["Clade"].map(
+	lambda c: ESA_STATUS.get(c, ("Unknown", ""))[0]
+)
+clade_table["DPS"] = clade_table["Clade"].map(
+	lambda c: ESA_STATUS.get(c, ("", "Unknown"))[1]
+)
+clade_table["Area km\u00b2"] = (
+	clades.to_crs(epsg=3310).geometry.area / 1e6
+).round(0).astype(int)
+clade_table.columns = ["Management Clade", "ESA Status", "DPS", "Area (km\u00b2)"]
+clade_table = clade_table.sort_values("ESA Status")
+clade_table
+```
+
+### EPA Level III Ecoregions
+
+The EPA's Level III Ecoregion framework divides North America into zones of relatively uniform ecology: climate, soils, vegetation, and land use. Within California, eleven Level III ecoregions span the state from the fog coast to the Basin and Range desert. They carry no legal weight, but they explain the geography of the frog's distribution. *Rana boylii* is essentially absent from arid ecoregions and most abundant where Mediterranean-climate stream systems have stayed relatively intact.
+
+```{python}
+#| label: ecoregion-table
+
+eco_table = ecoregions[["US_L3NAME"]].copy()
+eco_table["Area km\u00b2"] = (
+	ecoregions.to_crs(epsg=3310).geometry.area / 1e6
+).round(0).astype(int)
+eco_table.columns = ["EPA Level III Ecoregion", "Area (km\u00b2)"]
+eco_table.sort_values("Area (km\u00b2)", ascending=False)
+```
+
+### GBIF Occurrence Records
+
+GBIF, the Global Biodiversity Information Facility, aggregates species observation records from museums, research institutions, and citizen science platforms into a single open database. The California records here span the 1890s to the present.
+
+These are not population counts. GBIF records reflect where people have looked, and the sampling bias is real: roadside stream crossings and state park trails are heavily overrepresented; remote wilderness drainages are thin. But the spatial signal holds up. The near-complete absence of modern records from Southern California is consistent with independent survey data, rangewide assessments, and the federal listing decisions. The cluster density in the North Coast Ranges reflects both observer effort and genuine population density.
+
+## The Frog's Territory
+
+```{python}
+#| label: interactive-map
+
+ECO_COLORS = {
+	"Sierra Nevada":                                      "#d4a574",
+	"Coast Range":                                        "#a8c5a0",
+	"Central California Valley":                          "#e8d5a0",
+	"Klamath Mountains/California High North Coast Range":"#8ab4a0",
+	"Cascades":                                           "#b0c8a8",
+	"Central California Foothills and Coastal Mountains": "#c8b890",
+	"Southern California Mountains":                      "#c8a888",
+	"Southern California/Northern Baja Coast":            "#d8c098",
+	"Eastern Cascades Slopes and Foothills":              "#c0b898",
+	"Central Basin and Range":                            "#d8c8a8",
+	"Northern Basin and Range":                           "#d0c4a4",
+}
+
+CLADE_COLORS = {
+	"Southwest/South Coast":                        "#ef4444",
+	"East/Southern Sierra":                         "#f97316",
+	"NF Feather and Upper Feather River Watershed": "#f59e0b",
+	"West/Central Coast":                           "#0ea5e9",
+	"Northwest/North Coast":                        "#22c55e",
+	"Northeast/Northern Sierra":                    "#a855f7",
+}
+
+m = create_base_map(center=[37.5, -119.5], zoom=6, tiles="positron")
+
+# Additional base tile — satellite imagery
+folium.TileLayer(
+	tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+	attr="Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+	name="Satellite (Esri)",
+	control=True,
+).add_to(m)
+
+Fullscreen(position="topright").add_to(m)
+
+# Ecoregion layer
+eco_layer = folium.FeatureGroup(name="EPA Level III Ecoregions", show=True)
+for _, row in eco_simple.iterrows():
+	name  = row["US_L3NAME"]
+	color = ECO_COLORS.get(name, "#d0c8b8")
+	folium.GeoJson(
+		row["geometry"].__geo_interface__,
+		style_function=lambda feature, c=color: {
+			"fillColor": c,
+			"color": "#94a3b8",
+			"weight": 0.5,
+			"fillOpacity": 0.35,
+		},
+		tooltip=folium.Tooltip(
+			f"<b style='font-family:sans-serif'>{name}</b>"
+		),
+	).add_to(eco_layer)
+eco_layer.add_to(m)
+
+# Range polygon
+range_layer = folium.FeatureGroup(name="Current Range (CDFW ds589)", show=True)
+folium.GeoJson(
+	frog_range_simple.__geo_interface__,
+	style_function=lambda f: {
+		"fillColor": "#22c55e",
+		"color": "#16a34a",
+		"weight": 1.5,
+		"fillOpacity": 0.25,
+	},
+	tooltip=folium.Tooltip(
+		"<b style='font-family:sans-serif'>Rana boylii</b> — Current Range<br>"
+		"<span style='font-size:0.85em;color:#555'>CDFW CWHR ds589</span>"
+	),
+).add_to(range_layer)
+range_layer.add_to(m)
+
+# Clade boundaries
+clade_layer = folium.FeatureGroup(name="Management Clades (CDFW ds2865)", show=True)
+for _, row in clades_simple.iterrows():
+	clade       = row["Clade"]
+	status_info = ESA_STATUS.get(clade, ("Not Listed", ""))
+	color       = CLADE_COLORS.get(clade, "#64748b")
+	status_color = {
+		"Endangered": "#ef4444",
+		"Threatened": "#f59e0b",
+		"Not Listed": "#4ade80",
+	}.get(status_info[0], "#94a3b8")
+	tooltip_html = (
+		f"<div style='font-family:sans-serif; min-width:180px'>"
+		f"<b>{clade}</b><br>"
+		f"ESA Status: <span style='color:{status_color}; font-weight:700'>{status_info[0]}</span><br>"
+		f"<span style='color:#555; font-size:0.85em'>{status_info[1]}</span>"
+		f"</div>"
+	)
+	folium.GeoJson(
+		row["geometry"].__geo_interface__,
+		style_function=lambda f, c=color: {
+			"fillColor": "none",
+			"color": c,
+			"weight": 2.5,
+			"fillOpacity": 0,
+			"dashArray": "6 3",
+		},
+		tooltip=folium.Tooltip(tooltip_html),
+	).add_to(clade_layer)
+clade_layer.add_to(m)
+
+# GBIF heatmap
+occ_layer = folium.FeatureGroup(name="GBIF Occurrence Density (Heatmap)", show=False)
+heat_data = occ_df[["lat", "lon"]].dropna().values.tolist()
+HeatMap(
+	heat_data,
+	min_opacity=0.3,
+	radius=8,
+	blur=12,
+	gradient={"0.4": "#0ea5e9", "0.7": "#0284c7", "1.0": "#1e3a5f"},
+).add_to(occ_layer)
+occ_layer.add_to(m)
+
+# Documented sighting
+sighting_layer = folium.FeatureGroup(
+	name="Documented Sighting (Feather R. foothills)", show=True
+)
+folium.CircleMarker(
+	location=[farm_lat, farm_lon],
+	radius=9,
+	color="#991b1b",
+	fill=True,
+	fill_color="#ef4444",
+	fill_opacity=0.9,
+	weight=2.5,
+	tooltip=folium.Tooltip(
+		"<div style='font-family:sans-serif'>"
+		"<b>Documented sighting</b><br>"
+		"<span style='color:#555; font-size:0.87em'>Feather River foothills, Butte County<br>"
+		"North Feather River DPS — "
+		"<span style='color:#f59e0b; font-weight:700'>Threatened</span></span>"
+		"</div>"
+	),
+).add_to(sighting_layer)
+sighting_layer.add_to(m)
+
+# Custom HTML legend
+legend_html = """
+<div style="
+	position: fixed;
+	bottom: 36px;
+	left: 36px;
+	z-index: 1000;
+	background: rgba(255,255,255,0.96);
+	padding: 14px 18px;
+	border-radius: 8px;
+	box-shadow: 0 2px 14px rgba(0,0,0,0.18);
+	font-family: 'DM Sans', system-ui, sans-serif;
+	font-size: 12px;
+	line-height: 1.7;
+	max-width: 265px;
+	border-top: 3px solid #1d5e35;
+">
+<b style="font-size:13px; color:#1a2e1e; font-family:'Bitter',Georgia,serif;">Rana boylii</b><br>
+<span style="color:#5f7a6b; font-size:11px; letter-spacing:0.03em; text-transform:uppercase;">Map Legend</span>
+
+<div style="margin-top:9px; margin-bottom:3px; font-size:10.5px; text-transform:uppercase;
+            letter-spacing:0.04em; color:#5f7a6b;">Range &amp; Occurrences</div>
+
+<span style="display:inline-block; width:14px; height:14px; background:#22c55e; opacity:0.55;
+	border-radius:2px; vertical-align:middle; margin-right:6px; border:1px solid #16a34a;"></span>
+Current Range (CDFW ds589)<br>
+
+<span style="display:inline-block; width:14px; height:4px;
+	background:linear-gradient(90deg,#0ea5e9,#1e3a5f);
+	vertical-align:middle; margin-right:6px; margin-bottom:2px; border-radius:2px;"></span>
+GBIF Occurrence Density<br>
+
+<span style="display:inline-block; width:12px; height:12px; background:#ef4444;
+	border-radius:50%; vertical-align:middle; margin-right:6px; margin-bottom:1px;"></span>
+Documented Sighting<br>
+
+<div style="margin-top:9px; margin-bottom:3px; font-size:10.5px; text-transform:uppercase;
+            letter-spacing:0.04em; color:#5f7a6b;">Management Clades (dashed)</div>
+
+<span style="display:inline-block; width:18px; border-top:2.5px dashed #ef4444;
+	vertical-align:middle; margin-right:6px; margin-bottom:2px;"></span>
+SW/South Coast &nbsp;<b style="color:#ef4444;">Endangered</b><br>
+
+<span style="display:inline-block; width:18px; border-top:2.5px dashed #f97316;
+	vertical-align:middle; margin-right:6px; margin-bottom:2px;"></span>
+East/Southern Sierra &nbsp;<b style="color:#f97316;">Endangered</b><br>
+
+<span style="display:inline-block; width:18px; border-top:2.5px dashed #f59e0b;
+	vertical-align:middle; margin-right:6px; margin-bottom:2px;"></span>
+NF Feather River &nbsp;<b style="color:#f59e0b;">Threatened</b><br>
+
+<span style="display:inline-block; width:18px; border-top:2.5px dashed #0ea5e9;
+	vertical-align:middle; margin-right:6px; margin-bottom:2px;"></span>
+W/Central Coast &nbsp;<b style="color:#0ea5e9;">Threatened</b><br>
+
+<span style="display:inline-block; width:18px; border-top:2.5px dashed #22c55e;
+	vertical-align:middle; margin-right:6px; margin-bottom:2px;"></span>
+NW/North Coast &nbsp;<b style="color:#22c55e;">Not Listed</b><br>
+
+<span style="display:inline-block; width:18px; border-top:2.5px dashed #a855f7;
+	vertical-align:middle; margin-right:6px; margin-bottom:2px;"></span>
+NE/Northern Sierra &nbsp;<b style="color:#a855f7;">Not Listed</b>
+</div>
+"""
+m.get_root().html.add_child(folium.Element(legend_html))
+
+m = finalize_map(m)
+m
+```
+
+**Toggle layers** with the control in the top right. The fullscreen button expands the map to fill the viewport.
+
+### A Note from the Field
+
+The red marker sits in the Feather River foothills of Butte County, on a property where a friend documented a sighting in the spring of 2023. Several frogs, cobbled tributary, bright yellow-orange undersides visible in the shallows. The photos were unambiguous.
+
+That location falls within the North Fork Feather River watershed, the management unit now listed as Threatened. The Feather River system has one of the most intensively managed flow regimes in California. Oroville Dam, the tallest earthfill dam in the United States, controls the main stem with a precision that leaves almost nothing to chance. That frogs persist in small upland tributaries suggests those streams may be buffered enough from main-stem operations to retain some ecological function. Whether that persists as climate change shortens snowmelt windows is an open question.
+
+## A Shrinking Map
+
+```{python}
+#| label: obs-by-decade
+
+import plotly.express as px
+
+occ_clean = occ_df[occ_df["year"].notna() & (occ_df["year"] > 1900)].copy()
+occ_clean["decade"] = (occ_clean["year"] // 10 * 10).astype(int)
+decade_counts = (
+	occ_clean.groupby("decade")
+	.size()
+	.reset_index(name="observations")
+)
+
+fig = px.bar(
+	decade_counts,
+	x="decade",
+	y="observations",
+	title="GBIF Rana boylii Observations in California by Decade",
+	labels={"decade": "Decade", "observations": "Observation Records"},
+	color_discrete_sequence=["#1d5e35"],
+)
+fig.update_layout(
+	height=350,
+	plot_bgcolor="white",
+	paper_bgcolor="rgba(0,0,0,0)",
+	title_font=dict(family="Bitter, Georgia, serif", size=15),
+	font=dict(family="DM Sans, system-ui, sans-serif"),
+)
+fig.show()
+```
+
+The recent spike in observations reflects the rise of iNaturalist, not population recovery. By the mid-2010s, a trained naturalist with a smartphone could document a *Rana boylii* sighting in the time it took to kneel down by the stream. Before that, records required institutional access: museum collections, CDFW survey protocols, academic fieldwork. The historical thinness of older decades says more about who was recording than about where frogs were.
+
+What matters is the spatial breakdown of the modern records: they cluster hard in the northern Coast Ranges (particularly the Klamath, Trinity, and Mad River drainages) and in scattered Sierra foothill reaches where small tributaries have stayed intact. Southern California barely registers.
+
+Key losses by region:
+
+- **Sierra Nevada:** roughly two-thirds of historic populations gone; surviving frogs largely restricted to north-facing drainages above impoundment reservoirs
+- **Southern California:** effectively extirpated south of the San Gabriel Mountains
+- **Monterey County:** peripheral coastal populations largely lost
+- **Strongholds:** Northwestern California (Klamath, Trinity, Mad River); scattered North Sierra foothill tributaries
+
+### Monthly Distribution
+
+```{python}
+#| label: monthly-distribution
+
+import plotly.graph_objects as go
+
+month_names = {
+	1:"Jan", 2:"Feb", 3:"Mar", 4:"Apr", 5:"May", 6:"Jun",
+	7:"Jul", 8:"Aug", 9:"Sep", 10:"Oct", 11:"Nov", 12:"Dec",
+}
+
+month_counts = (
+	occ_clean[occ_clean["month"].notna()]
+	.groupby("month")
+	.size()
+	.reset_index(name="observations")
+)
+month_counts["month_name"] = month_counts["month"].map(month_names)
+
+bar_colors = [
+	"#c2610f" if m in [4, 5, 6] else "#1d5e35"
+	for m in month_counts["month"]
+]
+
+fig2 = go.Figure(go.Bar(
+	x=month_counts["month_name"],
+	y=month_counts["observations"],
+	marker_color=bar_colors,
+))
+fig2.update_layout(
+	title="Monthly Observation Records: Peak Activity and Breeding Season",
+	xaxis_title="Month",
+	yaxis_title="Observation Records",
+	height=320,
+	plot_bgcolor="white",
+	paper_bgcolor="rgba(0,0,0,0)",
+	title_font=dict(family="Bitter, Georgia, serif", size=14),
+	font=dict(family="DM Sans, system-ui, sans-serif"),
+	showlegend=False,
+	annotations=[
+		dict(
+			x=4.5, y=month_counts["observations"].max() * 1.05,
+			text="Breeding season (Apr–Jun)",
+			showarrow=False,
+			font=dict(size=11, color="#c2610f"),
+		)
+	],
+)
+fig2.show()
+```
+
+The April through June peak maps directly onto *Rana boylii*'s breeding window: declining flows, warming water, and the narrow spring window when egg masses can be safely attached to streambed cobbles without being swept away. Cold-season observations drop near zero, consistent with the frog's partial dormancy in winter.
+
+## Why the Frogs Are Disappearing
+
+Four threats have restructured the geography of *Rana boylii*:
+
+**Dams and flow alteration.** *Rana boylii* evolved with the natural hydrograph of California rivers: high and cold in winter, low and warm by late summer. Dams invert or flatten this pattern. Hydropower operations release cold water in summer; flood-control operations hold water back in winter and release it unpredictably. The consequences are precise and well-documented: egg masses laid in spring riffles can be scoured off rocks by sudden operational releases, or left stranded and desiccating when operators cut flows without notice. The frog's reproductive timing is calibrated to a seasonal pulse that no longer exists in most managed California watersheds.
+
+**Invasive species.** Two introductions have had outsized impacts. The American Bullfrog (*Rana catesbeiana*) was released deliberately across California for commercial frog-farming operations beginning in the early 20th century. It is a voracious predator and competitor that thrives in the warm, still-water habitats created by reservoirs. Non-native centrarchid fishes (bass, sunfish, bluegill) introduced for recreational angling prey heavily on *Rana boylii* tadpoles and juveniles in stream reaches where the frog historically had no fish predators.
+
+**Climate change.** The same hydrological sensitivities that make *Rana boylii* vulnerable to dam operations make it equally vulnerable to altered precipitation. More intense atmospheric river events followed by prolonged summer drought creates exactly the unpredictable flow regime that breaks the frog's life cycle: high water during egg development, early drying during tadpole development. Snow-fed foothill streams that once ran clear into August now dry weeks earlier as the snowpack retreats upslope.
+
+**Water rights and environmental flow deficits.** California's rivers serve a long list of interests: irrigators who need summer deliveries, municipalities drawing from reservoirs, hydroelectric operators optimizing generation for peak-demand pricing. Environmental water requirements for *Rana boylii* are structurally at odds with most of these uses. The frog needs low, stable, gradually warming late-spring flows. Flow augmentation agreements negotiated under FERC hydroelectric licenses have produced real improvements on some drainages, including the North Fork Feather and parts of the Trinity. But enforcement mechanisms are weak and implementation is inconsistent year to year.
+
+## The Four DPS and Their Status
+
+```{python}
+#| label: dps-chart
+
+dps_data = pd.DataFrame([
+	{
+		"DPS": "South Coast",
+		"ESA Status": "Endangered",
+		"CDFW Clade(s)": "Southwest/South Coast",
+		"Range Loss Est.": "~70%",
+		"Primary Threats": "Dams, invasives, drought",
+		"Listing Year": 2024,
+		"loss_pct": 70,
+	},
+	{
+		"DPS": "South Sierra",
+		"ESA Status": "Endangered",
+		"CDFW Clade(s)": "East/Southern Sierra",
+		"Range Loss Est.": "~66%",
+		"Primary Threats": "Dams, invasives, climate",
+		"Listing Year": 2024,
+		"loss_pct": 66,
+	},
+	{
+		"DPS": "North Feather River",
+		"ESA Status": "Threatened",
+		"CDFW Clade(s)": "NF Feather and Upper Feather River Watershed",
+		"Range Loss Est.": "~40%",
+		"Primary Threats": "Dams, flow alteration",
+		"Listing Year": 2023,
+		"loss_pct": 40,
+	},
+	{
+		"DPS": "Central California Coast",
+		"ESA Status": "Threatened",
+		"CDFW Clade(s)": "West/Central Coast",
+		"Range Loss Est.": "~50%",
+		"Primary Threats": "Drought, invasives, urbanization",
+		"Listing Year": 2023,
+		"loss_pct": 50,
+	},
+])
+
+fig3 = go.Figure(go.Bar(
+	x=dps_data["loss_pct"],
+	y=dps_data["DPS"],
+	orientation="h",
+	marker_color=["#ef4444", "#f97316", "#f59e0b", "#0ea5e9"],
+	text=[f"{v}%" for v in dps_data["loss_pct"]],
+	textposition="outside",
+))
+fig3.update_layout(
+	title="Estimated Range Loss by Distinct Population Segment",
+	xaxis_title="Estimated Range Loss (%)",
+	xaxis=dict(range=[0, 90]),
+	height=310,
+	plot_bgcolor="white",
+	paper_bgcolor="rgba(0,0,0,0)",
+	title_font=dict(family="Bitter, Georgia, serif", size=14),
+	font=dict(family="DM Sans, system-ui, sans-serif"),
+	showlegend=False,
+)
+fig3.show()
+```
+
+```{python}
+#| label: dps-table
+
+dps_data[["DPS", "ESA Status", "Range Loss Est.", "Primary Threats", "Listing Year"]]
+```
+
+## Static Overview Map
+
+```{python}
+#| label: static-map
+#| fig-cap: "Rana boylii — California range and management clades. Dashed outlines indicate genetic management clades; fill indicates current CDFW range extent. GBIF occurrence points thinned to every fifth record for clarity."
+
+fig, ax = plt.subplots(1, 1, figsize=(8, 12))
+ax.set_facecolor("#f0f7f1")
+fig.patch.set_facecolor("#f0f7f1")
+
+california.to_crs(epsg=3310).plot(
+	ax=ax, color="#e8f5eb", edgecolor="#94a3b8", linewidth=0.8, zorder=1
+)
+
+ECO_MPL_COLORS = {
+	"Sierra Nevada":                                      "#d4a574",
+	"Coast Range":                                        "#a8c5a0",
+	"Central California Valley":                          "#e8d5a0",
+	"Klamath Mountains/California High North Coast Range":"#8ab4a0",
+	"Cascades":                                           "#b0c8a8",
+	"Central California Foothills and Coastal Mountains": "#c8b890",
+	"Southern California Mountains":                      "#c8a888",
+	"Southern California/Northern Baja Coast":            "#d8c098",
+	"Eastern Cascades Slopes and Foothills":              "#c0b898",
+	"Central Basin and Range":                            "#d8c8a8",
+	"Northern Basin and Range":                           "#d0c4a4",
+}
+for _, row in ecoregions.to_crs(epsg=3310).iterrows():
+	color = ECO_MPL_COLORS.get(row["US_L3NAME"], "#d0c8b8")
+	gpd.GeoDataFrame([row], crs=3310).plot(
+		ax=ax, color=color, edgecolor="#94a3b8", linewidth=0.3, alpha=0.45, zorder=2,
+	)
+
+frog_range.to_crs(epsg=3310).plot(
+	ax=ax, color="#22c55e", alpha=0.4, edgecolor="#16a34a", linewidth=1.0, zorder=3,
+)
+
+CLADE_MPL = {
+	"Southwest/South Coast":                        "#ef4444",
+	"East/Southern Sierra":                         "#f97316",
+	"NF Feather and Upper Feather River Watershed": "#f59e0b",
+	"West/Central Coast":                           "#0ea5e9",
+	"Northwest/North Coast":                        "#22c55e",
+	"Northeast/Northern Sierra":                    "#a855f7",
+}
+for _, row in clades.to_crs(epsg=3310).iterrows():
+	c = CLADE_MPL.get(row["Clade"], "#64748b")
+	gpd.GeoDataFrame([row], crs=3310).plot(
+		ax=ax, color="none", edgecolor=c, linewidth=2.0, linestyle="--", zorder=4,
+	)
+
+occ_thin = gpd.GeoDataFrame(
+	occ_df.iloc[::5].dropna(subset=["lat", "lon"]).copy(),
+	geometry=gpd.points_from_xy(
+		occ_df.iloc[::5]["lon"].dropna(),
+		occ_df.iloc[::5]["lat"].dropna()
+	),
+	crs="EPSG:4326",
+).to_crs(epsg=3310)
+occ_thin.plot(ax=ax, color="#0ea5e9", markersize=2, alpha=0.5, zorder=5)
+
+sighting_mpl = gpd.GeoDataFrame(
+	[{"geometry": farm.geometry.iloc[0]}], crs=4326
+).to_crs(epsg=3310)
+sighting_mpl.plot(
+	ax=ax, color="#ef4444", markersize=60, marker="*", zorder=6,
+	edgecolor="#991b1b", linewidth=0.8,
+)
+
+legend_handles = [
+	mpatches.Patch(facecolor="#22c55e", alpha=0.5, edgecolor="#16a34a",
+	               linewidth=0.8, label="Current Range (CDFW ds589)"),
+	Line2D([0], [0], color="#ef4444", linewidth=2, linestyle="--",
+	       label="South Coast — Endangered"),
+	Line2D([0], [0], color="#f97316", linewidth=2, linestyle="--",
+	       label="East/Southern Sierra — Endangered"),
+	Line2D([0], [0], color="#f59e0b", linewidth=2, linestyle="--",
+	       label="North Feather — Threatened"),
+	Line2D([0], [0], color="#0ea5e9", linewidth=2, linestyle="--",
+	       label="West/Central Coast — Threatened"),
+	Line2D([0], [0], color="#22c55e", linewidth=2, linestyle="--",
+	       label="NW/North Coast — Not Listed"),
+	Line2D([0], [0], color="#a855f7", linewidth=2, linestyle="--",
+	       label="NE/Northern Sierra — Not Listed"),
+	Line2D([0], [0], marker="o", color="w", markerfacecolor="#0ea5e9",
+	       markersize=5, label="GBIF Occurrences (1 of 5)"),
+	Line2D([0], [0], marker="*", color="w", markerfacecolor="#ef4444",
+	       markeredgecolor="#991b1b", markersize=10, label="Documented Sighting"),
+]
+
+ax.legend(
+	handles=legend_handles,
+	loc="lower left",
+	fontsize=7.5,
+	framealpha=0.93,
+	title="Legend",
+	title_fontsize=8.5,
+	edgecolor="#c2dbc8",
+)
+ax.set_title(
+	"Rana boylii — California Range and Management Clades",
+	fontsize=13, fontweight="bold", pad=10,
+)
+ax.set_axis_off()
+plt.tight_layout()
+plt.show()
+```
+
+## Data Sources and Bibliography
+
+### GIS Data
+
+**CDFW CWHR Range Maps (ds589)**
+California Department of Fish and Wildlife. (2024). *Foothill Yellow-legged Frog Range — CWHR A043 (ds589)*. California Natural Resources Agency Open Data.
+
+**CDFW Clade Boundary Maps (ds2865)**
+California Department of Fish and Wildlife. (2025). *Foothill Yellow-legged Frog Clade Boundaries (ds2865)*. CDFW BIOS Public Datasets.
+
+**EPA Level III Ecoregions**
+U.S. Environmental Protection Agency. (2024). *Level III Ecoregions of the Contiguous United States*. EPA ArcGIS REST Service.
+
+**GBIF Occurrence Records**
+GBIF.org. (2026). *GBIF Occurrence Download — Rana boylii (taxonKey 2426814), California, USA*. Global Biodiversity Information Facility.
+
+### ESA Regulatory
+
+U.S. Fish and Wildlife Service. (2023–2024). *Listing of the Foothill Yellow-legged Frog as Threatened or Endangered Under the Endangered Species Act; Designation of Critical Habitat*. Federal Register, 88 FR 73498.
+
+### Scholarly Sources
+
+Welsh, H. H. Jr., Garthwaite, P. G., and Lind, A. J. (2016). Foothill yellow-legged frog (*Rana boylii*) oviposition site choice at multiple spatial scales. USDA Forest Service Pacific Southwest Research Station.
+
+McCartney-Melstad, E. et al. (2018). Landscape genomics of the Foothill Yellow-legged Frog. *(Phylogeography and genetic clade boundaries.)*
+
+Hayes, M. P. et al. (2016). *Foothill yellow-legged frog conservation assessment in California*. USDA Forest Service General Technical Report PSW-GTR-248.
+
+AmphibiaWeb. (2024). *Rana boylii: Foothill Yellow-legged Frog*. University of California, Berkeley.
+
+## Technical Notes
+
+```{python}
+#| label: tech-summary
+
+print(f"Python:    {sys.version.split()[0]}")
+print(f"Platform:  {platform.platform()}")
+print(f"GeoPandas: {gpd.__version__}")
+print(f"Pandas:    {pd.__version__}")
+print(f"Folium:    {folium.__version__}")
+print()
+print(f"California boundary: {len(california)} feature, CRS: {california.crs}")
+print(f"Range polygon (ds589): {len(frog_range)} feature")
+print(f"  Common name:     {frog_range['CName'].iloc[0]}")
+print(f"  Scientific name: {frog_range['SName'].iloc[0]}")
+print(f"Management clades (ds2865): {len(clades)} polygons")
+for c in clades["Clade"].tolist():
+	print(f"  {c}")
+print(f"EPA Ecoregions (CA): {len(ecoregions)}")
+print(f"GBIF occurrences: {len(occ_gdf):,} points")
+```
+
+**Database:** `everglades_gis` (PostGIS). Tables: `california_boundary`, `rana_boylii_range`, `rana_boylii_clades`, `ca_ecoregions`, `rana_boylii_occurrences`.
+**CRS:** EPSG:4326 (WGS84) for all spatial layers; EPSG:3310 (California Albers) for area calculations.
+**Geometry simplification:** `simplify(0.005)` on range, clade, and ecoregion layers for Folium rendering performance.
+**GBIF heatmap:** used instead of individual CircleMarkers to avoid Quarto serialization stack overflow on large point datasets.
+**Static map legend:** uses `matplotlib.lines.Line2D` for dashed clade entries (`mpatches.Patch` does not render dashed line styles correctly in legends).

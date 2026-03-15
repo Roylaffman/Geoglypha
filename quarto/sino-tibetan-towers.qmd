@@ -1,0 +1,465 @@
+---
+title: "Stone Sentinels"
+subtitle: "The Enigmatic Towers of the Sino-Tibetan Borderlands"
+author: "Ryan Lafferty"
+date: last-modified
+bibliography: stone-towers-refs.bib
+format:
+  html:
+    toc: true
+    toc-location: right
+    toc-depth: 3
+    code-fold: true
+    code-summary: "Show code"
+    embed-resources: true
+    smooth-scroll: true
+    page-layout: full
+    fig-cap-location: bottom
+    theme:
+      - cosmo
+      - sino-tibetan-towers.scss
+jupyter: python3
+execute:
+  cache: false
+---
+
+::: {.pullquote}
+"They rise out of the gorges like stone fingers pointing at the sky:
+hundreds of them, some over a thousand years old, and almost no one
+in the outside world knew they existed."
+
+Fredérique Darragon, 2003
+:::
+
+## Prologue: A Discovery Hidden in Plain Sight
+
+In the autumn of 1998, French explorer Frédérique Darragon was trekking through the deep river valleys of western Sichuan Province, tracking snow leopards, when she encountered something that had eluded sustained Western scholarly attention for centuries: clusters of massive stone towers, some soaring above 50 meters, rising from villages and ridgelines across the Sino-Tibetan borderlands.
+
+The towers were not unknown. Local Qiang (羌) and Gyalrong Tibetan communities had lived among them for generations. Chinese historians had referenced *diaolou* (碉楼, literally "watchtower buildings") since at least the Tang Dynasty. But in the Western geographical imagination, these structures barely registered, overshadowed by the Silk Road, the Great Wall, and the monasteries of central Tibet.
+
+::: {.callout-note}
+## Map Note
+The interactive map below places all seven documented site clusters on a terrain basemap. Use the layer control to toggle between **Esri Shaded Relief**, **Satellite Imagery**, and a **Label Overlay**. Click any marker for full site details.
+:::
+
+## Data and Setup
+
+```{python}
+#| label: setup
+#| echo: false
+import json, sys, os, warnings
+warnings.filterwarnings("ignore")
+
+from pathlib import Path
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+import folium
+from folium.plugins import Fullscreen, MiniMap, MousePosition
+
+QUARTO_GIS = Path("C:/Users/royla/Documents/quarto-gis/research")
+sys.path.append(str(QUARTO_GIS))
+
+DATA_JSON   = QUARTO_GIS / "analysis" / "StoneTowerSites.json"
+EXPORT_IMGS = QUARTO_GIS / "analysis" / "_export_images"
+
+with open(DATA_JSON, encoding="utf-8") as f:
+	sites = json.load(f)
+sites_df = pd.DataFrame(sites)
+
+print(f"Loaded {len(sites)} tower site clusters")
+print(sites_df[["name", "ethnic_group", "tower_count"]].to_string(index=False))
+```
+
+## The Landscape: Where the Towers Stand
+
+### Physiographic Setting
+
+The towers occupy one of the most tectonically and culturally complex corridors on Earth: the eastern escarpment of the Tibetan Plateau, where elevations plunge from above 4,000 m to below 1,500 m over horizontal distances of less than 100 km. The region is defined by three major river systems: the **Dadu River** (大渡河), the **Min River** (岷江), and the **Yalong River** (雅砻江), all of which have carved deep, fortifiable gorges through Mesozoic limestone and Paleozoic granite.
+
+This is not merely backdrop. The geology *enables* the towers: abundant tabular stone for dry-stack masonry, slopes that create natural defensible positions, and narrow valley floors that funnel movement along predictable routes. These were later formalized as the **Tea-Horse Road** (茶马古道).
+
+### Primary Zone: Aba and Garzê Prefectures, Sichuan
+
+::: {.location-card}
+**Danba County (丹巴县)**
+Coordinates: ~30.88°N, 101.89°E | Elevation: 1,800 to 3,200 m
+
+The densest surviving concentration. The **Suopo Tower Cluster** (梭坡碉楼群), with 13 towers visible from a single vantage, is the most photographed and studied group. The nearby **Jiaju Tibetan Village** (甲居藏寨) preserves towers integrated into a living residential landscape. Danba towers exhibit the full range of cross-sectional geometries, from square to 13-pointed star plans.
+:::
+
+::: {.location-card}
+**Maerkang (马尔康) and Jinchuan (金川) Counties**
+Coordinates: ~31.90°N, 102.22°E and ~31.47°N, 102.01°E | Elevation: 2,600 to 3,400 m
+
+Seat of the historical Gyalrong kingdoms. Towers here tend to be taller and more militaristic in design, reflecting centuries of inter-valley conflict and resistance to Qing imperial expansion. The Jinchuan campaigns of 1747 to 1749 and 1771 to 1776 are well-documented triggers for fortification.
+:::
+
+::: {.location-card}
+**Heishui County (黑水县) and Songpan County (松潘县)**
+Coordinates: ~32.06°N, 102.99°E and ~32.65°N, 103.57°E | Elevation: 2,300 to 3,800 m
+
+Predominantly Qiang-associated towers. The Qiang *diaolou* tradition tends toward square or rectangular plans, more frequently integrated into residential compounds as a single defensive wing of a larger house.
+:::
+
+### Secondary Zones
+
+::: {.location-card}
+**Chamdo Prefecture (昌都), Tibet Autonomous Region**
+Coordinates: ~31.17°N, 97.17°E | Elevation: 3,200 to 4,000 m
+
+The westernmost confirmed extension of the tower tradition. Structures here are fewer, more weathered, and less studied. Some researchers argue these represent an independent tradition; others see them as the western edge of a single cultural continuum.
+:::
+
+::: {.location-card}
+**Yushu Tibetan Autonomous Prefecture (玉树), Qinghai Province**
+Coordinates: ~33.00°N, 97.02°E | Elevation: 3,600 to 4,200 m
+
+Tentative. The devastating 2010 earthquake (Ms 6.9) destroyed much of Yushu's built heritage, making retrospective identification challenging. Tower presence here is possible but not definitively confirmed.
+:::
+
+## Site Distribution
+
+```{python}
+#| label: site-table
+#| tbl-cap: "Documented stone tower site clusters. Tower counts are estimates based on available surveys."
+
+display_df = sites_df[[
+	"name", "county", "ethnic_group", "tower_count", "plan_types", "status", "period"
+]].copy()
+display_df.columns = [
+	"Site Cluster", "County", "Ethnic Group", "Tower Count", "Plan Types", "Protection Status", "Period"
+]
+
+display_df.style\
+	.set_properties(**{"font-size": "0.88em"})\
+	.set_table_styles([
+		{"selector": "th", "props": [
+			("background-color", "#7c3d12"),
+			("color", "#faf8f4"),
+			("font-size", "0.85em"),
+			("padding", "6px 10px"),
+		]},
+		{"selector": "td", "props": [("padding", "5px 10px")]},
+		{"selector": "tr:nth-child(even)", "props": [("background-color", "rgba(139,69,19,0.04)")]},
+	])\
+	.hide(axis="index")
+```
+
+## The Regional Map
+
+```{python}
+#| label: folium-map
+#| fig-cap: "Seven documented tower site clusters across western Sichuan and eastern Tibet. Relief basemap via Esri. Toggle Satellite Imagery for terrain context, or enable Label Overlay for place names."
+
+GROUP_COLORS = {
+	"Gyalrong Tibetan":       "#a16207",
+	"Qiang":                  "#be185d",
+	"Tibetan (mixed/unknown)": "#6b7280",
+}
+
+def make_div_icon(color, size=22):
+	return folium.DivIcon(
+		icon_size=(size, size),
+		icon_anchor=(size // 2, size // 2),
+		html=(
+			f'<div style="width:{size}px;height:{size}px;border-radius:50%;'
+			f'background:{color};border:2.5px solid white;'
+			f'box-shadow:0 1px 4px rgba(0,0,0,0.45);"></div>'
+		),
+	)
+
+def make_popup(site):
+	color = GROUP_COLORS.get(site["ethnic_group"], "#6b7280")
+	return folium.Popup(
+		folium.IFrame(
+			html=(
+				'<div style="font-family:Georgia,serif;padding:4px;">'
+				f'<h4 style="margin:0 0 6px;color:#7c3d12;font-size:1em;">{site["name"]}</h4>'
+				'<table style="width:100%;font-size:0.82em;border-collapse:collapse;">'
+				f'<tr><td style="color:#78716c;padding:2px 4px 2px 0;white-space:nowrap;">County</td>'
+				f'<td style="padding:2px 0;">{site["county"]}</td></tr>'
+				f'<tr><td style="color:#78716c;padding:2px 4px 2px 0;">Prefecture</td>'
+				f'<td>{site["prefecture"]}</td></tr>'
+				f'<tr><td style="color:#78716c;padding:2px 4px 2px 0;">Ethnic group</td>'
+				f'<td><span style="color:{color};font-weight:600;">{site["ethnic_group"]}</span></td></tr>'
+				f'<tr><td style="color:#78716c;padding:2px 4px 2px 0;">Towers</td>'
+				f'<td>{site["tower_count"]}</td></tr>'
+				f'<tr><td style="color:#78716c;padding:2px 4px 2px 0;">Plan types</td>'
+				f'<td>{site["plan_types"]}</td></tr>'
+				f'<tr><td style="color:#78716c;padding:2px 4px 2px 0;">Period</td>'
+				f'<td>{site["period"]}</td></tr>'
+				f'<tr><td style="color:#78716c;padding:2px 4px 2px 0;">Status</td>'
+				f'<td>{site["status"]}</td></tr>'
+				'</table>'
+				f'<p style="font-size:0.78em;color:#78716c;margin:6px 0 0;font-style:italic;">'
+				f'{site["notes"]}</p>'
+				'</div>'
+			),
+			width=310, height=230,
+		),
+		max_width=330,
+	)
+
+m = folium.Map(location=[31.5, 100.5], zoom_start=6, tiles=None)
+
+# Terrain basemap
+folium.TileLayer(
+	tiles=(
+		"https://server.arcgisonline.com/ArcGIS/rest/services/"
+		"World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}"
+	),
+	attr="Tiles &copy; Esri",
+	name="Esri Shaded Relief",
+	control=True,
+).add_to(m)
+
+# Satellite basemap
+folium.TileLayer(
+	tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+	attr="Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+	name="Satellite (Esri)",
+	control=True,
+).add_to(m)
+
+# Optional label overlay
+folium.TileLayer(
+	tiles="https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png",
+	attr='&copy; <a href="https://carto.com/">CARTO</a>',
+	name="Label Overlay",
+	overlay=True,
+	show=False,
+	opacity=0.85,
+).add_to(m)
+
+for site in sites:
+	color = GROUP_COLORS.get(site["ethnic_group"], "#6b7280")
+	folium.Marker(
+		location=[site["lat"], site["lon"]],
+		popup=make_popup(site),
+		tooltip=folium.Tooltip(
+			"<b>" + site["name"] + "</b><br>"
+			+ "<span style='color:" + color + ";'>" + site["ethnic_group"] + "</span>"
+		),
+		icon=make_div_icon(color, size=22),
+	).add_to(m)
+
+# Legend
+legend_html = """
+<div style="
+	position:fixed;bottom:30px;left:30px;
+	background:rgba(247,240,227,0.95);
+	border:1px solid #c4a882;border-radius:6px;
+	padding:10px 14px;font-family:Georgia,serif;
+	font-size:12px;z-index:9999;
+	box-shadow:0 2px 6px rgba(0,0,0,0.2);
+">
+<b style="color:#7c3d12;font-size:13px;">Ethnic Group</b><br>
+<span style="display:inline-block;width:12px;height:12px;border-radius:50%;
+	background:#a16207;margin:4px 5px 0 0;border:2px solid white;
+	box-shadow:0 1px 3px rgba(0,0,0,0.3);"></span>Gyalrong Tibetan<br>
+<span style="display:inline-block;width:12px;height:12px;border-radius:50%;
+	background:#be185d;margin:4px 5px 0 0;border:2px solid white;
+	box-shadow:0 1px 3px rgba(0,0,0,0.3);"></span>Qiang<br>
+<span style="display:inline-block;width:12px;height:12px;border-radius:50%;
+	background:#6b7280;margin:4px 5px 0 0;border:2px solid white;
+	box-shadow:0 1px 3px rgba(0,0,0,0.3);"></span>Tibetan (mixed/unknown)
+</div>
+"""
+m.get_root().html.add_child(folium.Element(legend_html))
+
+Fullscreen(position="topright", title="Fullscreen", title_cancel="Exit fullscreen").add_to(m)
+
+_minimap_tile = folium.TileLayer(
+	tiles=(
+		"https://server.arcgisonline.com/ArcGIS/rest/services/"
+		"World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}"
+	),
+	attr="Tiles &copy; Esri",
+	name="minimap-relief",
+)
+MiniMap(tile_layer=_minimap_tile, position="bottomright", toggle_display=True, width=140, height=100).add_to(m)
+MousePosition(position="bottomleft", separator=" | ", prefix="Lat/Lon:", num_digits=4).add_to(m)
+folium.LayerControl(collapsed=False).add_to(m)
+
+from folium import Figure as FoliumFigure
+fig_map = FoliumFigure(width="100%", height="650px")
+m.add_to(fig_map)
+fig_map
+```
+
+## Danba in Detail: A Local View
+
+The Suopo tower cluster sits in a river valley approximately 6 km northeast of Danba County seat, at around 2,400 m elevation. From a single viewpoint above the valley floor, 13 towers are visible simultaneously, an extraordinary density that reflects both the social organization of the Gyalrong Tibetan communities who built them and the topographic channeling of the Dadu River gorge system.
+
+```{python}
+#| label: danba-local-map
+#| fig-cap: "OpenStreetMap data rendered via osmnx + matplotlib. Danba County seat and surroundings, ~4 km radius. Buildings (tan), streets (warm ochre), waterways (sky blue), vegetation (sage green). Data: OpenStreetMap contributors (ODbL)."
+
+import matplotlib.image as mpimg
+
+img = mpimg.imread(str(EXPORT_IMGS / "danba-osmnx.png"))
+fig_danba, ax = plt.subplots(figsize=(9, 9))
+ax.imshow(img)
+ax.set_axis_off()
+plt.tight_layout()
+plt.show()
+```
+
+## Architecture: Building Without Mortar in Earthquake Country
+
+### Cross-Sectional Geometry
+
+The most remarkable feature of these towers is the diversity of plan geometries, particularly the star-shaped forms found in greatest concentration around Danba County.
+
+| Plan Type | Sides / Points | Distribution | Structural Notes |
+|---|:---:|---|---|
+| Square | 4 | Ubiquitous, especially Qiang | Simplest form; most common |
+| Hexagonal | 6 | Danba, Maerkang | Greater lateral stability than square |
+| Octagonal | 8 | Danba | Transitional between hex and star |
+| Star (5-pointed) | 5 | Rare; Danba | Interlocking angles resist shear |
+| Star (6-pointed) | 6 | Danba, Jinchuan | Star of David geometry in plan |
+| Star (8-pointed) | 8 | Danba | Complex; high-status buildings |
+| Star (12-pointed) | 12 | Very rare; Danba | Among the most geometrically complex |
+| Star (13-pointed) | 13 | Extremely rare | Only a handful documented; enigmatic |
+
+: Plan geometries of documented tower cross-sections. {#tbl-plans}
+
+```{python}
+#| label: plan-geometry-chart
+#| fig-cap: "Estimated distribution of tower plan types. Star-plan towers are concentrated in Danba County and are associated with high-status Gyalrong Tibetan builders."
+import plotly.express as px
+
+plan_data = pd.DataFrame([
+	{"Plan Type": "Square",        "Estimated %": 55, "tradition": "Qiang + Gyalrong"},
+	{"Plan Type": "Hexagonal",     "Estimated %": 18, "tradition": "Gyalrong"},
+	{"Plan Type": "Octagonal",     "Estimated %": 10, "tradition": "Gyalrong"},
+	{"Plan Type": "Star (5-6 pt)", "Estimated %": 9,  "tradition": "Gyalrong"},
+	{"Plan Type": "Star (8-13 pt)","Estimated %": 8,  "tradition": "Gyalrong (elite)"},
+])
+
+fig_plans = px.bar(
+	plan_data,
+	x="Plan Type",
+	y="Estimated %",
+	color="tradition",
+	color_discrete_map={
+		"Qiang + Gyalrong": "#78716c",
+		"Gyalrong":         "#a16207",
+		"Gyalrong (elite)": "#7c3d12",
+	},
+	labels={"Estimated %": "Estimated Share (%)", "tradition": "Tradition"},
+	title="Approximate Distribution of Tower Plan Types",
+)
+fig_plans.update_layout(
+	height=360,
+	plot_bgcolor="#faf8f4",
+	paper_bgcolor="#f7f0e3",
+	font_color="#44403c",
+	title_font_color="#2c1810",
+	showlegend=True,
+	legend_title_text="Tradition",
+	xaxis=dict(gridcolor="rgba(139,69,19,0.1)", color="#78716c"),
+	yaxis=dict(gridcolor="rgba(139,69,19,0.1)", color="#78716c"),
+)
+fig_plans.update_traces(marker_line_width=0.5, marker_line_color="white")
+fig_plans.show()
+```
+
+### Materials and Dimensions
+
+The towers are **dry-stone masonry**: flat, roughly dressed stone slabs stacked without mortar or cement, relying on friction, gravity, and precise fitting for stability. Wall thickness typically ranges from 0.8 m at the base to 0.3 m near the summit, a *battered profile* that lowers the center of gravity and increases resistance to lateral forces.
+
+::: {.tower-stat}
+~60 m
+:::
+::: {.tower-stat-label}
+Maximum recorded tower height (Danba / Maerkang)
+:::
+
+Heights range from 10 to 40 m for typical examples, with exceptional towers in Danba and Maerkang reaching 50 to 60 m. For context, a 60-meter stone tower built without mortar in a seismic zone rivals the engineering achievement of a Romanesque cathedral bell tower.
+
+**Star-plan towers and seismic resilience:** Each re-entrant angle in a star plan acts as a buttress, distributing seismic forces across multiple axes rather than concentrating them along four flat walls. The 2008 Wenchuan earthquake (M~s~ 8.0) destroyed many square-plan structures but left star-plan towers largely intact [@sun2009wenchuan].
+
+## Chronology and Purpose
+
+### When Were They Built?
+
+Dating the towers is one of the central unresolved problems in this field. The earliest plausible textual references appear in **Tang Dynasty** (618 to 907 CE) military records describing fortified stone structures associated with Qiang and Tibetan border peoples. The **Qing Dynasty** (1644 to 1912) archives are far more detailed, particularly surrounding the **Jinchuan campaigns** (大小金川之役, 1747 to 1776), in which imperial armies besieged tower-fortified Gyalrong communities [@theobald2013]. Radiocarbon dating of timber elements has yielded dates spanning roughly 500 to 1,500 years before present, consistent with a Tang through Ming construction window.
+
+A provisional developmental sequence:
+
+1. **Earliest phase** (~6th to 9th c.): Square-plan towers, modest heights, integrated with residential compounds.
+2. **Middle phase** (~10th to 14th c.): Polygonal plans emerge; heights increase; towers become freestanding.
+3. **Late phase** (~15th to 18th c.): Star-plan towers proliferate; maximum heights reached; towers serve increasingly symbolic and prestige functions.
+
+### Why Build Them?
+
+The towers almost certainly served multiple, overlapping functions that shifted over time:
+
+- **Military / defensive**: Elevated observation, refuge during raids, platforms for dropping stones. Confirmed by Qing military records [@theobald2013].
+- **Prestige and social status**: Oral tradition holds that wealthier Gyalrong families built taller, more geometrically complex towers, analogous to the competitive tower-building of San Gimignano in Tuscany or the tower houses of Svaneti in Georgia [@darragon2003].
+- **Storage and economic security**: Evidence of grain storage on upper floors; secure elevated storage was rational in a landscape where arable land was scarce and raiding endemic.
+- **Trade route infrastructure**: Distribution along the Tea-Horse Road suggests possible use as waypoints, toll stations, or signal relay points [@yang2004; @freeman2015].
+- **Ritual and cosmological**: Some researchers and local informants associate towers with spiritual functions, including orientation toward sacred peaks and solstice alignment. Difficult to verify systematically but consistent with deep integration of architecture and cosmology in Tibetan and Qiang traditions [@aldenderfer2004].
+
+## Conservation and Comparative Context
+
+### A Heritage at Risk
+
+::: {.tower-stat}
+~250
+:::
+::: {.tower-stat-label}
+Towers surviving in recognizable form (down from several thousand)
+:::
+
+The **World Monuments Fund** added the Sichuan towers to its Watch List in **2006**, citing "the fragility of these structures and the rapid pace of change in the region." Threats are multiple and compounding [@wmf2006]:
+
+- **Seismic damage**: The 2008 Wenchuan earthquake (epicenter ~150 km east of Danba) caused significant damage across the region. The area sits atop the Longmenshan fault system.
+- **Water infiltration**: Without mortar, freeze-thaw cycling progressively dislodges stones. Many towers show characteristic bulging or partial collapse.
+- **Abandonment**: As younger generations migrate to cities, the villages that maintained towers lose the labor and cultural knowledge necessary for upkeep.
+- **Tourism development**: Danba's designation as a scenic area has brought revenue but also insensitive infrastructure construction near tower sites.
+
+As of the most recent available information, the towers have not received UNESCO World Heritage designation, though Chinese authorities have explored nomination.
+
+### Global Comparators
+
+```{python}
+#| label: comparative-table
+#| tbl-cap: "Comparative tower-building traditions worldwide. The Sichuan diaolou are globally unique in combining dry-stone construction, star-plan geometry, and heights exceeding 50 m in a seismically active zone."
+
+comp = pd.DataFrame([
+	{"Tradition": "Sichuan diaolou",       "Location": "W. Sichuan / E. Tibet", "Period": "~6th–18th c.", "Material": "Dry stone",       "Max Height": "~60 m", "Plan Forms": "Square to 13-star"},
+	{"Tradition": "Svaneti towers",        "Location": "Georgia (Caucasus)",     "Period": "9th–13th c.",  "Material": "Stone/mortar",     "Max Height": "~25 m", "Plan Forms": "Square"},
+	{"Tradition": "San Gimignano",         "Location": "Tuscany, Italy",         "Period": "12th–14th c.", "Material": "Stone/mortar",     "Max Height": "~54 m", "Plan Forms": "Square"},
+	{"Tradition": "Kaiping diaolou",       "Location": "Guangdong, China",       "Period": "19th–20th c.", "Material": "Brick/concrete",   "Max Height": "~30 m", "Plan Forms": "Square/rectangular"},
+	{"Tradition": "Tower houses of Shibam","Location": "Yemen",                  "Period": "16th c.+",     "Material": "Mud brick",        "Max Height": "~30 m", "Plan Forms": "Square"},
+	{"Tradition": "Nuraghi",               "Location": "Sardinia",               "Period": "~1900–730 BCE","Material": "Dry stone",        "Max Height": "~20 m", "Plan Forms": "Circular"},
+])
+
+comp.style\
+	.set_properties(**{"font-size": "0.88em"})\
+	.set_table_styles([
+		{"selector": "th", "props": [
+			("background-color", "#7c3d12"),
+			("color", "#faf8f4"),
+			("font-size", "0.84em"),
+			("padding", "6px 10px"),
+		]},
+		{"selector": "td", "props": [("padding", "5px 10px")]},
+		{"selector": "tr:nth-child(odd)", "props": [("background-color", "#fefce8")]},
+		{"selector": "tr:first-child td", "props": [
+			("font-weight", "600"),
+			("color", "#7c3d12"),
+		]},
+	])\
+	.hide(axis="index")
+```
+
+The Sichuan towers exceed all comparators in geometric complexity. No other tradition produced star plans, and they match or exceed all comparators in height while using the most structurally challenging technique: dry stone, no mortar, in a seismic zone. This combination is, as far as current evidence indicates, globally unique.
+
+## Bibliography
+
+::: {#refs}
+:::

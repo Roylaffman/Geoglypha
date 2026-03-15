@@ -1,0 +1,320 @@
+/*-- scss:defaults --*/
+
+/*
+ * White Gold Rush — Critical Minerals of the Americas
+ * Author: Ryan Lafferty
+ *
+ * Palette drawn from geological survey maps, mine tailings, and satellite imagery:
+ * deep earth black, lithium green, salar salt-flat white, rare earth amber.
+ * Dark-register industrial theme.
+ */
+
+/* Google Fonts — Space Grotesk (technical headings) + Lora (journalistic body) */
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,500;1,400&family=Fira+Code:wght@400;500&display=swap');
+
+$font-family-sans-serif: 'Lora', Georgia, serif;
+$font-family-monospace:  'Fira Code', ui-monospace, 'Cascadia Mono', Menlo, monospace;
+$headings-font-family:   'Space Grotesk', system-ui, sans-serif;
+
+/* Core palette */
+$primary:   #22c55e;   /* lithium green */
+$secondary: #475569;   /* slate */
+$success:   #22c55e;   /* lithium green */
+$info:      #38bdf8;   /* rare earth blue */
+$warning:   #f59e0b;   /* gold / white gold */
+$danger:    #ef4444;   /* hazard red */
+$light:     #1e2a38;   /* dark card surface */
+$dark:      #0b1219;   /* deep earth */
+
+/* Body */
+$body-bg:          #0b1219;
+$body-color:       #cbd5e1;
+$link-color:       #38bdf8;
+$link-hover-color: #7dd3fc;
+
+/* Type scale */
+$font-size-base:   1rem;
+$line-height-base: 1.78;
+
+/* Headings */
+$headings-color:       #f0f6ff;
+$headings-font-weight: 600;
+
+/* Tables */
+$table-color:              #cbd5e1;
+$table-bg:                 transparent;
+$table-border-color:       rgba(56, 189, 248, 0.15);
+
+/*-- scss:rules --*/
+
+/* === Page-load animation === */
+@keyframes fadeSlideUp {
+	from { opacity: 0; transform: translateY(18px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+body {
+	animation: fadeSlideUp 0.55s ease-out both;
+}
+
+/* === Background — deep earth strata === */
+body::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	background:
+		radial-gradient(ellipse 100% 60% at 80% 0%, rgba(34, 197, 94, 0.06) 0%, transparent 55%),
+		radial-gradient(ellipse 80% 50% at 10% 100%, rgba(56, 189, 248, 0.04) 0%, transparent 50%),
+		repeating-linear-gradient(
+			-28deg,
+			transparent,
+			transparent 40px,
+			rgba(34, 197, 94, 0.025) 40px,
+			rgba(34, 197, 94, 0.025) 41px
+		),
+		repeating-linear-gradient(
+			62deg,
+			transparent,
+			transparent 60px,
+			rgba(56, 189, 248, 0.018) 60px,
+			rgba(56, 189, 248, 0.018) 61px
+		);
+	pointer-events: none;
+}
+
+/* === TOC === */
+#TOC {
+	font-size: 0.9em;
+	font-family: 'Space Grotesk', system-ui, sans-serif;
+	border-left: 3px solid rgba(34, 197, 94, 0.3);
+	padding-left: 0.5rem;
+
+	.nav-link {
+		color: #64748b;
+		&:hover, &.active { color: #22c55e; }
+	}
+}
+
+/* === Headings === */
+h1, h2, h3, h4 {
+	letter-spacing: -0.02em;
+}
+
+h1 {
+	color: #f0f6ff;
+	font-size: 2.4rem;
+}
+
+h2 {
+	color: #22c55e;
+	border-bottom: 2px solid rgba(34, 197, 94, 0.25);
+	padding-bottom: 0.35rem;
+	margin-top: 2.6rem;
+	text-transform: uppercase;
+	font-size: 1.1rem;
+	letter-spacing: 0.05em;
+}
+
+h3 {
+	color: #f59e0b;
+	margin-top: 1.8rem;
+	font-size: 1.25rem;
+}
+
+/* === Subtitle === */
+.subtitle {
+	color: #94a3b8;
+	font-family: 'Space Grotesk', sans-serif;
+}
+
+/* === Pull quote === */
+.pullquote {
+	border-left: 4px solid #f59e0b;
+	background: rgba(245, 158, 11, 0.08);
+	padding: 1.1rem 1.6rem;
+	margin: 1.8rem 0;
+	font-style: italic;
+	font-size: 1.06em;
+	color: #fde68a;
+	border-radius: 0 6px 6px 0;
+}
+
+/* === Mineral category badges === */
+.badge-lithium {
+	display: inline-block;
+	background: #166534;
+	color: #bbf7d0;
+	border: 1px solid #22c55e;
+	font-size: 0.78em;
+	font-weight: 600;
+	padding: 2px 10px;
+	border-radius: 4px;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	font-family: 'Space Grotesk', sans-serif;
+}
+
+.badge-rare-earth {
+	display: inline-block;
+	background: #7c2d12;
+	color: #fed7aa;
+	border: 1px solid #f97316;
+	font-size: 0.78em;
+	font-weight: 600;
+	padding: 2px 10px;
+	border-radius: 4px;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	font-family: 'Space Grotesk', sans-serif;
+}
+
+.badge-strategic {
+	display: inline-block;
+	background: #0c4a6e;
+	color: #bae6fd;
+	border: 1px solid #38bdf8;
+	font-size: 0.78em;
+	font-weight: 600;
+	padding: 2px 10px;
+	border-radius: 4px;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	font-family: 'Space Grotesk', sans-serif;
+}
+
+/* === Stat display === */
+.mineral-stat {
+	font-size: 2.8rem;
+	font-weight: 700;
+	color: #22c55e;
+	text-align: center;
+	font-family: 'Space Grotesk', sans-serif;
+	line-height: 1.0;
+	margin: 0.5rem 0 0.1rem;
+}
+
+.mineral-stat-label {
+	text-align: center;
+	color: #64748b;
+	font-size: 0.86em;
+	margin-bottom: 1.4rem;
+	font-family: 'Space Grotesk', sans-serif;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+}
+
+/* === Site callout card === */
+.site-card {
+	background: rgba(30, 42, 56, 0.8);
+	border-left: 5px solid #22c55e;
+	border-radius: 0 8px 8px 0;
+	padding: 1.1rem 1.4rem;
+	margin: 1.4rem 0;
+	font-size: 0.97em;
+	border-top: 1px solid rgba(34, 197, 94, 0.1);
+	border-right: 1px solid rgba(34, 197, 94, 0.1);
+	border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+}
+
+.site-card strong { color: #22c55e; }
+.site-card.rare-earth { border-left-color: #f97316; }
+.site-card.rare-earth strong { color: #f97316; }
+.site-card.strategic { border-left-color: #38bdf8; }
+.site-card.strategic strong { color: #38bdf8; }
+
+/* === Callout overrides === */
+.callout {
+	border-radius: 6px;
+	background: rgba(30, 42, 56, 0.7) !important;
+}
+
+.callout-note    { border-left-color: #38bdf8 !important; }
+.callout-warning { border-left-color: #f59e0b !important; }
+.callout-tip     { border-left-color: #22c55e !important; }
+.callout-important { border-left-color: #ef4444 !important; }
+
+/* === Tables === */
+table {
+	font-size: 0.93em;
+	border-collapse: collapse;
+}
+
+thead th {
+	background-color: #0f1e2c;
+	color: #22c55e;
+	font-family: 'Space Grotesk', sans-serif;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	font-size: 0.76rem;
+	border-bottom: 2px solid rgba(34, 197, 94, 0.3);
+}
+
+tbody tr {
+	border-bottom: 1px solid rgba(56, 189, 248, 0.08);
+}
+
+tbody tr:nth-child(even) {
+	background-color: rgba(34, 197, 94, 0.04);
+}
+
+tbody tr:hover {
+	background-color: rgba(34, 197, 94, 0.08);
+}
+
+/* === Code blocks === */
+pre.sourceCode {
+	background-color: #0f1e2c !important;
+	border: 1px solid rgba(34, 197, 94, 0.2) !important;
+	border-radius: 6px;
+}
+
+code {
+	color: #86efac;
+}
+
+/* === Figures === */
+figure {
+	margin: 2rem 0;
+}
+
+.figure-caption {
+	color: #64748b;
+	font-size: 0.88em;
+	font-style: italic;
+	font-family: 'Space Grotesk', sans-serif;
+}
+
+/* === Folium map container === */
+iframe {
+	border-radius: 8px;
+	border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+/* === Staggered section reveals === */
+section, .level2 {
+	animation: fadeSlideUp 0.5s ease-out both;
+}
+
+/* === Blockquote === */
+blockquote {
+	border-left: 3px solid #f59e0b;
+	background: rgba(245, 158, 11, 0.06);
+	padding: 0.75rem 1.25rem;
+	border-radius: 0 6px 6px 0;
+	font-style: italic;
+	color: #fde68a;
+}
+
+/* === Navbar === */
+.navbar {
+	background-color: #060d13 !important;
+	border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.navbar-brand,
+.navbar .nav-link {
+	color: #cbd5e1 !important;
+	font-family: 'Space Grotesk', sans-serif;
+}

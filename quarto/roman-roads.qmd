@@ -1,0 +1,508 @@
+---
+title: "Roads of the Roman Empire"
+subtitle: "The Itiner-e Digital Atlas: Routes, Stations, and the Ancient Network"
+author: "Ryan Lafferty"
+date: last-modified
+format:
+  html:
+    toc: true
+    toc-location: right
+    code-fold: true
+    code-summary: "Show code"
+    embed-resources: true
+    theme: [cosmo, roman-roads.scss]
+jupyter: python3
+execute:
+  warning: false
+  message: false
+  cache: false
+---
+
+```{python}
+#| label: setup
+#| echo: false
+
+import sys
+import platform
+from pathlib import Path
+
+import pandas as pd
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
+import matplotlib.patches as mpatches
+import plotly.express as px
+import folium
+import folium.plugins
+import json
+
+# Resolve db_connection and map_builder from quarto-gis
+QUARTO_GIS = Path("C:/Users/royla/Documents/quarto-gis/research")
+sys.path.append(str(QUARTO_GIS))
+
+from db_connection import query_to_geodataframe, query_to_dataframe
+from map_builder import create_base_map, add_geodataframe_layer, finalize_map, build_photo_popup
+
+# POI data lives alongside the old QMD
+POI_PATH = QUARTO_GIS / "analysis" / "roman-roads-poi.json"
+
+# Bounding box: core Roman Empire (W 5.74, S 36.71, E 29.04, N 48.47)
+BBOX = "ST_MakeEnvelope(5.743307, 36.706750, 29.040825, 48.474916, 4326)"
+```
+
+## All Roads Lead to Rome
+
+The Via Appia left Rome in 312 BCE heading southeast, cutting 350 miles to Brundisium in a line so direct that modern surveyors still marvel at it. Built under the censor Appius Claudius Caecus, it was the first of the *viae publicae*: state-funded trunk roads wide enough for two wagons to pass, surfaced with fitted basalt polygons laid over a gravel-and-rubble subbase, and designed to drain standing water through a crowned center profile and flanking ditches.
+
+At the height of the empire, that single road was one thread in a network stretching over 250,000 miles. Legions in Britain marched the same standardized surface that administrators in Syria used to move grain reports to the capital. The roads were not incidental to Roman power: they were the mechanism of it. Without them, the empire's tax collection, judicial circuits, troop deployments, and grain supply chains would have collapsed within a generation.
+
+This analysis draws on the **Itiner-e** digital atlas of ancient Roman roads (Brughmans, de Soto, Pazout, and Bjerregaard Vahlstrup, 2024), a collaborative reconstruction by Aarhus University built from archaeological surveys, the *Itinerarium Antonini*, the *Tabula Peutingeriana*, and the Pleiades ancient places gazetteer. The dataset is licensed CC BY 4.0 and represents the most comprehensive spatial reconstruction of the Roman road network currently available.
+
+## The Itiner-e Atlas
+
+The *Itinerarium Antonini* is a third-century CE route document listing 225 itineraries across the empire, each recording stations, distances in Roman miles, and the roads connecting them. Combined with the *Tabula Peutingeriana*, a medieval copy of a fourth-century Roman world map, and decades of ground-truth archaeology, the Itiner-e team has reconstructed the network as a spatial dataset.
+
+Each road segment in the database carries a certainty rating, from confirmed archaeological traces to hypothetical reconstructions bridging documented endpoints. The dataset distinguishes four feature types: main roads (*viae publicae*), secondary roads (*viae vicinales*), sea lanes, and rivers used as navigation corridors. The bounding box for this analysis covers the western and central empire: Iberia to Asia Minor, Britannia to the Saharan frontier.
+
+```{python}
+#| label: load-data
+
+segments = query_to_geodataframe(f"""
+	SELECT segment_id, name, road_type, segment_certainty,
+	       construction_period, itinerary, description,
+	       length_m, lower_date, upper_date, source_url,
+	       ST_Simplify(geometry, 0.005) AS geom
+	FROM roman_road_segments
+	WHERE ST_Intersects(geometry, {BBOX})
+""", geom_col="geom", crs=4326)
+
+places = query_to_geodataframe(f"""
+	SELECT pleiades_id, name, place_type, start_year, end_year, url,
+	       geometry AS geom
+	FROM roman_road_places
+	WHERE ST_Intersects(geometry, {BBOX})
+	  AND place_type IN ('major-settlement', 'fort', 'bridge')
+""", geom_col="geom", crs=4326)
+
+with open(POI_PATH, "r", encoding="utf-8") as f:
+	poi_data = json.load(f)
+
+print(f"Road segments loaded:  {len(segments):,}")
+print(f"Pleiades places loaded: {len(places):,}")
+print(f"User POIs loaded:       {len(poi_data)}")
+```
+
+```{python}
+#| label: network-summary
+
+total_km = segments["length_m"].sum() / 1000
+main_km  = segments.loc[segments["road_type"] == "Main Road", "length_m"].sum() / 1000
+
+type_counts = (
+	segments.groupby("road_type")
+	.agg(segments=("segment_id", "count"), total_km=("length_m", lambda x: x.sum() / 1000))
+	.reset_index()
+	.sort_values("total_km", ascending=False)
+	.rename(columns={"road_type": "Road Type", "segments": "Segments", "total_km": "Total km"})
+)
+type_counts["Total km"] = type_counts["Total km"].round(1)
+type_counts
+```
+
+## Engineering the Network
+
+Roman road construction was a military operation before it was an engineering one. Legions built the roads because only legions had the organized labor, surveying equipment, and logistical supply chains to do it at scale. The standard cross-section, *via munita*, proceeded in four layers: the *statumen* (large flat stones set in sand), the *rudus* (rubble and mortar), the *nucleus* (finer gravel concrete), and the *summum dorsum* (the finished surface: basalt polygons in Italy, gravel or stone chips in the provinces).
+
+The surface was crowned by 6 to 12 inches at the center, throwing water into flanking ditches. Every Roman mile (1,480 meters) stood a *miliarium*, a cylindrical stone pillar recording the distance from the nearest major city and the name of the magistrate or emperor who built or restored that section of road. The *Milliarium Aureum*, the Golden Milestone, stood in the Forum Romanum in Rome: the symbolic origin point of the entire network.
+
+Maintenance was the harder problem. The *lex Iulia municipalis* of 45 BCE assigned upkeep of roads passing through a settlement to the adjacent landowners, with the state covering the *viae publicae* directly. In practice, roads required constant attention: frost heave, floods, and heavy wagon traffic broke the surface within decades without resurfacing. The same political attention that built a great road could leave it to collapse when a province lost imperial favor.
+
+### The Cursus Publicus
+
+Augustus established the *cursus publicus* around 20 BCE: a state courier and transport system using the road network as its backbone. At roughly every 10 to 15 miles stood a *mutatio*, a horse-changing post with fresh animals, water, and a small staff. At 25 to 30 mile intervals stood a *mansio*, a full waystation with stabling, sleeping quarters, a bathhouse, and repair shops. Together they formed a relay system capable of moving an imperial dispatch rider 50 miles a day and a slow transport wagon 20 to 25.
+
+The *cursus publicus* had two tiers. The *cursus velox* (fast post) served official dispatch riders on horseback or in light *birotae*. The *cursus clabularis* (heavy post) moved military supplies, treasury shipments, and official passengers in heavier *raedae* wagons. Access required a *diploma*, a bronze tablet issued by the emperor or a governor, which entitled the bearer to horses, lodging, and provisions at state expense. Abuse of the *diploma* system was a constant administrative complaint: provincial governors issued far more tablets than the system could efficiently support.
+
+```{python}
+#| label: station-table
+
+display_places = places[["name", "place_type", "start_year", "end_year"]].copy()
+display_places.columns = ["Settlement", "Type", "Founded (CE)", "End (CE)"]
+display_places = display_places.sort_values("Settlement").head(30)
+display_places
+```
+
+## The Road Network
+
+The interactive map below renders all road segments in the study area, styled by road type, with tooltips showing name, type, and construction period. Major settlements, forts, and bridges from the Pleiades gazetteer appear as a toggleable overlay. User-curated points of interest mark key sites along the network.
+
+```{python}
+#| label: folium-map
+
+m = create_base_map(center=[43.5, 17.0], zoom=5, tiles="positron")
+
+# Additional base tile — satellite imagery
+folium.TileLayer(
+	tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+	attr="Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+	name="Satellite (Esri)",
+	control=True,
+).add_to(m)
+
+# Road type style definitions
+ROAD_STYLES = {
+	"Main Road":       {"color": "#c9a46e", "weight": 2.5, "opacity": 0.95},
+	"Secondary Road":  {"color": "#8a6830", "weight": 1.5, "opacity": 0.80},
+	"Sea Lane":        {"color": "#5a7a9e", "weight": 1.5, "opacity": 0.65, "dashArray": "8 5"},
+	"River":           {"color": "#3a7aae", "weight": 1.5, "opacity": 0.60, "dashArray": "4 3"},
+}
+
+for road_type, style in ROAD_STYLES.items():
+	subset = segments[segments["road_type"] == road_type]
+	if len(subset) == 0:
+		continue
+	m = add_geodataframe_layer(
+		m, subset,
+		name=road_type,
+		tooltip_fields=["name", "road_type", "construction_period", "segment_certainty"],
+		style=style,
+		highlight={"weight": style["weight"] + 2, "opacity": 1.0},
+	)
+
+# Remaining types not in the dict
+known = set(ROAD_STYLES.keys())
+other = segments[~segments["road_type"].isin(known)]
+if len(other) > 0:
+	m = add_geodataframe_layer(
+		m, other,
+		name="Other",
+		tooltip_fields=["name", "road_type"],
+		style={"color": "#8a7a9e", "weight": 1.2, "opacity": 0.55},
+	)
+
+# Pleiades places layer
+m = add_geodataframe_layer(
+	m, places,
+	name="Pleiades Places",
+	tooltip_fields=["name", "place_type"],
+	style={"color": "#8D2A2A", "weight": 0.5, "fillOpacity": 0.45, "radius": 4},
+	show=False,
+)
+
+# User-curated POIs
+for poi in poi_data:
+	popup_html = build_photo_popup(
+		poi,
+		photo_url=poi.get("photo_url") or None,
+		photo_caption=poi.get("photo_caption") or None,
+	)
+	folium.Marker(
+		location=[poi["lat"], poi["lon"]],
+		popup=folium.Popup(popup_html, max_width=450),
+		tooltip=f"<b>{poi['name']}</b><br><i>{poi.get('category', '')}</i>",
+		icon=folium.Icon(color="red", icon="monument", prefix="fa"),
+	).add_to(m)
+
+# Fullscreen control
+folium.plugins.Fullscreen(position="topright").add_to(m)
+
+# Custom legend
+legend_html = """
+<div style="
+	position: fixed; bottom: 30px; left: 12px; z-index: 1000;
+	background: rgba(28, 24, 20, 0.92);
+	border: 1px solid rgba(141, 42, 42, 0.45);
+	border-top: 3px solid #8D2A2A;
+	border-radius: 6px;
+	padding: 12px 16px;
+	font-family: 'EB Garamond', Georgia, serif;
+	font-size: 13px;
+	color: #e8e0d0;
+	max-width: 200px;
+	box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+">
+<div style="font-family: 'Cinzel', Georgia, serif; font-size: 11px; text-transform: uppercase;
+            letter-spacing: 0.1em; color: #c9a46e; margin-bottom: 10px;">Road Types</div>
+
+<div style="display:flex; align-items:center; margin-bottom:6px;">
+  <svg width="28" height="8"><line x1="0" y1="4" x2="28" y2="4"
+    stroke="#c9a46e" stroke-width="2.5"/></svg>
+  <span style="margin-left:8px;">Main Road</span>
+</div>
+
+<div style="display:flex; align-items:center; margin-bottom:6px;">
+  <svg width="28" height="8"><line x1="0" y1="4" x2="28" y2="4"
+    stroke="#8a6830" stroke-width="1.5"/></svg>
+  <span style="margin-left:8px;">Secondary Road</span>
+</div>
+
+<div style="display:flex; align-items:center; margin-bottom:6px;">
+  <svg width="28" height="8"><line x1="0" y1="4" x2="28" y2="4"
+    stroke="#5a7a9e" stroke-width="1.5" stroke-dasharray="6 4"/></svg>
+  <span style="margin-left:8px;">Sea Lane</span>
+</div>
+
+<div style="display:flex; align-items:center; margin-bottom:6px;">
+  <svg width="28" height="8"><line x1="0" y1="4" x2="28" y2="4"
+    stroke="#3a7aae" stroke-width="1.5" stroke-dasharray="4 3"/></svg>
+  <span style="margin-left:8px;">River</span>
+</div>
+
+<div style="display:flex; align-items:center; margin-bottom:0;">
+  <svg width="14" height="14"><circle cx="7" cy="7" r="5"
+    fill="rgba(141,42,42,0.45)" stroke="#8D2A2A" stroke-width="0.5"/></svg>
+  <span style="margin-left:8px; font-size:12px;">Pleiades Place</span>
+</div>
+</div>
+"""
+m.get_root().html.add_child(folium.Element(legend_html))
+
+m = finalize_map(m)
+m
+```
+
+## Construction Timeline
+
+The road network was not built in a single program. The earliest *viae publicae* date to the middle Republic: the Via Appia (312 BCE), the Via Flaminia (220 BCE), the Via Aemilia (187 BCE). Republican road-building followed military campaigns: each road cemented a newly conquered region into the Italian system. The Via Domitia through southern Gaul (121 BCE) was the first Roman road north of the Alps, constructed immediately after the creation of the province of Gallia Narbonensis.
+
+The great imperial building programs came under Augustus, who rebuilt or extended 14 major roads and funded the repair of the entire Italian network. Trajan added the Via Traiana (bypassing the Appennines on a coastal route to Brundisium), the Via Traiana Nova through Syria, and the monumental road along the Danube frontier. Hadrian completed the provincial networks in Britain and North Africa.
+
+```{python}
+#| label: timeline-chart
+
+dated = segments.dropna(subset=["lower_date"]).copy()
+dated = dated[dated["lower_date"].astype(float) != 0]
+
+if len(dated) > 0:
+	date_summary = (
+		dated.groupby(["road_type", "lower_date"])
+		.size()
+		.reset_index(name="segment_count")
+	)
+
+	COLOR_MAP = {
+		"Main Road":      "#c9a46e",
+		"Secondary Road": "#8a6830",
+		"Sea Lane":       "#5a7a9e",
+		"River":          "#3a7aae",
+	}
+
+	fig = px.scatter(
+		date_summary,
+		x="lower_date",
+		y="road_type",
+		size="segment_count",
+		color="road_type",
+		title="Road Segment Construction by Period",
+		labels={
+			"lower_date": "Date (BCE negative / CE positive)",
+			"road_type": "",
+			"segment_count": "Segments",
+		},
+		color_discrete_map=COLOR_MAP,
+	)
+	fig.update_layout(
+		height=360,
+		showlegend=False,
+		plot_bgcolor="rgba(0,0,0,0)",
+		paper_bgcolor="rgba(0,0,0,0)",
+		font=dict(color="#e8e0d0", family="EB Garamond, Georgia, serif"),
+		title_font=dict(color="#c9a46e", family="Cinzel, Georgia, serif", size=13),
+		xaxis=dict(gridcolor="rgba(255,255,255,0.06)", zerolinecolor="rgba(141,42,42,0.3)"),
+		yaxis=dict(gridcolor="rgba(255,255,255,0.06)"),
+	)
+	fig.show()
+else:
+	print("No dated segments found in the study area.")
+```
+
+## Static Overview
+
+```{python}
+#| label: static-map
+
+import contextily as cx
+
+segments_3857 = segments.to_crs(epsg=3857)
+places_3857   = places.to_crs(epsg=3857)
+
+COLOR_MAP = {
+	"Main Road":      ("#c9a46e", 0.8, 0.92),
+	"Secondary Road": ("#8a6830", 0.5, 0.80),
+	"Sea Lane":       ("#5a7a9e", 0.5, 0.60),
+	"River":          ("#3a7aae", 0.4, 0.55),
+}
+
+fig, ax = plt.subplots(1, 1, figsize=(14, 9))
+fig.patch.set_facecolor("#1c1814")
+ax.set_facecolor("#1c1814")
+
+for road_type, (color, lw, alpha) in COLOR_MAP.items():
+	subset = segments_3857[segments_3857["road_type"] == road_type]
+	if len(subset) > 0:
+		subset.plot(ax=ax, color=color, linewidth=lw, alpha=alpha)
+
+other_3857 = segments_3857[~segments_3857["road_type"].isin(COLOR_MAP.keys())]
+if len(other_3857) > 0:
+	other_3857.plot(ax=ax, color="#6a5a8e", linewidth=0.4, alpha=0.45)
+
+# Major settlements overlay
+major = places_3857[places_3857["place_type"] == "major-settlement"]
+if len(major) > 0:
+	major.plot(ax=ax, color="#8D2A2A", markersize=12, alpha=0.7, zorder=5)
+
+cx.add_basemap(ax, source=cx.providers.CartoDB.DarkMatter, zoom=5)
+
+# Manual legend
+legend_handles = [
+	mlines.Line2D([], [], color="#c9a46e", linewidth=2.0, label="Main Road"),
+	mlines.Line2D([], [], color="#8a6830", linewidth=1.2, label="Secondary Road"),
+	mlines.Line2D([], [], color="#5a7a9e", linewidth=1.2, linestyle="dashed", label="Sea Lane"),
+	mlines.Line2D([], [], color="#3a7aae", linewidth=1.2, linestyle="dotted", label="River"),
+	mlines.Line2D([], [], color="#8D2A2A", marker="o", markersize=5,
+	              linewidth=0, label="Major Settlement"),
+]
+legend = ax.legend(
+	handles=legend_handles,
+	loc="lower left", fontsize=8.5, framealpha=0.85,
+	facecolor="#1c1814", edgecolor="#8D2A2A",
+	labelcolor="#e8e0d0",
+)
+
+ax.set_title(
+	"Roman Road Network — Western and Central Empire",
+	fontsize=12, color="#c9a46e", pad=12,
+	fontfamily="EB Garamond"
+)
+ax.set_axis_off()
+plt.tight_layout()
+plt.show()
+```
+
+## Network Analysis
+
+```{python}
+#| label: network-analysis
+
+# Total length by type
+length_by_type = (
+	segments.groupby("road_type")
+	.agg(
+		segments=("segment_id", "count"),
+		total_km=("length_m", lambda x: round(x.sum() / 1000, 1)),
+		avg_km=("length_m", lambda x: round(x.mean() / 1000, 2)),
+	)
+	.reset_index()
+	.sort_values("total_km", ascending=False)
+	.rename(columns={
+		"road_type": "Road Type",
+		"segments":  "Segments",
+		"total_km":  "Total Length (km)",
+		"avg_km":    "Avg Segment (km)",
+	})
+)
+print("Network length by road type:")
+display(length_by_type)
+```
+
+```{python}
+#| label: certainty-breakdown
+
+certainty = (
+	segments.groupby("segment_certainty")
+	.agg(count=("segment_id", "count"), km=("length_m", lambda x: round(x.sum() / 1000, 1)))
+	.reset_index()
+	.sort_values("count", ascending=False)
+	.rename(columns={"segment_certainty": "Certainty", "count": "Segments", "km": "Total km"})
+)
+print("Segment certainty breakdown:")
+display(certainty)
+```
+
+```{python}
+#| label: place-types
+
+place_counts = (
+	places.groupby("place_type")
+	.size()
+	.reset_index(name="count")
+	.sort_values("count", ascending=False)
+	.rename(columns={"place_type": "Place Type", "count": "Count"})
+)
+place_counts
+```
+
+## Legacy
+
+The Roman road network outlasted the empire by more than a millennium. The Via Appia carried pilgrims to Brundisium for centuries after the Western empire fell in 476 CE. The Via Aurelia along the Tyrrhenian coast became the medieval pilgrimage road to Rome, then the *via Francigena*, then the modern Strada Statale 1. In Britain, Ermine Street became the A1, the Great North Road, still the principal route from London to Edinburgh.
+
+Medieval kingdoms could not build roads at Roman scale: that required a centralized state capable of conscripting labor and enforcing a maintenance system across hundreds of jurisdictions simultaneously. What medieval administrators did was use the Roman network as long as possible, repair specific segments critical to their own trade routes, and allow the rest to grass over. The result is a map of modern European highway networks that remains, in broad outline, Roman in structure.
+
+The *cursus publicus* had no direct medieval equivalent. The nearest analogy, the relay messenger systems of the 13th-century Italian city-states, operated on a fraction of the scale and served commercial rather than administrative purposes. The Ottoman *menzilhane* system, established in the 15th century, was the first government-run relay postal network to approach Roman scope in the eastern Mediterranean. Western Europe did not see anything comparable until the royal post systems of the 16th and 17th centuries.
+
+What the Romans built was not just infrastructure: it was a theory of territorial control made physical. A road through a newly conquered region said to its inhabitants that the state was permanent, had surveyed their land, and expected to tax them and move troops across it for generations to come. The roads were imperial ideology in basalt and gravel.
+
+## Points of Interest
+
+```{python}
+#| label: poi-table
+
+if poi_data:
+	poi_df = pd.DataFrame(poi_data)
+	display_poi = poi_df[["name", "category", "description"]].copy()
+	display_poi.columns = ["Site", "Category", "Description"]
+	display_poi.style.set_properties(
+		subset=["Description"],
+		**{"min-width": "400px", "white-space": "normal"}
+	)
+else:
+	print("No POIs added yet — edit roman-roads-poi.json to get started.")
+```
+
+## Data Source and Bibliography
+
+### Itiner-e Digital Atlas
+
+Brughmans, T., de Soto, P., Pazout, A. and Bjerregaard Vahlstrup, P. (2024). *Itiner-e: the digital atlas of ancient roads*. Aarhus University. Licensed CC BY 4.0.
+
+Website: [https://www.itiner-e.org](https://www.itiner-e.org)
+
+### Pleiades Gazetteer
+
+Simon Hornblower, Antony Spawforth, and Esther Eidinow (eds.). *Oxford Classical Dictionary*, 4th ed. Oxford University Press, 2012. Place data linked via the Pleiades ancient world gazetteer ([https://pleiades.stoa.org](https://pleiades.stoa.org)).
+
+### Primary Sources
+
+- Gaius Julius Caesar. *Commentarii de Bello Gallico*. Trans. H.J. Edwards. Loeb Classical Library. Harvard University Press, 1917.
+- *Itinerarium Antonini Augusti*. Ed. Otto Cuntz. Teubner, 1929. (3rd-century CE route document listing 225 imperial itineraries.)
+- *Tabula Peutingeriana*. Österreichische Nationalbibliothek, Vienna. (Medieval copy of a 4th-century Roman world map; digital facsimile at https://www.bl.uk/manuscripts/.)
+
+### Secondary Sources
+
+- Chevallier, Raymond. *Roman Roads*. Trans. N.H. Field. Batsford, 1976.
+- Davies, Hugh E.H. *Roads in Roman Britain*. Tempus, 2002.
+- Laurence, Ray. *The Roads of Roman Italy: Mobility and Cultural Change*. Routledge, 1999.
+- Kolb, Anne. *Transport and Communication in the Roman State: The Cursus Publicus*. In Kolb, A. (ed.), *Infrastruktur und Herrschaftsorganisation im Imperium Romanum*. Akademie Verlag, 2014.
+
+## Technical Notes
+
+```{python}
+#| label: tech-summary
+#| echo: true
+
+print(f"Python:    {sys.version.split()[0]}")
+print(f"Platform:  {platform.platform()}")
+print(f"GeoPandas: {gpd.__version__}")
+print(f"Pandas:    {pd.__version__}")
+print()
+print(f"Road segments (study area): {len(segments):,}")
+print(f"Pleiades places (study area): {len(places):,}")
+print(f"User POIs: {len(poi_data)}")
+print(f"CRS: {segments.crs}")
+print(f"Bounding box: W 5.74, S 36.71, E 29.04, N 48.47")
+```
+
+**Database:** `everglades_gis` (PostGIS), tables `roman_road_segments` and `roman_road_places`.
+**CRS:** EPSG:4326 (WGS84), native CRS of the Itiner-e export.
+**Geometry simplification:** `ST_Simplify(geometry, 0.005)` applied at query time for Folium performance.
+**Segment certainty:** Itiner-e rates each segment from confirmed archaeological trace to hypothetical reconstruction.

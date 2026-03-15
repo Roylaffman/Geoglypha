@@ -1,0 +1,399 @@
+---
+title: "White Gold Rush"
+subtitle: "Critical Minerals of the Americas and the New Resource Geography"
+author: "Ryan Lafferty"
+date: last-modified
+format:
+  html:
+    toc: true
+    toc-location: left
+    toc-depth: 3
+    code-fold: true
+    code-summary: "Show code"
+    embed-resources: true
+    smooth-scroll: true
+    page-layout: full
+    fig-cap-location: bottom
+    theme:
+      - cosmo
+      - americas-minerals.scss
+jupyter: python3
+execute:
+  cache: false
+---
+
+## The White Gold Rush
+
+Beneath the salt flats of the Andes, the desert basins of Nevada, and the boreal shield of northern Quebec lies the raw material of the twenty-first century's defining industrial transformation. Lithium powers the batteries in every electric vehicle, grid-scale storage system, and portable device on the planet. Rare earth elements make the permanent magnets in EV motors and wind turbines possible. Cobalt, nickel, and copper wire the entire energy transition together.
+
+The geography of these minerals is reshaping geopolitics. China dominates rare earth processing at roughly 60 percent of global output, and has invested heavily in South American lithium through companies like Ganfeng Lithium. The United States, despite sitting on vast deposits, produces almost no lithium domestically. The sole operating mine at Silver Peak, Nevada, has run since 1966 but supplies a fraction of national demand. The **Inflation Reduction Act** (2022) tied EV tax credits to domestic critical mineral sourcing, triggering a rush to permit new mines from the Nevada desert to the Minnesota wilderness.
+
+The **Lithium Triangle** sits at the high-altitude salars of Chile, Argentina, and Bolivia, and holds roughly 60 percent of the world's known lithium reserves. But extraction comes at a cost. Brine pumping depletes aquifers in some of the driest places on Earth, and Indigenous communities from the Atacama to the Boundary Waters have challenged projects that threaten their land and water. Every mine on this map sits at the intersection of industrial demand, environmental consequence, and political choice.
+
+```{python}
+#| label: setup
+#| echo: false
+import sys, platform, json
+from pathlib import Path
+
+import pandas as pd
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import folium
+
+QUARTO_GIS = Path("C:/Users/royla/Documents/quarto-gis/research")
+sys.path.append(str(QUARTO_GIS))
+
+from map_builder import create_base_map, build_photo_popup, finalize_map
+
+DATA_JSON = QUARTO_GIS / "analysis" / "CriticalMineralsSites.json"
+
+with open(DATA_JSON, "r", encoding="utf-8") as f:
+	sites_data = json.load(f)
+
+sites_df = pd.DataFrame(sites_data)
+print(f"{len(sites_df)} mineral sites loaded across {sites_df['category'].nunique()} categories")
+```
+
+## Mining Sites
+
+```{python}
+#| label: sites-table
+display_df = sites_df[["name", "category", "mineral_type", "status", "operator"]].copy()
+display_df.columns = ["Site", "Category", "Mineral Type", "Status", "Operator"]
+display_df.sort_values(["Category", "Site"]).style.set_properties(
+	**{"white-space": "normal", "font-size": "0.93em"}
+)
+```
+
+## The Lithium Triangle
+
+The Lithium Triangle straddles the high Andes where Chile, Argentina, and Bolivia meet. Salt flats called *salares*, at 2,300 to 4,000 meters elevation, formed over millions of years of volcanic activity that concentrated lithium in underground brines. Extraction is deceptively simple: pump brine into evaporation ponds, wait 12 to 18 months for the sun to do its work, then harvest lithium carbonate from the residue. The process is cheap but water-intensive. The Atacama Desert, where Chile's Salar de Atacama sits, is the driest non-polar place on Earth.
+
+Chile produces roughly a quarter of the world's lithium through two operators at the Salar de Atacama: SQM (state-partnered) and Albemarle (US-based). Argentina has taken a more open approach, welcoming foreign investment into provinces like Jujuy, Salta, and Catamarca. Chinese firm Ganfeng Lithium is a major partner at the Cauchari-Olaroz project. Bolivia sits on the largest reserves of all at the Salar de Uyuni (21 million tonnes), but state control through YLB and technical challenges with high-magnesium brines have kept production minimal.
+
+The triangle's dominance is now being challenged by hard-rock deposits in Australia, Canada, and Brazil, where lithium is mined from spodumene pegmatites rather than evaporated from brines. This geological diversity matters: as demand surges, the Americas' lithium supply chain is no longer just a story about salt flats.
+
+::: {.site-card}
+**Salar de Atacama, Chile** | 23.5°S, 68.2°W | Elevation: ~2,300m
+
+The world's largest and highest-grade lithium brine deposit. Operated jointly by SQM and Albemarle under Chilean government concessions, it produces roughly one-third of global lithium supply. Brine pumping in the hyper-arid Atacama has drawn intense scrutiny from Atacameno Indigenous communities and conservationists.
+:::
+
+::: {.site-card}
+**Salar de Uyuni, Bolivia** | 20.2°S, 67.6°W | Elevation: ~3,656m
+
+The world's largest salt flat (10,582 sq km), holding an estimated 21 million tonnes of lithium. Bolivia's state company YLB is developing extraction with Chinese and Russian partners, but production remains minimal due to technical challenges with high-magnesium brines and shifting political frameworks around nationalization.
+:::
+
+## The Americas' Critical Minerals Map
+
+```{python}
+#| label: interactive-map
+#| fig-cap: "Critical mineral sites across the Americas. Toggle satellite imagery via the layer control."
+
+fig = folium.Figure(width="100%", height="680px")
+m = create_base_map(center=[5.0, -80.0], zoom=3, tiles="positron")
+fig.add_child(m)
+
+# Satellite basemap option
+folium.TileLayer(
+	tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+	attr="Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+	name="Satellite (Esri)",
+	control=True,
+).add_to(m)
+
+CATEGORY_COLORS = {
+	"Lithium":          "green",
+	"Rare Earth":       "orange",
+	"Strategic Metals": "blue",
+}
+
+STATUS_ICONS = {
+	"Operating":          "industry",
+	"Under Construction": "wrench",
+	"Approved":           "check-circle",
+	"Development":        "flask",
+	"Proposed":           "question-circle",
+}
+
+for site in sites_data:
+	cat    = site.get("category", "Other")
+	status = site.get("status", "Unknown")
+	icon_color = CATEGORY_COLORS.get(cat, "gray")
+	icon_name  = STATUS_ICONS.get(status, "info-circle")
+
+	popup_html = build_photo_popup(
+		site,
+		photo_url=site.get("photo_url") or None,
+		photo_caption=site.get("photo_caption") or None,
+	)
+
+	tooltip_text = (
+		f"<b>{site['name']}</b><br>"
+		f"<i>{cat}</i> — {status}<br>"
+		f"{site.get('operator', '')}"
+	)
+
+	folium.Marker(
+		location=[site["lat"], site["lon"]],
+		popup=folium.Popup(popup_html, max_width=450),
+		tooltip=tooltip_text,
+		icon=folium.Icon(color=icon_color, icon=icon_name, prefix="fa"),
+	).add_to(m)
+
+folium.LayerControl().add_to(m)
+fig
+```
+
+**Legend:** <span style="color:#22c55e;font-weight:700;">Green</span> = Lithium, <span style="color:#f97316;font-weight:700;">Orange</span> = Rare Earth, <span style="color:#3b82f6;font-weight:700;">Blue</span> = Strategic Metals. Icons indicate development status.
+
+## Global Production: Americas vs. the World
+
+```{python}
+#| label: lithium-production
+#| fig-cap: "Global lithium production by country (2024 estimates). The Americas produce roughly 30 percent of global supply, led by Chile's brine operations at the Salar de Atacama."
+import plotly.express as px
+
+production_data = pd.DataFrame([
+	{"country": "Australia",   "production_kt": 112.5, "region": "Asia-Pacific"},
+	{"country": "China",       "production_kt": 78.0,  "region": "Asia"},
+	{"country": "Chile",       "production_kt": 54.4,  "region": "Americas"},
+	{"country": "Zimbabwe",    "production_kt": 22.0,  "region": "Africa"},
+	{"country": "Argentina",   "production_kt": 10.0,  "region": "Americas"},
+	{"country": "Brazil",      "production_kt": 5.0,   "region": "Americas"},
+	{"country": "Canada",      "production_kt": 4.3,   "region": "Americas"},
+	{"country": "Portugal",    "production_kt": 1.5,   "region": "Europe"},
+	{"country": "USA",         "production_kt": 0.0,   "region": "Americas"},
+]).sort_values("production_kt", ascending=True)
+
+color_map = {
+	"Americas":     "#22c55e",
+	"Asia-Pacific": "#f43f5e",
+	"Asia":         "#f97316",
+	"Africa":       "#64748b",
+	"Europe":       "#38bdf8",
+}
+
+fig_prod = px.bar(
+	production_data,
+	x="production_kt",
+	y="country",
+	color="region",
+	orientation="h",
+	title="Global Lithium Production by Country (2024 est., kilotonnes LCE)",
+	labels={"production_kt": "Production (kt LCE)", "country": ""},
+	color_discrete_map=color_map,
+)
+fig_prod.update_layout(
+	height=450,
+	plot_bgcolor="rgba(11,18,25,0.0)",
+	paper_bgcolor="rgba(11,18,25,0.0)",
+	font_color="#cbd5e1",
+	title_font_color="#f0f6ff",
+	legend_title_text="Region",
+	xaxis=dict(gridcolor="rgba(56,189,248,0.1)", color="#94a3b8"),
+	yaxis=dict(color="#cbd5e1"),
+)
+fig_prod.show()
+```
+
+The Americas collectively produce roughly 30 percent of the world's lithium, led by Chile's massive brine operations at the Salar de Atacama. The gap with Australia and China is stark. The United States currently produces effectively zero lithium at industrial scale. Silver Peak's output is negligible in global terms. The Inflation Reduction Act's domestic sourcing requirements are designed to change this equation, but Rhyolite Ridge and Thacker Pass are still years from first production.
+
+## Rare Earth Dominance
+
+```{python}
+#| label: ree-chart
+#| fig-cap: "China controls roughly 85 percent of global rare earth processing capacity, making supply chain diversification a strategic priority."
+ree_data = pd.DataFrame([
+	{"country": "China",               "share_pct": 60.0},
+	{"country": "USA (Mountain Pass)", "share_pct": 15.0},
+	{"country": "Myanmar",             "share_pct": 10.0},
+	{"country": "Australia",           "share_pct": 8.0},
+	{"country": "Other",               "share_pct": 7.0},
+])
+
+fig_ree = px.pie(
+	ree_data,
+	values="share_pct",
+	names="country",
+	title="Global Rare Earth Oxide Production Share (2024 est.)",
+	color="country",
+	color_discrete_map={
+		"China":               "#f97316",
+		"USA (Mountain Pass)": "#22c55e",
+		"Myanmar":             "#64748b",
+		"Australia":           "#f43f5e",
+		"Other":               "#334155",
+	},
+	hole=0.4,
+)
+fig_ree.update_layout(
+	height=420,
+	plot_bgcolor="rgba(11,18,25,0.0)",
+	paper_bgcolor="rgba(11,18,25,0.0)",
+	font_color="#cbd5e1",
+	title_font_color="#f0f6ff",
+)
+fig_ree.show()
+```
+
+China's dominance in rare earth elements extends well beyond mining. The country controls roughly 85 percent of global rare earth processing capacity. Even when rare earth ore is mined elsewhere, as at Mountain Pass in California, it has historically been shipped to China for refining. MP Materials is building domestic processing capability at Mountain Pass, but closing this gap will take years and billions in capital. The strategic implication is clear: without diversified processing, mining alone does not equal supply chain security.
+
+## Static Overview
+
+```{python}
+#| label: static-map
+#| fig-cap: "Critical mineral sites across the Americas. Point color indicates mineral category."
+import contextily as cx
+from shapely.geometry import Point
+
+geometry   = [Point(s["lon"], s["lat"]) for s in sites_data]
+sites_gdf  = gpd.GeoDataFrame(sites_df, geometry=geometry, crs="EPSG:4326")
+sites_3857 = sites_gdf.to_crs(epsg=3857)
+
+fig_map, ax = plt.subplots(1, 1, figsize=(10, 14))
+fig_map.patch.set_facecolor("#0b1219")
+ax.set_facecolor("#0b1219")
+
+cat_colors = {
+	"Lithium":          "#22c55e",
+	"Rare Earth":       "#f97316",
+	"Strategic Metals": "#38bdf8",
+}
+
+for cat, color in cat_colors.items():
+	subset = sites_3857[sites_3857["category"] == cat]
+	if len(subset) > 0:
+		subset.plot(
+			ax=ax, color=color, markersize=90,
+			label=cat, alpha=0.9, edgecolor="#0b1219", linewidth=0.9,
+		)
+
+cx.add_basemap(ax, source=cx.providers.CartoDB.DarkMatter, zoom=3)
+
+ax.set_title(
+	"Critical Mineral Sites — Americas",
+	fontsize=14, fontweight="bold", color="#f0f6ff",
+	pad=12,
+)
+ax.set_axis_off()
+
+legend = ax.legend(
+	loc="lower left", fontsize=10, framealpha=0.85,
+	facecolor="#0f1e2c", edgecolor="#22c55e", labelcolor="#e2e8f0",
+)
+plt.tight_layout()
+plt.show()
+```
+
+## Sites by Category
+
+```{python}
+#| label: category-breakdown
+cat_counts = (
+	sites_df.groupby("category")
+	.size()
+	.reset_index(name="count")
+	.sort_values("count", ascending=False)
+)
+status_counts = (
+	sites_df.groupby("status")
+	.size()
+	.reset_index(name="count")
+	.sort_values("count", ascending=False)
+)
+
+fig_cats = px.bar(
+	cat_counts,
+	x="category",
+	y="count",
+	title="Sites by Mineral Category",
+	labels={"category": "Category", "count": "Number of Sites"},
+	color="category",
+	color_discrete_map={
+		"Lithium":          "#22c55e",
+		"Rare Earth":       "#f97316",
+		"Strategic Metals": "#38bdf8",
+	},
+)
+fig_cats.update_layout(
+	height=360,
+	plot_bgcolor="rgba(11,18,25,0.0)",
+	paper_bgcolor="rgba(11,18,25,0.0)",
+	font_color="#cbd5e1",
+	title_font_color="#f0f6ff",
+	showlegend=False,
+	xaxis=dict(gridcolor="rgba(56,189,248,0.08)", color="#94a3b8"),
+	yaxis=dict(gridcolor="rgba(56,189,248,0.08)", color="#94a3b8"),
+)
+fig_cats.show()
+```
+
+```{python}
+#| label: status-breakdown
+fig_status = px.bar(
+	status_counts,
+	x="status",
+	y="count",
+	title="Sites by Development Status",
+	labels={"status": "Status", "count": "Number of Sites"},
+	color_discrete_sequence=["#f59e0b"],
+)
+fig_status.update_layout(
+	height=360,
+	plot_bgcolor="rgba(11,18,25,0.0)",
+	paper_bgcolor="rgba(11,18,25,0.0)",
+	font_color="#cbd5e1",
+	title_font_color="#f0f6ff",
+	showlegend=False,
+	xaxis=dict(gridcolor="rgba(56,189,248,0.08)", color="#94a3b8"),
+	yaxis=dict(gridcolor="rgba(56,189,248,0.08)", color="#94a3b8"),
+)
+fig_status.show()
+```
+
+## Geopolitics of the Energy Transition
+
+The Inflation Reduction Act fundamentally changed the economics of domestic critical mineral production in the United States. By tying EV tax credits to sourcing requirements, the legislation created a direct financial incentive to permit and build mines that had previously stalled. But permitting reform has lagged. Rhyolite Ridge in Nevada waited years for its federal environmental review, and Twin Metals in Minnesota remains caught in legal proceedings over its proximity to the Boundary Waters Canoe Area Wilderness.
+
+China's strategy runs deeper than just controlling processing capacity. Chinese investment in South American lithium, through Ganfeng at Cauchari-Olaroz and CATL at multiple Argentine projects, gives China upstream access to the raw material that feeds its battery manufacturing dominance. The Belt and Road Initiative has extended this resource diplomacy into Africa and Central Asia. For the United States, supply chain security is not just a matter of permitting domestic mines: it requires competing across the entire chain from extraction through refining to battery manufacturing.
+
+Canada occupies an unusual position in this geography. Its James Bay pegmatite fields hold some of the highest-grade lithium spodumene deposits in the world, and its established mining industry, stable regulatory environment, and trade relationship with the United States make it a natural supplier for North American battery manufacturing. The Canada-US critical minerals agreement signed in 2022 formalizes this alignment.
+
+Bolivia presents the sharpest contrast. Sitting on the world's largest lithium reserves at the Salar de Uyuni, it has produced the least of the three Lithium Triangle nations. State control through YLB, hostility to foreign equity stakes, and technical challenges with its high-magnesium brines have kept production far below potential. Whether Bolivia can develop its lithium at scale on its own terms remains one of the open questions of the energy transition.
+
+## Bibliography
+
+### USGS Mineral Commodity Summaries
+
+U.S. Geological Survey. (2025). *Mineral Commodity Summaries 2025*. U.S. Department of the Interior.
+
+- [Lithium](https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-lithium.pdf)
+- [Rare Earths](https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-rare-earths.pdf)
+- [Cobalt](https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-cobalt.pdf)
+- [Nickel](https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-nickel.pdf)
+- [Copper](https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-copper.pdf)
+
+### IEA Critical Minerals
+
+International Energy Agency. (2024). *The Role of Critical Minerals in Clean Energy Transitions*. IEA, Paris.
+
+### Inflation Reduction Act
+
+U.S. Congress. (2022). *Inflation Reduction Act of 2022*, Pub. L. 117-169. Sections 13401-13402 (Clean Vehicle Credit, critical mineral sourcing requirements).
+
+### Operator Sources
+
+- **Ioneer Ltd** — Rhyolite Ridge Project
+- **Lithium Americas Corp** — Thacker Pass
+- **MP Materials** — Mountain Pass
+- **Twin Metals Minnesota** — Boundary Waters
+- **SQM** — Salar de Atacama Operations
+- **Arcadium Lithium** — Hombre Muerto, Olaroz, James Bay
+- **Sigma Lithium** — Grota do Cirilo
+
+### USGS Mineral Resources Data System
+
+Additional mine location data: USGS MRDS, a downloadable GeoJSON with 240,000+ mineral deposit records globally.

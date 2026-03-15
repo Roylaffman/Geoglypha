@@ -1,0 +1,328 @@
+---
+title: "The Outlaw Coast"
+subtitle: "Smuggling Routes, Hidden Sites, and the 1978 Coastline of the Ten Thousand Islands"
+author: "Ryan Lafferty"
+date: last-modified
+format:
+  html:
+    toc: true
+    toc-location: left
+    toc-depth: 3
+    code-fold: true
+    code-summary: "Show code"
+    embed-resources: true
+    smooth-scroll: true
+    page-layout: full
+    fig-cap-location: bottom
+    theme:
+      - cosmo
+      - everglades-history.scss
+jupyter: python3
+execute:
+  cache: false
+---
+
+## The Outlaw Coast
+
+For nearly a century, the Ten Thousand Islands have served as Florida's untamed backdoor: a labyrinth of mangrove tunnels and oyster bars where the only law was the tide. In the 1920s, this watery wilderness became a haven for rum-runners who used the shallow, shifting channels to evade heavy Federal cutters, turning the quiet fishing villages of Chokoloskee and Everglades City into covert ports of call for Caribbean liquor.
+
+The skills forged in that era, navigating the pitch-black backcountry without a chart, found a new purpose in the 1970s. As commercial fishing was restricted and the local economy cratered, the sons and grandsons of those early pioneers became "saltwater cowboys," swapping mullet for marijuana. Under cover of the mangrove canopy, they transformed these islands into one of the primary entry points for the "Square Grouper" era, hauling millions of pounds of contraband through a landscape that swallowed outsiders whole.
+
+This analysis layers historical site data and archival smuggling routes onto the 1978 Florida coastline survey, a snapshot of the waterway network as it existed during the peak years of the trade. The satellite basemap reveals the same tidal maze that made enforcement nearly impossible.
+
+```{python}
+#| label: setup
+#| echo: false
+import sys, platform, warnings
+warnings.filterwarnings("ignore")
+
+from pathlib import Path
+import pandas as pd
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import folium
+
+QUARTO_GIS = Path("C:/Users/royla/Documents/quarto-gis/research")
+sys.path.append(str(QUARTO_GIS))
+
+from db_connection import query_to_geodataframe, query_to_dataframe
+from map_builder import (
+	create_base_map, add_geodataframe_layer,
+	add_point_markers, finalize_map
+)
+
+# Historical sites
+sites = query_to_geodataframe("""
+	SELECT id, name, description, site_type, year_established,
+		   significance_level, latitude, longitude, geom
+	FROM historical_sites
+""")
+print(f"{len(sites)} historical sites loaded")
+
+# Historical routes
+routes = query_to_geodataframe("""
+	SELECT id, name, description, route_type, year_active, length_km, geom
+	FROM historical_routes
+""")
+print(f"{len(routes)} historical routes loaded")
+
+# 1978 coastline — transform SRID 4269 (NAD83) to 4326
+coastline = query_to_geodataframe("""
+	SELECT
+		ogc_fid,
+		inform,
+		attribute,
+		class,
+		ST_Transform(wkb_geometry, 4326) AS geom
+	FROM "1978_fl_coastline"
+""", geom_col="geom", crs=4326)
+print(f"{len(coastline)} coastline features loaded")
+```
+
+## Points of Interest
+
+```{python}
+#| label: sites-table
+#| tbl-cap: "Historical sites of the Ten Thousand Islands region. Significance level reflects primary source documentation depth."
+
+display_cols = sites[["name", "site_type", "year_established", "significance_level", "description"]].copy()
+display_cols.columns = ["Name", "Type", "Year", "Significance", "Description"]
+display_cols.sort_values("Year").style.set_properties(
+	subset=["Description"], **{"min-width": "320px", "white-space": "normal"}
+).set_properties(**{"font-size": "0.92em"})
+```
+
+## The Smuggler's Highway
+
+To the uninitiated, the map of the Ten Thousand Islands is a chaotic splatter of green and blue. To the smugglers, it was a precise network of arterial highways. The Barron River, the region's dredged commercial heart, served as the brazen front door where shrimp boats laden with bales would dock under the guise of a night's catch. Deeper in the backcountry lay the Chatham River, a historic channel echoing with the dark legacy of Edgar Watson, offering a direct deep-water vein to the hidden interiors of the Glades.
+
+To the south, the Lopez River provided a winding back alley for smaller skiffs to slip unnoticed into the labyrinth. The Wilderness Waterway, now a celebrated paddling trail, served as the "Inside Route," a 99-mile concealed highway allowing traffickers to move illicit cargo from the Cape Romano shoals all the way to Flamingo without ever exposing themselves to the open Gulf or the Coast Guard's gaze.
+
+::: {.route-card}
+**Operation Everglades (1983):** The decisive federal action that collapsed the network. Authorities physically blocked CR 29, the only road into Everglades City, while simultaneously closing the Barron River to boat traffic. With escape routes sealed, the operation netted 52 arrests in a single morning, effectively ending the organized trade in the Ten Thousand Islands.
+:::
+
+## Route Details
+
+```{python}
+#| label: routes-table
+#| tbl-cap: "Documented historical routes by type, period, and approximate length."
+
+routes[["name", "route_type", "year_active", "length_km", "description"]]\
+	.sort_values("year_active")\
+	.style.set_properties(
+		subset=["description"], **{"min-width": "280px", "white-space": "normal"}
+	).set_properties(**{"font-size": "0.92em"})
+```
+
+## Smuggling Routes and Historical Sites
+
+All layers on one interactive map: the 1978 coastline, documented smuggling routes, and historical sites against satellite imagery of the Ten Thousand Islands.
+
+```{python}
+#| label: interactive-map
+#| fig-cap: "The 1978 Florida coastline (NOAA survey), historical smuggling routes, and key sites overlaid on Esri satellite imagery. Toggle layers via the control panel."
+
+m = create_base_map(center=[25.85, -81.35], zoom=10, tiles="satellite")
+
+# Add a terrain/positron option alongside the default satellite
+folium.TileLayer(
+	tiles="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+	attr='&copy; <a href="https://carto.com/">CARTO</a>',
+	name="Dark (CartoDB)",
+	control=True,
+).add_to(m)
+
+# 1978 coastline layers
+shoreline   = coastline[coastline["class"] == "SHORELINE"]
+alongshore  = coastline[coastline["class"] == "ALONGSHORE FEATURE"]
+
+m = add_geodataframe_layer(
+	m, shoreline,
+	name="Shoreline (1978)",
+	tooltip_fields=["inform", "attribute"],
+	style={"color": "#38bdf8", "weight": 1.5, "opacity": 0.8},
+)
+
+m = add_geodataframe_layer(
+	m, alongshore,
+	name="Alongshore Features (1978)",
+	tooltip_fields=["inform", "attribute"],
+	style={"color": "#94a3b8", "weight": 1.0, "opacity": 0.6},
+)
+
+# Routes layer
+m = add_geodataframe_layer(
+	m, routes,
+	name="Historical Routes",
+	tooltip_fields=["name", "route_type", "year_active"],
+	style={"color": "#fbbf24", "weight": 4, "opacity": 0.9, "dashArray": "8 4"},
+	highlight={"weight": 6, "opacity": 1},
+)
+
+# Site markers
+for _, site in sites.iterrows():
+	color = (
+		"#f43f5e" if site["significance_level"] == "High"
+		else "#f97316" if site["significance_level"] == "Medium"
+		else "#0ea5e9"
+	)
+	folium.CircleMarker(
+		location=[site["latitude"], site["longitude"]],
+		radius=9 if site["significance_level"] == "High" else 6,
+		color=color,
+		fill=True,
+		fill_opacity=0.85,
+		tooltip=f"<b>{site['name']}</b> ({site['year_established']})",
+		popup=folium.Popup(
+			f"<div style='min-width:280px;font-family:Georgia,serif;'>"
+			f"<b style='color:#0a1a16;'>{site['name']}</b><br>"
+			f"<i>{site['site_type']}</i> | {site['year_established']}<br><br>"
+			f"{site['description']}"
+			f"</div>",
+			max_width=450,
+		),
+	).add_to(m)
+
+m = finalize_map(m)
+m
+```
+
+**Legend:** <span style="color:#38bdf8;font-weight:700;">Blue lines</span> = 1978 NOAA shoreline. <span style="color:#fbbf24;font-weight:700;">Gold dashed</span> = historical smuggling routes. Circles colored by significance: <span style="color:#f43f5e;font-weight:700;">red</span> = High, <span style="color:#f97316;font-weight:700;">orange</span> = Medium, <span style="color:#0ea5e9;font-weight:700;">blue</span> = Low.
+
+## The 1978 Coastline
+
+```{python}
+#| label: coastline-static
+#| fig-cap: "1978 NOAA Florida coastline survey for the Ten Thousand Islands region, classified by feature type."
+import contextily as cx
+
+coastline_display = coastline[coastline["class"] != "CARTOGRAPHIC LIMIT"]
+coastline_3857    = coastline_display.to_crs(epsg=3857)
+
+CLASS_COLORS = {
+	"SHORELINE":           "#38bdf8",
+	"ALONGSHORE FEATURE":  "#94a3b8",
+}
+
+fig_coast, ax = plt.subplots(1, 1, figsize=(12, 8))
+fig_coast.patch.set_facecolor("#0a1a16")
+ax.set_facecolor("#0a1a16")
+
+for cls, color in CLASS_COLORS.items():
+	subset = coastline_3857[coastline_3857["class"] == cls]
+	if len(subset) > 0:
+		subset.plot(ax=ax, color=color, linewidth=0.6, label=cls, alpha=0.9)
+
+cx.add_basemap(ax, source=cx.providers.CartoDB.DarkMatter, zoom=10)
+
+ax.set_title("1978 Florida Coastline — Ten Thousand Islands", fontsize=13, fontweight="bold", color="#e8f4f1", pad=10)
+ax.set_axis_off()
+legend = ax.legend(loc="lower left", fontsize=9, framealpha=0.85, facecolor="#0d2b23", edgecolor="#00b5a3", labelcolor="#c8d8d4")
+plt.tight_layout()
+plt.show()
+```
+
+## Sites Timeline
+
+```{python}
+#| label: timeline
+#| fig-cap: "Historical sites plotted by year of establishment and significance level."
+import plotly.express as px
+
+fig_timeline = px.scatter(
+	sites,
+	x="year_established",
+	y="name",
+	color="significance_level",
+	symbol="site_type",
+	title="Historical Sites of the Ten Thousand Islands: Timeline",
+	labels={"year_established": "Year Established", "name": "Site"},
+	color_discrete_map={
+		"High":   "#f43f5e",
+		"Medium": "#f97316",
+		"Low":    "#0ea5e9",
+	},
+)
+fig_timeline.update_layout(
+	height=520,
+	plot_bgcolor="rgba(10,26,22,0.0)",
+	paper_bgcolor="rgba(10,26,22,0.0)",
+	font_color="#c8d8d4",
+	title_font_color="#e8f4f1",
+	legend_title_text="Significance",
+	xaxis=dict(gridcolor="rgba(0,181,163,0.1)", color="#94a3b8"),
+	yaxis=dict(gridcolor="rgba(0,181,163,0.08)", color="#c8d8d4"),
+)
+fig_timeline.show()
+```
+
+## Coastline Feature Breakdown
+
+```{python}
+#| label: feature-breakdown
+class_counts = (
+	coastline.groupby("class")
+	.size()
+	.reset_index(name="count")
+	.sort_values("count", ascending=False)
+)
+inform_counts = (
+	coastline.groupby("inform")
+	.size()
+	.reset_index(name="count")
+	.sort_values("count", ascending=False)
+)
+
+print("Features by Class:")
+print(class_counts.to_string(index=False))
+print("\nFeatures by Inform:")
+print(inform_counts.head(10).to_string(index=False))
+```
+
+## Primary Sources and Bibliography
+
+### The Barron River Route
+
+**Significance**: The primary commercial artery. The 1983 "Operation Everglades" blockade physically shut down CR 29 and the river access to trap the smugglers.
+
+- *Primary*: United States District Court, Middle District of Florida. "Operation Everglades" Case Archives (1983 to 1984).
+- *Secondary*: *Deep Water: The Story of the Beavers of Everglades City* (local history covering the dredging era and subsequent bust).
+
+### The Chatham River Route
+
+**Significance**: The deep-water access to the Watson Place. Smugglers used the high banks of the Chatham, rare in the mangroves, to offload onto elevated shell mounds.
+
+- *Primary*: Tebeau, Charlton W. *Man in the Everglades: 2000 Years of Human History in the Everglades National Park*. University of Miami Press.
+- *Literary*: Matthiessen, Peter. *Killing Mister Watson*. Documents the river as the primary transit route for the region's outlaws.
+
+### The Lopez River Route
+
+**Significance**: Named for the Lopez family (early settlers). It connects the inland bays to the Gulf, allowing for "inside" passage to avoid rough seas and patrols.
+
+- *Primary*: Simons, M.H. "Report on the Ten Thousand Islands." *Annual Report of the Smithsonian Institution*.
+- *Oral History*: Brown, Totch. *Totch: A Life in the Everglades*. Describes specific use of these "backdoor" family channels for evading game wardens and later drug interdiction.
+
+### The Wilderness Waterway (North Section)
+
+**Significance**: The historic "Inside Route." While officially established as a park trail in the 1970s, its channels were the standard smuggler's highway to move goods between Everglades City and Flamingo without entering the Gulf of Mexico.
+
+- *Primary*: Truesdell, William G. *A Guide to the Wilderness Waterway of the Everglades National Park*. University of Miami Press.
+- *Oral History*: "Calusa to Campbell" (NPS Historic Resource Study) details the usage of inland cuts by locals to avoid "outside" detection.
+
+## Technical Details
+
+```{python}
+#| label: environment
+#| code-fold: false
+print(f"Python:     {sys.version.split()[0]}")
+print(f"Platform:   {platform.system()} {platform.release()}")
+print(f"GeoPandas:  {gpd.__version__}")
+print(f"Pandas:     {pd.__version__}")
+print(f"Folium:     {folium.__version__}")
+print()
+print(f"Historical sites:   {len(sites)}")
+print(f"Historical routes:  {len(routes)}")
+print(f"Coastline features: {len(coastline)}")
+print(f"Coastline CRS:      {coastline.crs}")
+```

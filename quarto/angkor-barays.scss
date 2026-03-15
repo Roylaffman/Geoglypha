@@ -1,0 +1,198 @@
+/*-- scss:defaults --*/
+
+/*
+ * Angkor Barays — Khmer Stone and Monsoon Theme
+ * Author: Ryan Lafferty
+ *
+ * Palette drawn from Angkor's visual world:
+ * laterite sandstone, monsoon water, jungle canopy, Khmer gold leaf.
+ * Dark-register theme: saturated stone + warm accent on deep slate.
+ */
+
+/* Google Fonts — Cormorant Garamond (editorial serif) + Jost (clean geometric) */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Jost:wght@300;400;500&display=swap');
+
+$font-family-sans-serif: 'Jost', system-ui, sans-serif;
+$font-family-monospace:  'Fira Code', ui-monospace, 'Cascadia Mono', Menlo, monospace;
+$headings-font-family:   'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+
+/* Core palette */
+$primary:   #c9a84c;   /* Khmer gold leaf */
+$secondary: #7a9e8e;   /* monsoon jade */
+$success:   #4a9e6e;   /* jungle green */
+$info:      #3d7a9e;   /* baray water blue */
+$warning:   #c97a3d;   /* fired laterite */
+$danger:    #b84040;   /* deep red ochre */
+$light:     #2a2e38;   /* panel surface */
+$dark:      #141720;   /* deep slate */
+
+/* Body — dark register */
+$body-bg:    #1a1d26;
+$body-color: #ddd8cc;
+$link-color: #c9a84c;
+$link-hover-color: #e8c96c;
+
+/* Type scale */
+$font-size-base:   1rem;
+$line-height-base: 1.75;
+
+/* Headings */
+$headings-color:       #e8dfc8;
+$headings-font-weight: 600;
+
+/*-- scss:rules --*/
+
+/* === Page-load animation === */
+@keyframes fadeSlideUp {
+	from { opacity: 0; transform: translateY(20px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+body {
+	animation: fadeSlideUp 0.6s ease-out both;
+}
+
+/* === Background — geometric stone pattern === */
+body::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	background:
+		repeating-linear-gradient(
+			0deg,
+			transparent,
+			transparent 48px,
+			rgba(201, 168, 76, 0.04) 48px,
+			rgba(201, 168, 76, 0.04) 49px
+		),
+		repeating-linear-gradient(
+			90deg,
+			transparent,
+			transparent 48px,
+			rgba(201, 168, 76, 0.04) 48px,
+			rgba(201, 168, 76, 0.04) 49px
+		),
+		linear-gradient(160deg, #1a1d26 0%, #13161e 60%, #0e1119 100%);
+}
+
+/* === TOC === */
+#TOC {
+	background: rgba(255, 255, 255, 0.04);
+	border-left: 3px solid #c9a84c;
+	border-radius: 0 8px 8px 0;
+	padding: 1rem 0.75rem;
+
+	.nav-link {
+		color: #a89878;
+		font-family: 'Jost', sans-serif;
+		font-size: 0.85rem;
+		font-weight: 400;
+		&:hover, &.active { color: #c9a84c; }
+	}
+}
+
+/* === Headings === */
+h1, h2, h3, h4 {
+	letter-spacing: 0.01em;
+}
+
+h2 {
+	border-bottom: 1px solid rgba(201, 168, 76, 0.25);
+	padding-bottom: 0.35em;
+	margin-top: 2.5rem;
+}
+
+/* === Callout blocks === */
+.callout {
+	border-radius: 6px;
+	background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.callout-note    { border-left-color: #3d7a9e !important; }
+.callout-warning { border-left-color: #c97a3d !important; }
+.callout-tip     { border-left-color: #4a9e6e !important; }
+.callout-important { border-left-color: #c9a84c !important; }
+
+/* === Tables === */
+.table {
+	--bs-table-bg: transparent;
+	--bs-table-striped-bg: rgba(201, 168, 76, 0.06);
+	color: $body-color;
+	font-size: 0.9rem;
+}
+
+thead th {
+	border-bottom: 2px solid #c9a84c;
+	color: #c9a84c;
+	font-family: 'Jost', sans-serif;
+	font-weight: 500;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	font-size: 0.78rem;
+}
+
+/* === Code blocks === */
+pre.sourceCode {
+	background: rgba(0, 0, 0, 0.35) !important;
+	border: 1px solid rgba(201, 168, 76, 0.15);
+	border-radius: 6px;
+}
+
+/* === Figures === */
+figure {
+	margin: 2rem 0;
+}
+
+figcaption {
+	color: #7a8898;
+	font-size: 0.82rem;
+	font-style: italic;
+	text-align: center;
+	margin-top: 0.5rem;
+}
+
+/* === Folium map container === */
+iframe {
+	border-radius: 8px;
+	border: 1px solid rgba(201, 168, 76, 0.2);
+}
+
+/* === Stat highlight boxes === */
+.stat-box {
+	background: rgba(201, 168, 76, 0.08);
+	border: 1px solid rgba(201, 168, 76, 0.2);
+	border-radius: 8px;
+	padding: 1rem 1.25rem;
+	margin: 0.5rem 0;
+
+	.stat-label {
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.08em;
+		color: #7a9e8e;
+	}
+
+	.stat-value {
+		font-family: 'Cormorant Garamond', serif;
+		font-size: 2rem;
+		font-weight: 600;
+		color: #c9a84c;
+		line-height: 1.1;
+	}
+}
+
+/* === Staggered section reveals === */
+section, .level2 {
+	animation: fadeSlideUp 0.5s ease-out both;
+}
+
+/* === Blockquotes === */
+blockquote {
+	border-left: 3px solid #c9a84c;
+	background: rgba(201, 168, 76, 0.06);
+	padding: 0.75rem 1.25rem;
+	border-radius: 0 6px 6px 0;
+	font-style: italic;
+	color: #b8a888;
+}

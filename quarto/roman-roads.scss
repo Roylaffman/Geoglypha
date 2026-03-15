@@ -1,0 +1,235 @@
+/*-- scss:defaults --*/
+
+/*
+ * Roman Roads — Imperial Stone Theme
+ * Author: Ryan Lafferty
+ *
+ * Palette drawn from Roman material culture:
+ * aged basalt paving, imperial red pigment, tarnished gold leaf, travertine text.
+ * Dark-register theme: deep charcoal ground, imperial red primary, aged gold accent.
+ */
+
+/* Google Fonts — Cinzel (classical Roman inscriptions) + EB Garamond (humanist body) */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap');
+
+$font-family-sans-serif: 'EB Garamond', Georgia, 'Times New Roman', serif;
+$font-family-monospace:  'Fira Code', ui-monospace, 'Cascadia Mono', Menlo, monospace;
+$headings-font-family:   'Cinzel', Georgia, serif;
+
+/* Core palette */
+$primary:   #8D2A2A;   /* imperial red */
+$secondary: #c9a46e;   /* aged gold */
+$success:   #5a7a4e;   /* olive field */
+$info:      #4a7a9e;   /* provincial sky */
+$warning:   #c9a46e;   /* aged gold (alias) */
+$danger:    #a03030;   /* battle red */
+$light:     #2a2420;   /* panel surface */
+$dark:      #1c1814;   /* deep charcoal */
+
+/* Body — dark register */
+$body-bg:    #1c1814;
+$body-color: #e8e0d0;
+$link-color: #c9a46e;
+$link-hover-color: #e8c98e;
+
+/* Type scale */
+$font-size-base:   1.05rem;
+$line-height-base: 1.8;
+
+/* Headings */
+$headings-color:       #f0e8d8;
+$headings-font-weight: 600;
+
+/*-- scss:rules --*/
+
+/* === Page-load animation === */
+@keyframes fadeSlideUp {
+	from { opacity: 0; transform: translateY(18px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+body {
+	animation: fadeSlideUp 0.65s ease-out both;
+}
+
+/* === Background — Roman opus reticulatum (diamond grid) pattern === */
+body::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	background:
+		repeating-linear-gradient(
+			45deg,
+			transparent,
+			transparent 34px,
+			rgba(141, 42, 42, 0.04) 34px,
+			rgba(141, 42, 42, 0.04) 35px
+		),
+		repeating-linear-gradient(
+			-45deg,
+			transparent,
+			transparent 34px,
+			rgba(201, 164, 110, 0.03) 34px,
+			rgba(201, 164, 110, 0.03) 35px
+		),
+		linear-gradient(170deg, #1c1814 0%, #171310 55%, #120f0c 100%);
+}
+
+/* === TOC === */
+#TOC {
+	background: rgba(255, 255, 255, 0.03);
+	border-left: 3px solid #8D2A2A;
+	border-radius: 0 8px 8px 0;
+	padding: 1rem 0.75rem;
+
+	.nav-link {
+		color: #a09080;
+		font-family: 'EB Garamond', serif;
+		font-size: 0.88rem;
+		font-weight: 400;
+		&:hover, &.active { color: #c9a46e; }
+	}
+}
+
+/* === Headings === */
+h1, h2, h3, h4 {
+	letter-spacing: 0.03em;
+}
+
+h1 {
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+}
+
+h2 {
+	border-bottom: 1px solid rgba(141, 42, 42, 0.35);
+	padding-bottom: 0.35em;
+	margin-top: 2.5rem;
+	text-transform: uppercase;
+	font-size: 1.15rem;
+	letter-spacing: 0.1em;
+	color: #c9a46e;
+}
+
+h3 {
+	color: #d8c8b0;
+	font-size: 1rem;
+	letter-spacing: 0.05em;
+}
+
+/* === Callout blocks === */
+.callout {
+	border-radius: 6px;
+	background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.callout-note      { border-left-color: #4a7a9e !important; }
+.callout-warning   { border-left-color: #c9a46e !important; }
+.callout-tip       { border-left-color: #5a7a4e !important; }
+.callout-important { border-left-color: #8D2A2A !important; }
+
+/* === Tables === */
+.table {
+	--bs-table-bg: transparent;
+	--bs-table-striped-bg: rgba(141, 42, 42, 0.05);
+	color: $body-color;
+	font-size: 0.9rem;
+}
+
+thead th {
+	border-bottom: 2px solid #8D2A2A;
+	color: #c9a46e;
+	font-family: 'Cinzel', serif;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	font-size: 0.72rem;
+}
+
+/* === Code blocks === */
+pre.sourceCode {
+	background: rgba(0, 0, 0, 0.4) !important;
+	border: 1px solid rgba(141, 42, 42, 0.2);
+	border-radius: 6px;
+}
+
+/* === Figures === */
+figure {
+	margin: 2rem 0;
+}
+
+figcaption {
+	color: #7a6858;
+	font-size: 0.82rem;
+	font-style: italic;
+	text-align: center;
+	margin-top: 0.5rem;
+}
+
+/* === Folium map container === */
+iframe {
+	border-radius: 8px;
+	border: 1px solid rgba(141, 42, 42, 0.25);
+}
+
+/* === Stat highlight boxes === */
+.stat-box {
+	background: rgba(141, 42, 42, 0.07);
+	border: 1px solid rgba(141, 42, 42, 0.22);
+	border-radius: 8px;
+	padding: 1rem 1.25rem;
+	margin: 0.5rem 0;
+
+	.stat-label {
+		font-size: 0.72rem;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: #a09080;
+		font-family: 'Cinzel', serif;
+	}
+
+	.stat-value {
+		font-family: 'EB Garamond', serif;
+		font-size: 2.1rem;
+		font-weight: 600;
+		color: #c9a46e;
+		line-height: 1.1;
+	}
+}
+
+/* === Road type badges === */
+.road-main      { color: #c9a46e; font-weight: 600; }
+.road-secondary { color: #a88040; }
+.road-sea       { color: #64849e; font-style: italic; }
+.road-river     { color: #4a8cb8; font-style: italic; }
+
+/* === Staggered section reveals === */
+section, .level2 {
+	animation: fadeSlideUp 0.5s ease-out both;
+}
+
+/* === Blockquotes === */
+blockquote {
+	border-left: 3px solid #8D2A2A;
+	background: rgba(141, 42, 42, 0.06);
+	padding: 0.75rem 1.25rem;
+	border-radius: 0 6px 6px 0;
+	font-style: italic;
+	color: #b8a890;
+}
+
+/* === Milestone marker (decorative) === */
+.milestone {
+	display: inline-block;
+	background: #8D2A2A;
+	color: #f0e8d8;
+	font-family: 'Cinzel', serif;
+	font-size: 0.7rem;
+	letter-spacing: 0.1em;
+	padding: 0.2em 0.6em;
+	border-radius: 3px;
+	text-transform: uppercase;
+	vertical-align: middle;
+	margin-right: 0.4em;
+}

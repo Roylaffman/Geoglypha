@@ -1,0 +1,251 @@
+/*-- scss:defaults --*/
+
+/*
+ * Rana boylii — Riparian California Theme
+ * Author: Ryan Lafferty
+ *
+ * Palette drawn from California's North Coast rivers:
+ * deep forest understory, cobble-bed streams, October oak shadow, amber riffle light.
+ * Light-register theme.
+ */
+
+/* Google Fonts — Bitter (naturalist slab serif) + DM Sans (clean body) */
+@import url('https://fonts.googleapis.com/css2?family=Bitter:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap');
+
+$font-family-sans-serif: 'DM Sans', system-ui, sans-serif;
+$font-family-monospace:  'Fira Code', ui-monospace, 'Cascadia Mono', Menlo, monospace;
+$headings-font-family:   'Bitter', Georgia, 'Times New Roman', serif;
+
+/* Core palette */
+$primary:   #1d5e35;   /* deep forest green */
+$secondary: #5f7a6b;   /* muted sage */
+$success:   #16a34a;   /* frog green */
+$info:      #0c6b5e;   /* dark stream teal */
+$warning:   #c2610f;   /* autumn amber */
+$danger:    #dc2626;   /* ESA Endangered red */
+$light:     #f0f7f1;   /* cool off-white */
+$dark:      #1a2e1e;   /* near-black forest */
+
+/* Body */
+$body-bg:         #f0f7f1;
+$body-color:      #1a2e1e;
+$link-color:      #0c6b5e;
+$link-hover-color: #1d5e35;
+
+/* Type scale */
+$font-size-base:   1rem;
+$line-height-base: 1.75;
+
+/* Headings */
+$headings-color:       #1a2e1e;
+$headings-font-weight: 600;
+
+/*-- scss:rules --*/
+
+/* === Page-load animation === */
+@keyframes fadeSlideUp {
+	from { opacity: 0; transform: translateY(16px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+body {
+	animation: fadeSlideUp 0.5s ease-out both;
+}
+
+/* === Background — topographic diagonal lines === */
+body::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	background:
+		radial-gradient(ellipse 130% 80% at 70% 15%, #dff0e4 0%, transparent 60%),
+		repeating-linear-gradient(
+			-35deg,
+			transparent,
+			transparent 28px,
+			rgba(29, 94, 53, 0.032) 28px,
+			rgba(29, 94, 53, 0.032) 29px
+		);
+	pointer-events: none;
+}
+
+/* === TOC === */
+#TOC {
+	font-size: 0.91em;
+	border-left: 3px solid rgba(29, 94, 53, 0.25);
+	padding-left: 0.5rem;
+
+	.nav-link {
+		color: #5f7a6b;
+		&:hover, &.active { color: #1d5e35; }
+	}
+}
+
+/* === Headings === */
+h1, h2, h3, h4 {
+	letter-spacing: -0.015em;
+}
+
+h1 { color: #1a2e1e; }
+
+h2 {
+	color: #1d5e35;
+	border-bottom: 2px solid rgba(29, 94, 53, 0.2);
+	padding-bottom: 0.3rem;
+	margin-top: 2.4rem;
+}
+
+h3 {
+	color: #2d5c40;
+	margin-top: 1.6rem;
+}
+
+/* === Pull quote === */
+.pullquote {
+	border-left: 4px solid #c2610f;
+	background: #fef7ee;
+	padding: 1.1rem 1.6rem;
+	margin: 1.8rem 0;
+	font-style: italic;
+	font-size: 1.06em;
+	color: #3a2a12;
+	border-radius: 0 6px 6px 0;
+}
+
+/* === ESA status badges === */
+.badge-endangered {
+	display: inline-block;
+	background: #dc2626;
+	color: #fff;
+	font-size: 0.8em;
+	font-weight: 700;
+	padding: 2px 9px;
+	border-radius: 4px;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+
+.badge-threatened {
+	display: inline-block;
+	background: #c2610f;
+	color: #fff;
+	font-size: 0.8em;
+	font-weight: 700;
+	padding: 2px 9px;
+	border-radius: 4px;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+
+.badge-notlisted {
+	display: inline-block;
+	background: #16a34a;
+	color: #fff;
+	font-size: 0.8em;
+	font-weight: 700;
+	padding: 2px 9px;
+	border-radius: 4px;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+}
+
+/* === Stat display === */
+.frog-stat {
+	font-size: 2.6rem;
+	font-weight: 700;
+	color: #1d5e35;
+	text-align: center;
+	font-family: 'Bitter', Georgia, serif;
+	line-height: 1.1;
+	margin: 0.5rem 0 0.1rem;
+}
+
+.frog-stat-label {
+	text-align: center;
+	color: #5f7a6b;
+	font-size: 0.88em;
+	margin-bottom: 1.2rem;
+}
+
+/* === Sighting callout card === */
+.sighting-card {
+	background: #e8f5ed;
+	border-left: 5px solid #1d5e35;
+	border-radius: 0 8px 8px 0;
+	padding: 1.1rem 1.4rem;
+	margin: 1.4rem 0;
+	font-size: 0.97em;
+}
+
+.sighting-card strong {
+	color: #1d5e35;
+}
+
+/* === Callout blocks === */
+.callout {
+	border-radius: 6px;
+}
+
+.callout-note    { border-left-color: #0c6b5e !important; }
+.callout-warning { border-left-color: #c2610f !important; }
+.callout-tip     { border-left-color: #16a34a !important; }
+.callout-important { border-left-color: #dc2626 !important; }
+
+/* === Tables === */
+table {
+	font-size: 0.95em;
+}
+
+thead th {
+	background-color: #1d5e35;
+	color: #f0f7f1;
+	font-family: 'DM Sans', sans-serif;
+	font-weight: 500;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	font-size: 0.78rem;
+}
+
+tbody tr:nth-child(even) {
+	background-color: rgba(29, 94, 53, 0.04);
+}
+
+/* === Code blocks === */
+pre.sourceCode {
+	background-color: #e6f2e9 !important;
+	border: 1px solid #c2dbc8 !important;
+	border-radius: 6px;
+}
+
+/* === Figures === */
+figure {
+	margin: 2rem 0;
+}
+
+.figure-caption {
+	color: #5f7a6b;
+	font-size: 0.9em;
+	font-style: italic;
+}
+
+/* === Folium map container === */
+iframe {
+	border-radius: 8px;
+	border: 1px solid rgba(29, 94, 53, 0.2);
+}
+
+/* === Staggered section reveals === */
+section, .level2 {
+	animation: fadeSlideUp 0.45s ease-out both;
+}
+
+/* === Blockquote === */
+blockquote {
+	border-left: 3px solid #1d5e35;
+	background: rgba(29, 94, 53, 0.05);
+	padding: 0.75rem 1.25rem;
+	border-radius: 0 6px 6px 0;
+	font-style: italic;
+	color: #3a5c42;
+}

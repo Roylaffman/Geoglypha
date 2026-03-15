@@ -1,0 +1,560 @@
+---
+title: "Seas of Stone"
+subtitle: "The Barays of Angkor and the Hydraulic Civilization of the Khmer Empire"
+author: "Ryan Lafferty"
+date: last-modified
+format:
+  html:
+    theme: [cosmo, angkor-barays.scss]
+    toc: true
+    toc-location: left
+    toc-depth: 3
+    code-fold: true
+    code-summary: "Show code"
+    embed-resources: true
+    smooth-scroll: true
+    page-layout: full
+    fig-cap-location: bottom
+jupyter: python3
+execute:
+  cache: false
+  warning: false
+  message: false
+---
+
+## The Scale of the Impossible
+
+The West Baray holds 53 million cubic meters of water. It was dug by hand.
+
+Workers moved an estimated 8 million cubic meters of earth to build its dikes, which rise nearly 12 meters above the surrounding plain and extend 8 kilometers from end to end. At their widest point the dikes are broad enough to walk across comfortably. The reservoir they contain is large enough to be visible from space, a perfect rectangle of water pressed into the Cambodian plain west of Angkor Thom, more or less unchanged since the 11th century.
+
+It is one of four barays, the massive artificial reservoirs that defined the Khmer Empire's relationship with water. Together they represent a hydraulic engineering program unmatched in the pre-industrial world outside of the great river civilizations, and in some ways surpassing them: the barays were not built beside a natural river system but imposed on a flat, seasonally flooded plain using captured monsoon runoff and carefully engineered gradients. The Khmer did not exploit geography. They rewrote it.
+
+## Data and Setup
+
+```{python}
+#| label: setup
+#| cache: false
+
+import os
+import sys
+import warnings
+import json
+
+warnings.filterwarnings("ignore")
+
+import pandas as pd
+import geopandas as gpd
+import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+from matplotlib.lines import Line2D
+import folium
+from folium.plugins import Fullscreen
+from dotenv import load_dotenv
+from sqlalchemy import create_engine
+
+load_dotenv("../.env")
+
+# PostGIS connection
+conn_str = (
+    f"postgresql://{os.environ['PG_USER']}:{os.environ['PG_PASSWORD']}"
+    f"@{os.environ['PG_HOST']}:{os.environ['PG_PORT']}/{os.environ['PG_DBNAME']}"
+)
+engine = create_engine(conn_str)
+
+# Load spatial data from PostGIS
+barays      = gpd.read_postgis("SELECT * FROM angkor_barays",      engine, geom_col="geom")
+temples     = gpd.read_postgis("SELECT * FROM angkor_temples",     engine, geom_col="geom")
+waterways   = gpd.read_postgis("SELECT * FROM angkor_waterways",   engine, geom_col="geom")
+mebons      = gpd.read_postgis("SELECT * FROM angkor_mebon_temples", engine, geom_col="geom")
+
+# Ensure WGS84
+barays    = barays.to_crs(epsg=4326)
+temples   = temples.to_crs(epsg=4326)
+waterways = waterways.to_crs(epsg=4326)
+mebons    = mebons.to_crs(epsg=4326)
+
+def drop_timestamps(gdf):
+    """Remove datetime columns that Folium cannot JSON-serialize."""
+    ts_cols = [c for c in gdf.columns if str(gdf[c].dtype).startswith("datetime")]
+    return gdf.drop(columns=ts_cols)
+
+barays    = drop_timestamps(barays)
+temples   = drop_timestamps(temples)
+waterways = drop_timestamps(waterways)
+mebons    = drop_timestamps(mebons)
+
+print(f"Barays:     {len(barays):>4} features")
+print(f"Temples:    {len(temples):>4} features")
+print(f"Waterways:  {len(waterways):>4} features")
+print(f"Mebons:     {len(mebons):>4} features (seeded from research)")
+```
+
+## The Empire and Its Capital
+
+The Khmer Empire held its shape for more than six centuries, from the declaration of Jayavarman II as chakravartin (universal ruler) on Phnom Kulen in 802 CE to the sacking of Angkor by the Ayutthaya Kingdom in 1431. At its peak, between the 11th and 13th centuries, it controlled or vassalized much of mainland Southeast Asia. The capital, Angkor, was not a city in the usual sense but a sprawling low-density urban system of temples, residential compounds, rice paddies, and waterways spread across roughly 1,000 square kilometers. Its population at peak is estimated between 750,000 and one million, which would rank it among the largest pre-industrial urban centers on Earth.
+
+That population was fed almost entirely by rice. Three harvests per year were possible when water was reliable. Reliability, in a monsoon climate with a six-month dry season, required infrastructure. The barays were that infrastructure.
+
+```{python}
+#| label: baray-comparison-table
+
+baray_data = {
+    "Baray": ["East Baray (Yashodharatataka)", "West Baray"],
+    "Built by": ["Yasovarman I", "Suryavarman I / Udayadityavarman II"],
+    "Constructed": ["~900 CE", "1000–1066 CE"],
+    "Length (km)": [7.5, 8.0],
+    "Width (km)": [1.8, 2.2],
+    "Dike height (m)": ["~3–4", "~12"],
+    "Capacity (million m³)": ["36–55", "53"],
+    "Island temple": ["East Mebon (953 CE)", "West Mebon (~1060 CE)"],
+    "Current status": ["Dry — farmed today", "Partially filled — active lake"],
+}
+
+df = pd.DataFrame(baray_data)
+df.set_index("Baray", inplace=True)
+df
+```
+
+## The Hydraulic Machine
+
+### Collecting the Monsoon
+
+The Kulen Hills, a sandstone massif 40 kilometers northeast of Angkor, receive the first and heaviest monsoon rains each season. Khmer engineers channeled the runoff from these hills into the Siem Reap River, then rerouted and canalized the river to feed the barays and the city's moats. The engineering was not spectacular in any single structure but in its cumulative precision: the gradients were shallow, the channels wide, and the entire system was designed to fill slowly and drain slowly, moderating the extreme seasonality of the Cambodian climate.
+
+The moats around Angkor Wat and Angkor Thom were not decorative. Below ground they helped regulate the water table, keeping the clay-rich laterite soil saturated enough to prevent cracking but not so saturated as to undermine the foundation stones. Temple stability and water management were not separate engineering problems. They were the same problem.
+
+### The Village Scale
+
+The infrastructure did not stop at the barays. Across the plain, households and village clusters dug smaller ponds called trapeangs for drinking water and kitchen gardens. The trapeangs connected to the broader canal network during the wet season and held enough water to see a household through the dry months. The system was coherent from the regional scale down to the individual plot, a hydraulic gradient from the Kulen Hills to the rice paddy to the garden pond.
+
+```{python}
+#| label: waterway-summary
+
+canal_types = waterways["waterway"].value_counts().reset_index()
+canal_types.columns = ["Waterway Type", "Feature Count"]
+canal_types
+```
+
+### Three Harvests
+
+The arithmetic of Angkor's prosperity rests on a simple fact: dry-season rice cultivation requires irrigation, and irrigation at scale requires infrastructure. Without the barays and canal network, the Cambodian plain produces one rice harvest per year, during and immediately after the monsoon. With reliable irrigation, the number rises to two or three. Doubling or tripling agricultural output on the same land is the material foundation of the entire empire: the tax revenue, the labor mobilization, the temple construction, the military capacity.
+
+The barays were not monuments to surplus. They were the mechanism of surplus.
+
+## The Two Barays
+
+### East Baray
+
+Yasovarman I built the East Baray around 900 CE as part of the establishment of his capital, Yashodharapura. Its construction required moving approximately 8 million cubic meters of fill into the enclosing dikes. At full capacity it held between 36 and 55 million cubic meters of water across an area of 7.5 by 1.8 kilometers.
+
+The East Baray is now dry. Farmers cultivate rice on its bed. Its outline is visible in satellite imagery, and the East Mebon, built in 953 CE on an artificial island at the baray's center, now stands in open paddy fields where water once surrounded it on all sides.
+
+### West Baray
+
+The West Baray is the largest. Its construction stretched across the reigns of Suryavarman I and Udayadityavarman II, beginning around 1000 CE and completing around 1066. At 8 kilometers by 2.2 kilometers, with earthen dikes rising nearly 12 meters, it remains one of the largest hand-excavated water features on Earth.
+
+Unlike the East Baray, the West Baray still holds water. A lake occupies roughly two-thirds of its western portion, fed by seasonal rains and an intact intake channel. It is used for irrigation and fishing today. The West Mebon, an 11th-century temple on an artificial island, is still accessible only by boat.
+
+```{python}
+#| label: baray-map-static
+#| fig-cap: "East and West Barays of Angkor with temple locations. Data: OpenStreetMap Overpass API."
+
+fig, ax = plt.subplots(1, 1, figsize=(14, 9))
+fig.patch.set_facecolor("#1a1d26")
+ax.set_facecolor("#1a1d26")
+
+# Angkor region bounding box
+ax.set_xlim(103.68, 104.08)
+ax.set_ylim(13.28, 13.58)
+
+# Waterways
+if not waterways.empty:
+    waterways.plot(
+        ax=ax,
+        color="#3d7a9e",
+        linewidth=0.4,
+        alpha=0.5,
+        label="Canals & Waterways",
+    )
+
+# Barays
+if not barays.empty:
+    barays.plot(
+        ax=ax,
+        color="#4a90c4",
+        edgecolor="#6ab0e0",
+        linewidth=0.8,
+        alpha=0.6,
+        label="Barays (OSM)",
+    )
+
+# Temples
+if not temples.empty:
+    temples.plot(
+        ax=ax,
+        color="#c9a84c",
+        edgecolor="#e8c96c",
+        linewidth=0.5,
+        alpha=0.7,
+        label="Temples",
+    )
+
+# Mebon temple points
+for _, row in mebons.iterrows():
+    ax.plot(
+        row.geom.x, row.geom.y,
+        "o", color="#c9a84c", markersize=8, zorder=5,
+        markeredgecolor="#e8c96c", markeredgewidth=1.2,
+    )
+    ax.annotate(
+        row["name"],
+        xy=(row.geom.x, row.geom.y),
+        xytext=(6, 6), textcoords="offset points",
+        fontsize=8, color="#e8c96c",
+        fontfamily="Jost" if "Jost" in plt.rcParams.get("font.family", []) else "sans-serif",
+    )
+
+# Legend
+legend_elements = [
+    mpatches.Patch(facecolor="#4a90c4", edgecolor="#6ab0e0", alpha=0.7, label="Barays"),
+    mpatches.Patch(facecolor="#c9a84c", edgecolor="#e8c96c", alpha=0.7, label="Temples"),
+    Line2D([0], [0], color="#3d7a9e", linewidth=1.2, alpha=0.7, label="Waterways"),
+]
+ax.legend(
+    handles=legend_elements,
+    loc="lower right",
+    facecolor="#1a1d26",
+    edgecolor="#c9a84c",
+    labelcolor="#ddd8cc",
+    fontsize=9,
+)
+
+ax.set_title(
+    "Angkor Archaeological Park — Barays, Temples, and Waterways",
+    color="#e8dfc8",
+    fontsize=13,
+    pad=12,
+)
+ax.tick_params(colors="#7a8898")
+for spine in ax.spines.values():
+    spine.set_edgecolor("#c9a84c")
+    spine.set_alpha(0.3)
+
+plt.tight_layout()
+plt.show()
+```
+
+## The Island Temples
+
+Each baray held a temple on an artificial island at its center. The cosmological logic was precise: the baray was the cosmic ocean, the island was Mount Meru, and the temple at the summit was the axis around which the Hindu universe turned. The king who built the baray and the temple was not merely a political ruler but a divine pivot.
+
+### East Mebon (953 CE)
+
+Rajendravarman II consecrated the East Mebon in 953 CE, building in the Pre Rup architectural style: a multi-tiered sandstone pyramid with brick towers at each level and a quincunx of five towers at the summit. The structure rises 18 meters from a 120-meter square base. Eight three-headed elephant sculptures in sandstone anchor the corners of the lower two terraces — well-preserved and unique to this temple.
+
+The East Mebon was once reached exclusively by boat. The baray it sat in is now dry, and the temple stands in open fields.
+
+### West Mebon (~1060 CE)
+
+Udayadityavarman II built the West Mebon in the Baphuon and Kleang architectural style, contemporary with the Baphuon temple in Angkor Thom. The structure is largely ruined today: only laterite foundations and scattered sandstone fragments remain, and the central tower is entirely gone.
+
+Its dedication to Vishnu was confirmed in 1936 by the discovery of a 5.9-meter bronze fragment of a colossal reclining Vishnu, one of the most significant Angkorian bronze sculptures ever recovered. The fragment is now in the National Museum of Cambodia in Phnom Penh. The West Mebon remains accessible only by boat across the still-full West Baray.
+
+```{python}
+#| label: mebon-table
+
+mebon_table = mebons[[
+    "name", "baray", "consecration_year", "commissioning_king",
+    "architectural_style", "religious_dedication",
+    "base_dimension_m", "height_m", "preservation_status", "accessible_by"
+]].copy()
+mebon_table.columns = [
+    "Temple", "Baray", "Consecrated", "Built by",
+    "Style", "Dedicated to", "Base (m)", "Height (m)", "Status", "Access"
+]
+mebon_table
+```
+
+## The Hydraulic City: Interactive Map
+
+```{python}
+#| label: interactive-map
+
+# Angkor region center
+CENTER = [13.41, 103.87]
+
+m = folium.Map(location=CENTER, zoom_start=12, tiles=None)
+
+# Base tile layers — switchable in layer control
+folium.TileLayer(
+	tiles="CartoDB dark_matter",
+	name="Dark (CartoDB)",
+	control=True,
+).add_to(m)
+
+folium.TileLayer(
+	tiles="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+	attr="Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community",
+	name="Satellite (Esri)",
+	control=True,
+).add_to(m)
+
+Fullscreen(position="topright").add_to(m)
+
+# Waterways layer
+ww_layer = folium.FeatureGroup(name="Canals and Waterways", show=True)
+if not waterways.empty:
+    folium.GeoJson(
+        waterways.__geo_interface__,
+        style_function=lambda f: {
+            "color": "#3d7a9e",
+            "weight": 1.2,
+            "opacity": 0.6,
+        },
+    ).add_to(ww_layer)
+ww_layer.add_to(m)
+
+# Barays layer
+baray_layer = folium.FeatureGroup(name="Barays (Reservoirs)", show=True)
+if not barays.empty:
+    folium.GeoJson(
+        barays.__geo_interface__,
+        style_function=lambda f: {
+            "fillColor": "#4a90c4",
+            "color": "#6ab0e0",
+            "weight": 1.5,
+            "fillOpacity": 0.35,
+        },
+        tooltip=folium.GeoJsonTooltip(
+            fields=["name"],
+            aliases=["Baray:"],
+        ),
+    ).add_to(baray_layer)
+baray_layer.add_to(m)
+
+# Temples layer
+temple_layer = folium.FeatureGroup(name="Temples", show=True)
+if not temples.empty:
+    folium.GeoJson(
+        temples.__geo_interface__,
+        style_function=lambda f: {
+            "fillColor": "#c9a84c",
+            "color": "#e8c96c",
+            "weight": 1.0,
+            "fillOpacity": 0.45,
+        },
+        tooltip=folium.GeoJsonTooltip(
+            fields=["name"],
+            aliases=["Temple:"],
+        ),
+    ).add_to(temple_layer)
+temple_layer.add_to(m)
+
+# Mebon point markers
+mebon_layer = folium.FeatureGroup(name="Island Temples (Mebon)", show=True)
+for _, row in mebons.iterrows():
+    popup_html = f"""
+    <div style='min-width:220px; font-family:sans-serif;'>
+        <b style='font-size:1.05em; color:#c9a84c;'>{row['name']}</b><br>
+        <i style='color:#888;'>{row['architectural_style']}</i><br>
+        <span style='color:#aaa;'>Consecrated: {row['consecration_year'] or 'c. 1060'} CE</span><br>
+        <span style='color:#aaa;'>Built by: {row['commissioning_king']}</span><br>
+        <span style='color:#aaa;'>Status: {row['preservation_status']}</span>
+    </div>
+    """
+    folium.CircleMarker(
+        location=[row.geom.y, row.geom.x],
+        radius=9,
+        color="#c9a84c",
+        fill=True,
+        fill_color="#c9a84c",
+        fill_opacity=0.85,
+        popup=folium.Popup(popup_html, max_width=280),
+        tooltip=row["name"],
+    ).add_to(mebon_layer)
+mebon_layer.add_to(m)
+
+folium.LayerControl().add_to(m)
+m
+```
+
+```{python}
+#| label: comparison-slider
+#| echo: false
+
+import json as _json
+from IPython.display import HTML as _HTML
+
+# Export layers to GeoJSON strings for inline embedding
+def _to_geojson(gdf):
+	ts_cols = [c for c in gdf.columns if str(gdf[c].dtype).startswith("datetime")]
+	return _json.dumps(gdf.drop(columns=ts_cols).__geo_interface__)
+
+_baray_json    = _to_geojson(barays)
+_temple_json   = _to_geojson(temples)
+_waterway_json = _to_geojson(waterways)
+_mebon_json    = _to_geojson(mebons)
+
+_ESRI = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+_ESRI_ATTR = "Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
+
+_slider_html = f"""
+<div style="margin: 2rem 0;">
+
+<button
+	id="cmp-toggle-btn"
+	onclick="cmpToggle()"
+	style="
+		background: rgba(201,168,76,0.12);
+		border: 1px solid rgba(201,168,76,0.4);
+		border-radius: 6px;
+		color: #c9a46e;
+		cursor: pointer;
+		font-family: 'Cinzel', 'EB Garamond', Georgia, serif;
+		font-size: 0.82rem;
+		letter-spacing: 0.08em;
+		padding: 0.55em 1.2em;
+		text-transform: uppercase;
+		transition: background 0.2s;
+	"
+	onmouseover="this.style.background='rgba(201,168,76,0.22)'"
+	onmouseout="this.style.background='rgba(201,168,76,0.12)'"
+>
+	Show Layer Comparison Slider
+</button>
+
+<div id="cmp-wrapper" style="display:none; margin-top:1rem;">
+	<p style="font-family:'EB Garamond',Georgia,serif; font-size:0.88rem;
+	          color:#a09080; margin-bottom:0.6rem; letter-spacing:0.02em;">
+		Drag the center divider to compare satellite imagery alone (left)
+		against the full layer stack — barays, temples, canals, and island
+		temples (right).
+	</p>
+	<div id="cmp-map" style="height:600px; border-radius:8px;
+	     border:1px solid rgba(141,42,42,0.25);"></div>
+</div>
+
+</div>
+
+<link rel="stylesheet"
+	href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-side-by-side@2.2.0/leaflet-side-by-side.min.js"></script>
+
+<script>
+var _cmpReady = false;
+
+function cmpToggle() {{
+	var wrapper = document.getElementById('cmp-wrapper');
+	var btn     = document.getElementById('cmp-toggle-btn');
+	var visible = wrapper.style.display !== 'none';
+	if (visible) {{
+		wrapper.style.display = 'none';
+		btn.textContent = 'Show Layer Comparison Slider';
+	}} else {{
+		wrapper.style.display = 'block';
+		btn.textContent = 'Hide Layer Comparison Slider';
+		if (!_cmpReady) {{ _cmpInit(); _cmpReady = true; }}
+	}}
+}}
+
+function _cmpInit() {{
+	var map = L.map('cmp-map', {{ center: [13.41, 103.87], zoom: 12 }});
+
+	// Left pane — satellite only
+	var leftTile = L.tileLayer('{_ESRI}', {{
+		attribution: '{_ESRI_ATTR}',
+		maxZoom: 19
+	}}).addTo(map);
+
+	// Right pane — satellite (same source, layers drawn on top)
+	var rightTile = L.tileLayer('{_ESRI}', {{
+		attribution: '{_ESRI_ATTR}',
+		maxZoom: 19
+	}}).addTo(map);
+
+	// Data layers — assigned to right pane via slider
+	var barayLayer = L.geoJSON({_baray_json}, {{
+		style: {{
+			color: '#6ab0e0', fillColor: '#4a90c4',
+			weight: 1.8, fillOpacity: 0.45
+		}},
+		onEachFeature: function(f, l) {{
+			if (f.properties && f.properties.name)
+				l.bindTooltip('<b>' + f.properties.name + '</b>',
+				              {{className: 'leaflet-tooltip'}});
+		}}
+	}}).addTo(map);
+
+	var templeLayer = L.geoJSON({_temple_json}, {{
+		style: {{
+			color: '#e8c96c', fillColor: '#c9a84c',
+			weight: 1.2, fillOpacity: 0.5
+		}},
+		onEachFeature: function(f, l) {{
+			if (f.properties && f.properties.name)
+				l.bindTooltip(f.properties.name);
+		}}
+	}}).addTo(map);
+
+	var waterwayLayer = L.geoJSON({_waterway_json}, {{
+		style: {{ color: '#4a9ec4', weight: 1.4, opacity: 0.65 }}
+	}}).addTo(map);
+
+	var mebonLayer = L.geoJSON({_mebon_json}, {{
+		pointToLayer: function(f, latlng) {{
+			return L.circleMarker(latlng, {{
+				radius: 8,
+				color: '#c9a84c',
+				fillColor: '#c9a84c',
+				fillOpacity: 0.9,
+				weight: 2
+			}});
+		}},
+		onEachFeature: function(f, l) {{
+			if (f.properties && f.properties.name)
+				l.bindTooltip('<b>' + f.properties.name + '</b>');
+		}}
+	}}).addTo(map);
+
+	// Slider: left = satellite only, right = satellite + all layers
+	L.control.sideBySide(
+		leftTile,
+		[rightTile, barayLayer, templeLayer, waterwayLayer, mebonLayer]
+	).addTo(map);
+
+	// Force a resize so tiles load correctly after hidden div reveal
+	setTimeout(function() {{ map.invalidateSize(); }}, 200);
+}}
+</script>
+"""
+
+_HTML(_slider_html)
+```
+
+## Collapse of the Machine
+
+### Climate and the Killing Season
+
+The hydraulic system that built the empire also contributed to its collapse. Paleoclimate data derived from tree-ring records shows that the 14th and 15th centuries brought a brutal alternation: extended droughts followed by catastrophic monsoon events. This pattern struck at the specific vulnerability of the Angkorian system. The canals and barays were engineered for a relatively predictable seasonal rhythm. They were not engineered for drought years that left the watershed bare, followed by intense rainfall events that flushed enormous sediment loads into the network.
+
+In some areas, erosion cut channels 8 meters below the surrounding terrain. Key arteries silted shut. The system that had enabled three rice harvests per year ceased to function reliably, then in sections, then across whole districts.
+
+### What LiDAR Found
+
+The Greater Angkor Project used airborne LiDAR (Light Detection and Ranging) technology to produce high-resolution topographic maps of the Angkor region beneath the forest canopy. The technology revealed a pre-industrial urban complex far larger than previously understood, along with the failure points of its hydraulic infrastructure.
+
+Hydrological models built from the LiDAR data demonstrated how floods, after the network was compromised, concentrated into a diminishing number of functional channels. The concentration increased erosive force in those channels while reducing flow in others, accelerating silting. Each failure made the next more likely. The system collapsed not from a single blow but from cascading interdependence.
+
+### 1431
+
+By the time the Ayutthaya Kingdom sacked Angkor in 1431, the hydraulic machine had already fractured. The sack accelerated an abandonment already underway. The capital moved south to Lovek, then Phnom Penh. The jungle moved into the canal network. By the time French naturalist Henri Mouhot encountered Angkor Wat in 1860, the temple had been maintained by Buddhist monks in continuous occupation for four centuries, but the hydraulic city it once anchored was invisible under the canopy.
+
+The LiDAR surveys have now made it visible again.
+
+## Site Status
+
+Angkor was inscribed on the UNESCO World Heritage List in 1992, covering approximately 400 km² of temples, hydraulic infrastructure, and ancient urban fabric. It was briefly placed on the Danger List due to looting and uncontrolled development in the early post-conflict period, then removed in 2004 following sustained international conservation investment. The site receives approximately 2 million visitors per year and is managed by APSARA National Authority under the Cambodian government.
+
+The West Baray remains functional as a reservoir. Farmers cultivate the bed of the East Baray. The canal network is partially traceable on the ground and in full detail in the LiDAR data. The mebons sit in the centers of their respective barays, one dry, one wet, as they have since the 11th century.
