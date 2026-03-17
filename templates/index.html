@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<!-- Ryan Lafferty — Geoglypha Tools Suite -->
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Geoglypha Tools</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&family=Nunito+Sans:wght@300;400;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+	<style>
+		:root {
+			--bg:          #faf8f4;
+			--surface:     #ffffff;
+			--surface-2:   #f2edd7;
+			--border:      #d9cdb4;
+			--border-2:    #e8e0cc;
+			--primary:     #3a6351;
+			--primary-dim: #2a4d3e;
+			--amber:       #7c3d12;
+			--amber-light: #a16207;
+			--amber-faint: rgba(124,61,18,0.07);
+			--red:         #b91c1c;
+			--text:        #2c1810;
+			--muted:       #78716c;
+			--muted-2:     #a8a29e;
+			--font-head:   'Libre Baskerville', serif;
+			--font-body:   'Nunito Sans', sans-serif;
+			--font-mono:   'JetBrains Mono', monospace;
+		}
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+		body {
+			font-family: var(--font-body);
+			background: var(--bg);
+			color: var(--text);
+			line-height: 1.6;
+			min-height: 100vh;
+		}
+
+		/* ── Nav ── */
+		header {
+			background: var(--primary);
+			border-bottom: 1px solid #2a4d3e;
+			padding: 0.75rem 0;
+			position: sticky;
+			top: 0;
+			z-index: 1000;
+		}
+		.header-content {
+			width: 90%;
+			max-width: 1400px;
+			margin: 0 auto;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+		.logo {
+			font-family: var(--font-head);
+			font-size: 1.4rem;
+			font-weight: 700;
+		}
+		.logo a { color: #f2edd7; text-decoration: none; }
+		.logo span {
+			display: block;
+			font-family: var(--font-body);
+			font-size: 0.72rem;
+			font-weight: 300;
+			color: rgba(242,237,215,0.7);
+			letter-spacing: 0.06em;
+		}
+		nav ul {
+			display: flex;
+			list-style: none;
+			gap: 0.25rem;
+			flex-wrap: wrap;
+		}
+		nav ul li a {
+			color: rgba(242,237,215,0.8);
+			text-decoration: none;
+			font-size: 0.82rem;
+			font-weight: 600;
+			padding: 0.3rem 0.6rem;
+			border-radius: 4px;
+			transition: color 0.2s, background 0.2s;
+			letter-spacing: 0.02em;
+		}
+		nav ul li a:hover { color: #f2edd7; background: rgba(0,0,0,0.15); }
+		nav ul li a.active-tool { color: #f2edd7; text-decoration: underline; text-underline-offset: 3px; }
+		.mobile-menu-btn {
+			display: none;
+			background: none;
+			border: none;
+			color: #f2edd7;
+			font-size: 1.4rem;
+			cursor: pointer;
+		}
+
+		/* ── Hero ── */
+		.hero {
+			background: linear-gradient(160deg, #2a4d3e 0%, #3a6351 60%, #4a7a64 100%);
+			border-bottom: 3px solid var(--amber);
+			padding: 2.5rem 0 2rem;
+			text-align: center;
+		}
+		.hero h1 {
+			font-family: var(--font-head);
+			font-size: 2.2rem;
+			color: #f2edd7;
+			margin-bottom: 0.5rem;
+		}
+		.hero h1 span { color: #f2edd7; opacity: 0.75; font-style: italic; }
+		.hero p {
+			color: rgba(242,237,215,0.8);
+			font-size: 0.95rem;
+			max-width: 560px;
+			margin: 0 auto 1.25rem;
+		}
+		.capability-chips {
+			display: flex;
+			gap: 0.5rem;
+			justify-content: center;
+			flex-wrap: wrap;
+		}
+		.chip {
+			background: rgba(255,255,255,0.12);
+			border: 1px solid rgba(255,255,255,0.2);
+			color: rgba(242,237,215,0.75);
+			padding: 0.25rem 0.75rem;
+			border-radius: 20px;
+			font-size: 0.75rem;
+			font-family: var(--font-mono);
+		}
+		.chip.active { background: rgba(255,255,255,0.2); border-color: #f2edd7; color: #f2edd7; }
+
+		/* ── Tool Tabs ── */
+		.tools-wrapper {
+			width: 90%;
+			max-width: 1400px;
+			margin: 2rem auto;
+		}
+		.tab-bar {
+			display: flex;
+			gap: 0;
+			border-bottom: 2px solid var(--border);
+			margin-bottom: 2rem;
+			overflow-x: auto;
+		}
+		.tab-btn {
+			background: none;
+			border: none;
+			border-bottom: 3px solid transparent;
+			margin-bottom: -2px;
+			color: var(--muted);
+			font-family: var(--font-body);
+			font-size: 0.88rem;
+			font-weight: 600;
+			padding: 0.75rem 1.25rem;
+			cursor: pointer;
+			white-space: nowrap;
+			transition: color 0.2s, border-color 0.2s;
+			letter-spacing: 0.02em;
+		}
+		.tab-btn:hover { color: var(--text); }
+		.tab-btn.active {
+			color: var(--amber);
+			border-bottom-color: var(--amber);
+		}
+		.tab-icon { margin-right: 0.4rem; font-size: 0.95rem; }
+		.tool-panel { display: none; }
+		.tool-panel.active { display: block; }
+
+		/* ── Drop Zone ── */
+		.drop-zone {
+			border: 2px dashed var(--border);
+			border-radius: 10px;
+			background: var(--surface);
+			padding: 2.5rem;
+			text-align: center;
+			cursor: pointer;
+			transition: border-color 0.25s, background 0.25s;
+			position: relative;
+		}
+		.drop-zone:hover, .drop-zone.drag-over {
+			border-color: var(--primary);
+			background: #f0f7f3;
+		}
+		.drop-zone .drop-icon {
+			font-size: 2.5rem;
+			margin-bottom: 0.75rem;
+			opacity: 0.6;
+		}
+		.drop-zone h3 {
+			font-family: var(--font-head);
+			font-size: 1.1rem;
+			color: var(--text);
+			margin-bottom: 0.35rem;
+		}
+		.drop-zone p {
+			color: var(--muted);
+			font-size: 0.85rem;
+			margin-bottom: 1rem;
+		}
+		.file-input { display: none; }
+		.btn-upload {
+			display: inline-block;
+			background: var(--primary);
+			color: #f2edd7;
+			padding: 0.55rem 1.4rem;
+			border-radius: 6px;
+			font-weight: 600;
+			font-size: 0.88rem;
+			cursor: pointer;
+			transition: background 0.2s;
+			border: none;
+		}
+		.btn-upload:hover { background: var(--primary-dim); }
+		.file-chosen {
+			margin-top: 0.6rem;
+			font-size: 0.8rem;
+			color: var(--muted);
+			font-family: var(--font-mono);
+		}
+
+		/* ── Loading ── */
+		.loading-bar {
+			display: none;
+			margin-top: 1.25rem;
+			text-align: center;
+		}
+		.spinner {
+			width: 32px; height: 32px;
+			border: 3px solid var(--border);
+			border-top-color: var(--primary);
+			border-radius: 50%;
+			animation: spin 0.8s linear infinite;
+			margin: 0 auto 0.5rem;
+		}
+		@keyframes spin { to { transform: rotate(360deg); } }
+		.loading-bar p { color: var(--muted); font-size: 0.85rem; }
+
+		/* ── Messages ── */
+		.msg { display: none; margin-top: 1rem; padding: 0.65rem 1rem; border-radius: 6px; font-size: 0.88rem; }
+		.msg.error   { background: rgba(185,28,28,0.08); border: 1px solid rgba(185,28,28,0.25); color: var(--red); }
+		.msg.success { background: rgba(58,99,81,0.08);  border: 1px solid rgba(58,99,81,0.3);   color: var(--primary-dim); }
+
+		/* ── Results common ── */
+		.results-panel {
+			display: none;
+			margin-top: 2rem;
+			animation: fadeIn 0.3s ease;
+		}
+		@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+		.results-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 1rem;
+			flex-wrap: wrap;
+			gap: 0.5rem;
+		}
+		.results-header h2 {
+			font-family: var(--font-head);
+			font-size: 1.15rem;
+			color: var(--text);
+		}
+		.badge {
+			font-family: var(--font-mono);
+			font-size: 0.72rem;
+			padding: 0.2rem 0.6rem;
+			border-radius: 4px;
+			background: var(--surface-2);
+			border: 1px solid var(--border);
+			color: var(--muted);
+		}
+		.badge.green { border-color: #3a6351; color: var(--primary); }
+		.badge.gold  { border-color: #c9a84c; color: var(--amber-light); }
+
+		/* ── Map shared ── */
+		.map-container {
+			width: 100%;
+			height: 420px;
+			border-radius: 8px;
+			overflow: hidden;
+			border: 1px solid var(--border);
+			margin-bottom: 1.25rem;
+		}
+		.map-container > div { height: 100%; }
+
+		/* ── KML feature list ── */
+		.feature-list {
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			max-height: 220px;
+			overflow-y: auto;
+			margin-bottom: 1.25rem;
+		}
+		.feature-item {
+			padding: 0.6rem 1rem;
+			border-bottom: 1px solid var(--border-2);
+			font-size: 0.85rem;
+		}
+		.feature-item:last-child { border-bottom: none; }
+		.feature-item strong { color: var(--text); }
+		.feature-item em { color: var(--muted); font-size: 0.78rem; }
+
+		/* ── Download btn ── */
+		.btn-download {
+			width: 100%;
+			padding: 0.75rem;
+			background: var(--primary);
+			color: #f2edd7;
+			border: none;
+			border-radius: 6px;
+			font-family: var(--font-body);
+			font-weight: 600;
+			font-size: 0.95rem;
+			cursor: pointer;
+			transition: background 0.2s;
+		}
+		.btn-download:hover { background: var(--primary-dim); }
+
+		/* ── Vector viewer: split layout ── */
+		.vector-layout {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 1.25rem;
+			transition: grid-template-columns 0.3s ease;
+		}
+		.vector-layout.table-collapsed {
+			grid-template-columns: 1fr 0fr;
+		}
+		@media (max-width: 900px) { .vector-layout { grid-template-columns: 1fr; } }
+		.attr-panel {
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			display: flex;
+			flex-direction: column;
+			min-height: 420px;
+			max-height: 420px;
+			overflow: hidden;
+			transition: min-width 0.3s ease, opacity 0.3s ease;
+		}
+		.vector-layout.table-collapsed .attr-panel {
+			min-width: 0;
+			opacity: 0;
+			pointer-events: none;
+		}
+		.attr-panel-header {
+			padding: 0.6rem 1rem;
+			border-bottom: 1px solid var(--border);
+			background: var(--surface-2);
+			border-radius: 8px 8px 0 0;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			flex-shrink: 0;
+		}
+		.attr-panel-header h3 { font-size: 0.8rem; font-weight: 600; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+		.btn-collapse-table {
+			background: none;
+			border: 1px solid var(--border);
+			border-radius: 4px;
+			color: var(--muted);
+			font-size: 0.72rem;
+			font-family: var(--font-mono);
+			padding: 0.15rem 0.5rem;
+			cursor: pointer;
+			transition: color 0.2s, border-color 0.2s, background 0.2s;
+			white-space: nowrap;
+		}
+		.btn-collapse-table:hover { color: var(--text); border-color: var(--amber); background: var(--surface-2); }
+		.btn-expand-table {
+			display: none;
+			background: var(--surface-2);
+			border: 1px solid var(--border);
+			border-radius: 6px;
+			color: var(--muted);
+			font-size: 0.78rem;
+			font-family: var(--font-mono);
+			padding: 0.35rem 0.85rem;
+			cursor: pointer;
+			transition: color 0.2s, border-color 0.2s;
+			margin-top: 0.5rem;
+		}
+		.btn-expand-table:hover { color: var(--text); border-color: var(--amber); }
+		.attr-table-wrap { overflow: auto; flex: 1; }
+		table.attr-table {
+			width: 100%;
+			border-collapse: collapse;
+			font-size: 0.8rem;
+			font-family: var(--font-mono);
+		}
+		table.attr-table thead th {
+			background: var(--surface-2);
+			color: var(--muted);
+			padding: 0.5rem 0.75rem;
+			text-align: left;
+			border-bottom: 2px solid var(--border);
+			white-space: nowrap;
+			position: sticky;
+			top: 0;
+			z-index: 1;
+			cursor: pointer;
+			user-select: none;
+		}
+		table.attr-table thead th:hover { color: var(--text); }
+		table.attr-table tbody tr {
+			border-bottom: 1px solid var(--border-2);
+			cursor: pointer;
+			transition: background 0.15s;
+		}
+		table.attr-table tbody tr:hover { background: #f0f7f3; }
+		table.attr-table tbody tr.selected { background: rgba(58,99,81,0.1); }
+		table.attr-table tbody td {
+			padding: 0.4rem 0.75rem;
+			color: var(--text);
+			max-width: 160px;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+		}
+		.crs-badge {
+			font-family: var(--font-mono);
+			font-size: 0.72rem;
+			color: var(--muted);
+			background: #fff;
+			border: 1px solid var(--border);
+			padding: 0.2rem 0.5rem;
+			border-radius: 4px;
+		}
+
+		/* ── Raster metadata cards ── */
+		.meta-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+			gap: 1rem;
+			margin-bottom: 1.5rem;
+		}
+		.meta-card {
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 1rem 1.25rem;
+		}
+		.meta-card .label {
+			font-size: 0.7rem;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.07em;
+			color: var(--muted-2);
+			margin-bottom: 0.35rem;
+		}
+		.meta-card .value {
+			font-family: var(--font-mono);
+			font-size: 0.9rem;
+			color: var(--text);
+			word-break: break-all;
+		}
+		.meta-card.highlight { border-color: var(--primary); border-left: 3px solid var(--primary); }
+		.meta-card.highlight .value { color: var(--primary); }
+		.bands-section h3 {
+			font-family: var(--font-head);
+			font-size: 1rem;
+			color: var(--text);
+			margin-bottom: 0.75rem;
+		}
+		.band-row {
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 6px;
+			padding: 0.75rem 1rem;
+			margin-bottom: 0.5rem;
+			display: grid;
+			grid-template-columns: auto 1fr;
+			gap: 1rem;
+			align-items: center;
+		}
+		.band-num {
+			font-family: var(--font-mono);
+			font-size: 0.78rem;
+			color: var(--amber);
+			background: var(--amber-faint);
+			border: 1px solid rgba(124,61,18,0.2);
+			padding: 0.2rem 0.5rem;
+			border-radius: 4px;
+			white-space: nowrap;
+		}
+		.band-stats {
+			display: flex;
+			gap: 1.5rem;
+			flex-wrap: wrap;
+		}
+		.stat-item .stat-label {
+			font-size: 0.68rem;
+			color: var(--muted-2);
+			text-transform: uppercase;
+			letter-spacing: 0.05em;
+		}
+		.stat-item .stat-val {
+			font-family: var(--font-mono);
+			font-size: 0.85rem;
+			color: var(--text);
+		}
+		.cog-badge {
+			display: inline-block;
+			padding: 0.2rem 0.6rem;
+			border-radius: 4px;
+			font-size: 0.72rem;
+			font-family: var(--font-mono);
+			font-weight: 500;
+		}
+		.cog-badge.yes { background: rgba(58,99,81,0.1); border: 1px solid rgba(58,99,81,0.35); color: var(--primary); }
+		.cog-badge.no  { background: rgba(185,28,28,0.08); border: 1px solid rgba(185,28,28,0.25); color: var(--red); }
+
+		/* ── COG converter ── */
+		.cog-info-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+			gap: 1rem;
+			margin: 1.5rem 0;
+		}
+		.cog-info-card {
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 8px;
+			padding: 1rem 1.25rem;
+		}
+		.cog-info-card .label {
+			font-size: 0.7rem;
+			font-weight: 600;
+			text-transform: uppercase;
+			letter-spacing: 0.07em;
+			color: var(--muted-2);
+			margin-bottom: 0.35rem;
+		}
+		.cog-info-card .value {
+			font-family: var(--font-mono);
+			font-size: 0.9rem;
+			color: var(--primary);
+		}
+		.cog-explainer {
+			background: var(--surface-2);
+			border: 1px solid var(--border);
+			border-left: 3px solid var(--primary);
+			border-radius: 8px;
+			padding: 1rem 1.25rem;
+			margin-bottom: 1.5rem;
+			font-size: 0.85rem;
+			color: var(--muted);
+			line-height: 1.7;
+		}
+		.cog-explainer strong { color: var(--text); }
+
+		/* ── Footer ── */
+		footer {
+			background: var(--primary);
+			border-top: 3px solid var(--amber);
+			padding: 2rem 0 1.25rem;
+			margin-top: 4rem;
+		}
+		.footer-inner {
+			width: 90%;
+			max-width: 1400px;
+			margin: 0 auto;
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+			gap: 2rem;
+			margin-bottom: 1.5rem;
+		}
+		.footer-col h3 {
+			font-family: var(--font-head);
+			font-size: 0.95rem;
+			color: #f2edd7;
+			margin-bottom: 0.75rem;
+		}
+		.footer-col ul { list-style: none; }
+		.footer-col ul li { margin-bottom: 0.4rem; }
+		.footer-col ul li a {
+			color: rgba(242,237,215,0.7);
+			text-decoration: none;
+			font-size: 0.85rem;
+			transition: color 0.2s;
+		}
+		.footer-col ul li a:hover { color: #f2edd7; }
+		.copyright {
+			width: 90%;
+			max-width: 1400px;
+			margin: 0 auto;
+			text-align: center;
+			border-top: 1px solid rgba(255,255,255,0.15);
+			padding-top: 1rem;
+			font-size: 0.8rem;
+			color: rgba(242,237,215,0.55);
+		}
+
+		/* ── Responsive ── */
+		@media (max-width: 768px) {
+			.mobile-menu-btn { display: block; }
+			nav { display: none; width: 100%; }
+			nav.active { display: block; }
+			nav ul { flex-direction: column; padding: 0.75rem 0; }
+			nav ul li a { display: block; padding: 0.5rem 0; }
+			.header-content { flex-wrap: wrap; gap: 0.5rem; }
+			.hero h1 { font-size: 1.6rem; }
+			.map-container { height: 280px; }
+		}
+	</style>
+</head>
+<body>
+
+<header>
+	<div class="header-content">
+		<div class="logo">
+			<a href="https://www.geoglypha1.org">Geoglypha</a>
+			<span>Tools &amp; Utilities</span>
+		</div>
+		<button class="mobile-menu-btn" id="menuBtn">&#9776;</button>
+		<nav id="mainNav">
+			<ul>
+				<li><a href="https://www.geoglypha1.org">Home</a></li>
+				<li><a href="https://www.geoglypha1.org/geography.html">Geography</a></li>
+				<li><a href="https://www.geoglypha1.org/history.html">History</a></li>
+				<li><a href="https://www.geoglypha1.org/#projects">Projects</a></li>
+				<li><a href="https://www.geoglypha1.org/weather">Weather</a></li>
+				<li><a href="https://www.geoglypha1.org/graphita/graphitia.html">Gallery</a></li>
+				<li><a href="/" class="active-tool">Tools</a></li>
+				<li><a href="https://www.geoglypha1.org/supplies.html" style="color:#D8B4FE;">Supplies</a></li>
+				<li><a href="https://www.geoglypha1.org/stack.html" style="color:#86EFAC;">Stack</a></li>
+				<li><a href="https://www.geoglypha1.org/#about">About</a></li>
+				<li><a href="https://www.geoglypha1.org/#contact">Contact</a></li>
+			</ul>
+		</nav>
+	</div>
+</header>
+
+<section class="hero">
+	<div>
+		<h1>Geoglypha <span>Tools</span></h1>
+		<p>Browser-based GIS utilities for vector viewing, raster analysis, and format conversion.</p>
+		<div class="capability-chips">
+			<span class="chip active">KML / KMZ</span>
+			<span class="chip active">GeoJSON</span>
+			<span class="chip active">Shapefile</span>
+			<span class="chip active">GeoTIFF</span>
+			<span class="chip active">COG</span>
+			<span class="chip">GRASS GIS (coming)</span>
+			<span class="chip">QGIS (coming)</span>
+		</div>
+	</div>
+</section>
+
+<div class="tools-wrapper">
+
+	<!-- Tab bar -->
+	<div class="tab-bar">
+		<button class="tab-btn active" data-tab="kml"><span class="tab-icon">🔄</span>KML / KMZ Converter</button>
+		<button class="tab-btn" data-tab="vector"><span class="tab-icon">🗺️</span>Vector Viewer</button>
+		<button class="tab-btn" data-tab="raster"><span class="tab-icon">📊</span>Raster Info</button>
+		<button class="tab-btn" data-tab="cog"><span class="tab-icon">⚡</span>TIF → COG</button>
+	</div>
+
+	<!-- ════════════════════════════════════════ TAB: KML ════ -->
+	<div class="tool-panel active" id="tab-kml">
+
+		<div class="drop-zone" id="kmlDropZone">
+			<div class="drop-icon">📂</div>
+			<h3>Upload KML or KMZ File</h3>
+			<p>Converts to GeoJSON preserving folder structure and all attributes.</p>
+			<label class="btn-upload" for="kmlInput">Choose File</label>
+			<input type="file" class="file-input" id="kmlInput" accept=".kml,.kmz">
+			<div class="file-chosen" id="kmlChosen">No file selected</div>
+		</div>
+		<div class="loading-bar" id="kmlLoading">
+			<div class="spinner"></div>
+			<p>Converting...</p>
+		</div>
+		<div class="msg error" id="kmlError"></div>
+		<div class="msg success" id="kmlSuccess"></div>
+
+		<div class="results-panel" id="kmlResults">
+			<div class="results-header">
+				<h2>Conversion Results</h2>
+				<div id="kmlBadges"></div>
+			</div>
+			<div class="map-container"><div id="kmlMap"></div></div>
+			<div class="feature-list" id="kmlFeatureList"></div>
+			<button class="btn-download" id="kmlDownloadBtn">Download GeoJSON</button>
+		</div>
+	</div>
+
+	<!-- ════════════════════════════════════════ TAB: VECTOR ════ -->
+	<div class="tool-panel" id="tab-vector">
+
+		<div class="drop-zone" id="vectorDropZone">
+			<div class="drop-icon">📐</div>
+			<h3>Upload Vector File</h3>
+			<p>Accepts GeoJSON, KML, KMZ, or a zipped Shapefile (.zip containing .shp / .dbf / .prj).</p>
+			<label class="btn-upload" for="vectorInput">Choose File</label>
+			<input type="file" class="file-input" id="vectorInput" accept=".geojson,.json,.kml,.kmz,.zip">
+			<div class="file-chosen" id="vectorChosen">No file selected</div>
+		</div>
+		<div class="loading-bar" id="vectorLoading">
+			<div class="spinner"></div>
+			<p>Reading file...</p>
+		</div>
+		<div class="msg error" id="vectorError"></div>
+		<div class="msg success" id="vectorSuccess"></div>
+
+		<div class="results-panel" id="vectorResults">
+			<div class="results-header">
+				<h2>Vector Viewer</h2>
+				<div id="vectorBadges" style="display:flex;gap:0.4rem;flex-wrap:wrap;"></div>
+			</div>
+			<div class="vector-layout" id="vectorLayout">
+				<div>
+					<div class="map-container"><div id="vectorMap"></div></div>
+					<button class="btn-expand-table" id="expandTableBtn" onclick="toggleAttrTable()">
+						&#9654; Show Attribute Table
+					</button>
+				</div>
+				<div class="attr-panel">
+					<div class="attr-panel-header">
+						<h3>Attribute Table</h3>
+						<div style="display:flex;align-items:center;gap:0.5rem;">
+							<span class="crs-badge" id="vectorCrsBadge"></span>
+							<button class="btn-collapse-table" onclick="toggleAttrTable()">&#9664; Hide</button>
+						</div>
+					</div>
+					<div class="attr-table-wrap">
+						<table class="attr-table">
+							<thead id="attrTableHead"></thead>
+							<tbody id="attrTableBody"></tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- ════════════════════════════════════════ TAB: RASTER ════ -->
+	<div class="tool-panel" id="tab-raster">
+
+		<div class="drop-zone" id="rasterDropZone">
+			<div class="drop-icon">🛰️</div>
+			<h3>Upload GeoTIFF</h3>
+			<p>Reads CRS, dimensions, resolution, bounds, and per-band statistics.</p>
+			<label class="btn-upload" for="rasterInput">Choose File</label>
+			<input type="file" class="file-input" id="rasterInput" accept=".tif,.tiff">
+			<div class="file-chosen" id="rasterChosen">No file selected</div>
+		</div>
+		<div class="loading-bar" id="rasterLoading">
+			<div class="spinner"></div>
+			<p>Reading raster...</p>
+		</div>
+		<div class="msg error" id="rasterError"></div>
+
+		<div class="results-panel" id="rasterResults">
+			<div class="results-header">
+				<h2>Raster Metadata</h2>
+				<div id="rasterBadges" style="display:flex;gap:0.4rem;flex-wrap:wrap;"></div>
+			</div>
+			<div class="meta-grid" id="metaGrid"></div>
+			<div class="bands-section">
+				<h3>Band Statistics</h3>
+				<div id="bandsContainer"></div>
+			</div>
+		</div>
+	</div>
+
+	<!-- ════════════════════════════════════════ TAB: COG ════ -->
+	<div class="tool-panel" id="tab-cog">
+
+		<div class="cog-explainer">
+			<strong>Cloud Optimized GeoTIFF (COG)</strong> stores tiles and overview pyramids in a specific byte order so HTTP range requests can stream any zoom level without downloading the full file. Use COGs for web mapping, large rasters on GCS/S3, and Google Earth Engine ingestion.
+		</div>
+
+		<div class="drop-zone" id="cogDropZone">
+			<div class="drop-icon">⚙️</div>
+			<h3>Upload GeoTIFF</h3>
+			<p>Output: tiled 512x512, DEFLATE compressed, overview pyramid (2x to 32x). Max 128 MB.</p>
+			<label class="btn-upload" for="cogInput">Choose File</label>
+			<input type="file" class="file-input" id="cogInput" accept=".tif,.tiff">
+			<div class="file-chosen" id="cogChosen">No file selected</div>
+		</div>
+		<div class="loading-bar" id="cogLoading">
+			<div class="spinner"></div>
+			<p>Building COG... this may take a moment for large files.</p>
+		</div>
+		<div class="msg error" id="cogError"></div>
+		<div class="msg success" id="cogSuccess"></div>
+
+		<div class="results-panel" id="cogResults">
+			<div class="results-header">
+				<h2>COG Ready</h2>
+				<span class="cog-badge yes">COG</span>
+			</div>
+			<div class="cog-info-grid" id="cogInfoGrid"></div>
+			<button class="btn-download" id="cogDownloadBtn">Download COG (.tif)</button>
+		</div>
+	</div>
+
+</div><!-- /tools-wrapper -->
+
+<footer>
+	<div class="footer-inner">
+		<div class="footer-col">
+			<h3>Geoglypha</h3>
+			<p style="font-size:0.82rem;color:var(--muted);line-height:1.6;">Exploring Earth's historical landscapes through archaeology, history, and geography.</p>
+		</div>
+		<div class="footer-col">
+			<h3>Tools</h3>
+			<ul>
+				<li><a href="#" onclick="switchTab('kml');return false;">KML/KMZ Converter</a></li>
+				<li><a href="#" onclick="switchTab('vector');return false;">Vector Viewer</a></li>
+				<li><a href="#" onclick="switchTab('raster');return false;">Raster Info</a></li>
+				<li><a href="#" onclick="switchTab('cog');return false;">TIF → COG</a></li>
+				<li><a href="/api">API Reference</a></li>
+			</ul>
+		</div>
+		<div class="footer-col">
+			<h3>Connect</h3>
+			<ul>
+				<li><a href="https://www.instagram.com/geoglypha/">Instagram</a></li>
+				<li><a href="https://www.tiktok.com/@geoglypha">TikTok</a></li>
+				<li><a href="https://substack.com/@geoglypha">Substack</a></li>
+			</ul>
+		</div>
+	</div>
+	<div class="copyright">
+		<p>&copy; <span id="year"></span> Geoglypha. All rights reserved.</p>
+	</div>
+</footer>
+
+<script>
+const API = window.location.origin;
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function switchTab(name) {
+	document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+	document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
+	document.querySelector(`[data-tab="${name}"]`).classList.add('active');
+	document.getElementById(`tab-${name}`).classList.add('active');
+
+	// Invalidate maps so they render correctly after tab reveal
+	if (name === 'kml' && kmlMap) setTimeout(() => kmlMap.invalidateSize(), 50);
+	if (name === 'vector' && vectorMap) setTimeout(() => vectorMap.invalidateSize(), 50);
+}
+document.querySelectorAll('.tab-btn').forEach(btn => {
+	btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+// ── Shared helpers ────────────────────────────────────────────────────────────
+function showMsg(el, type, text) {
+	el.className = `msg ${type}`;
+	el.textContent = text;
+	el.style.display = 'block';
+}
+function hideMsg(el) { el.style.display = 'none'; }
+
+function setupDropZone(zoneId, inputId, chosenId, handler) {
+	const zone = document.getElementById(zoneId);
+	const input = document.getElementById(inputId);
+	const chosen = document.getElementById(chosenId);
+
+	input.addEventListener('change', e => {
+		if (e.target.files[0]) { chosen.textContent = e.target.files[0].name; handler(e.target.files[0]); }
+	});
+	zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+	zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+	zone.addEventListener('drop', e => {
+		e.preventDefault(); zone.classList.remove('drag-over');
+		if (e.dataTransfer.files[0]) {
+			chosen.textContent = e.dataTransfer.files[0].name;
+			handler(e.dataTransfer.files[0]);
+		}
+	});
+}
+
+// ── KML/KMZ converter ─────────────────────────────────────────────────────────
+let kmlMap = null, kmlLayer = null, kmlData = null;
+
+function initKmlMap() {
+	kmlMap = L.map('kmlMap').setView([20, 0], 2);
+	L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+		attribution: '&copy; OpenStreetMap &copy; CARTO', maxZoom: 19
+	}).addTo(kmlMap);
+	kmlLayer = L.layerGroup().addTo(kmlMap);
+}
+
+function renderKmlFeatures(geojson) {
+	kmlLayer.clearLayers();
+	const geoLayer = L.geoJSON(geojson, {
+		style: { color: '#3a6351', weight: 2, fillOpacity: 0.3 },
+		pointToLayer: (f, ll) => L.circleMarker(ll, { radius: 7, fillColor: '#3a6351', color: '#2c1810', weight: 1, fillOpacity: 0.85 }),
+		onEachFeature: (f, l) => {
+			let html = `<strong>${f.properties.name || 'Unnamed'}</strong>`;
+			if (f.properties.description) html += `<p style="font-size:0.8rem;margin-top:4px">${f.properties.description}</p>`;
+			if (f.properties.folder_path) html += `<p style="font-size:0.75rem;color:#78716c">${f.properties.folder_path}</p>`;
+			l.bindPopup(html);
+		}
+	}).addTo(kmlLayer);
+	const b = geoLayer.getBounds();
+	if (b.isValid()) kmlMap.fitBounds(b, { padding: [30, 30] });
+}
+
+function renderKmlList(geojson) {
+	const list = document.getElementById('kmlFeatureList');
+	list.innerHTML = '';
+	if (!geojson.features || !geojson.features.length) {
+		list.innerHTML = '<div class="feature-item">No features found.</div>'; return;
+	}
+	geojson.features.forEach(f => {
+		const div = document.createElement('div');
+		div.className = 'feature-item';
+		div.innerHTML = `<strong>${f.properties.name || 'Unnamed'}</strong>` +
+			(f.properties.folder_path ? `<br><em>${f.properties.folder_path}</em>` : '');
+		list.appendChild(div);
+	});
+}
+
+function processKml(file) {
+	hideMsg(document.getElementById('kmlError'));
+	hideMsg(document.getElementById('kmlSuccess'));
+	document.getElementById('kmlResults').style.display = 'none';
+	document.getElementById('kmlLoading').style.display = 'block';
+
+	const fd = new FormData();
+	fd.append('file', file);
+
+	fetch(`${API}/upload`, { method: 'POST', body: fd })
+		.then(r => r.ok ? r.json() : r.json().then(d => { throw new Error(d.error); }))
+		.then(data => {
+			document.getElementById('kmlLoading').style.display = 'none';
+			kmlData = data.geojson;
+			showMsg(document.getElementById('kmlSuccess'), 'success', data.message);
+			if (!kmlMap) initKmlMap();
+			renderKmlFeatures(kmlData);
+			renderKmlList(kmlData);
+			document.getElementById('kmlBadges').innerHTML =
+				`<span class="badge green">${data.geojson.features.length} features</span>`;
+			document.getElementById('kmlResults').style.display = 'block';
+			setTimeout(() => { if (kmlMap) kmlMap.invalidateSize(); }, 100);
+		})
+		.catch(err => {
+			document.getElementById('kmlLoading').style.display = 'none';
+			showMsg(document.getElementById('kmlError'), 'error', err.message);
+		});
+}
+
+document.getElementById('kmlDownloadBtn').addEventListener('click', () => {
+	if (!kmlData) return;
+	fetch(`${API}/download`, {
+		method: 'POST', headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ geojson: kmlData })
+	})
+	.then(r => r.blob())
+	.then(blob => {
+		const a = document.createElement('a');
+		a.href = URL.createObjectURL(blob);
+		a.download = 'converted.geojson';
+		a.click();
+		URL.revokeObjectURL(a.href);
+	});
+});
+
+setupDropZone('kmlDropZone', 'kmlInput', 'kmlChosen', processKml);
+
+
+// ── Vector viewer ─────────────────────────────────────────────────────────────
+let vectorMap = null, vectorLayer = null, vectorFeatures = [];
+
+function initVectorMap() {
+	vectorMap = L.map('vectorMap').setView([20, 0], 2);
+	L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+		attribution: '&copy; OpenStreetMap &copy; CARTO', maxZoom: 19
+	}).addTo(vectorMap);
+	vectorLayer = L.layerGroup().addTo(vectorMap);
+}
+
+function renderVectorMap(geojson) {
+	vectorLayer.clearLayers();
+	vectorFeatures = [];
+
+	const geoLayer = L.geoJSON(geojson, {
+		style: { color: '#3a6351', weight: 2, fillOpacity: 0.25 },
+		pointToLayer: (f, ll) => L.circleMarker(ll, { radius: 7, fillColor: '#3a6351', color: '#2c1810', weight: 1, fillOpacity: 0.85 }),
+		onEachFeature: (f, layer, idx) => {
+			vectorFeatures.push(layer);
+			let html = '<div style="font-family:var(--font-mono);font-size:0.78rem;">';
+			for (const [k, v] of Object.entries(f.properties || {})) {
+				if (v != null && v !== '') html += `<div><span style="color:#78716c">${k}:</span> ${v}</div>`;
+			}
+			html += '</div>';
+			layer.bindPopup(html);
+		}
+	}).addTo(vectorLayer);
+
+	const b = geoLayer.getBounds();
+	if (b.isValid()) vectorMap.fitBounds(b, { padding: [30, 30] });
+}
+
+function renderAttrTable(geojson, columns) {
+	const thead = document.getElementById('attrTableHead');
+	const tbody = document.getElementById('attrTableBody');
+	thead.innerHTML = '';
+	tbody.innerHTML = '';
+
+	const tr = document.createElement('tr');
+	columns.forEach(col => {
+		const th = document.createElement('th');
+		th.textContent = col;
+		tr.appendChild(th);
+	});
+	thead.appendChild(tr);
+
+	(geojson.features || []).forEach((f, idx) => {
+		const row = document.createElement('tr');
+		row.dataset.idx = idx;
+		columns.forEach(col => {
+			const td = document.createElement('td');
+			const v = f.properties ? f.properties[col] : '';
+			td.textContent = v != null ? v : '';
+			td.title = v != null ? String(v) : '';
+			row.appendChild(td);
+		});
+		row.addEventListener('click', () => {
+			document.querySelectorAll('#attrTableBody tr').forEach(r => r.classList.remove('selected'));
+			row.classList.add('selected');
+			const layer = vectorFeatures[idx];
+			if (layer) {
+				if (layer.getBounds) vectorMap.fitBounds(layer.getBounds(), { maxZoom: 14 });
+				else if (layer.getLatLng) vectorMap.setView(layer.getLatLng(), 12);
+				layer.openPopup();
+			}
+		});
+		tbody.appendChild(row);
+	});
+}
+
+function processVector(file) {
+	hideMsg(document.getElementById('vectorError'));
+	hideMsg(document.getElementById('vectorSuccess'));
+	document.getElementById('vectorResults').style.display = 'none';
+	document.getElementById('vectorLoading').style.display = 'block';
+
+	const fd = new FormData();
+	fd.append('file', file);
+
+	fetch(`${API}/api/vector/info`, { method: 'POST', body: fd })
+		.then(r => r.ok ? r.json() : r.json().then(d => { throw new Error(d.error); }))
+		.then(data => {
+			document.getElementById('vectorLoading').style.display = 'none';
+			showMsg(document.getElementById('vectorSuccess'), 'success', data.message);
+
+			const badges = document.getElementById('vectorBadges');
+			badges.innerHTML =
+				`<span class="badge green">${data.feature_count} features</span>` +
+				`<span class="badge">${(data.geometry_types || []).join(', ')}</span>` +
+				`<span class="badge gold">${data.columns.length} fields</span>`;
+
+			document.getElementById('vectorCrsBadge').textContent = data.crs || 'Unknown CRS';
+
+			if (!vectorMap) initVectorMap();
+			renderVectorMap(data.geojson);
+			renderAttrTable(data.geojson, data.columns);
+			document.getElementById('vectorResults').style.display = 'block';
+			setTimeout(() => { if (vectorMap) vectorMap.invalidateSize(); }, 100);
+		})
+		.catch(err => {
+			document.getElementById('vectorLoading').style.display = 'none';
+			showMsg(document.getElementById('vectorError'), 'error', err.message);
+		});
+}
+
+setupDropZone('vectorDropZone', 'vectorInput', 'vectorChosen', processVector);
+
+function toggleAttrTable() {
+	const layout = document.getElementById('vectorLayout');
+	const expandBtn = document.getElementById('expandTableBtn');
+	const collapsed = layout.classList.toggle('table-collapsed');
+	expandBtn.style.display = collapsed ? 'block' : 'none';
+	setTimeout(() => { if (vectorMap) vectorMap.invalidateSize(); }, 320);
+}
+
+
+// ── Raster info ───────────────────────────────────────────────────────────────
+function processRaster(file) {
+	hideMsg(document.getElementById('rasterError'));
+	document.getElementById('rasterResults').style.display = 'none';
+	document.getElementById('rasterLoading').style.display = 'block';
+
+	const fd = new FormData();
+	fd.append('file', file);
+
+	fetch(`${API}/api/raster/info`, { method: 'POST', body: fd })
+		.then(r => r.ok ? r.json() : r.json().then(d => { throw new Error(d.error); }))
+		.then(data => {
+			document.getElementById('rasterLoading').style.display = 'none';
+
+			// Badges
+			const badges = document.getElementById('rasterBadges');
+			const cogHtml = data.is_cog
+				? '<span class="cog-badge yes">COG</span>'
+				: '<span class="cog-badge no">Not COG</span>';
+			badges.innerHTML = cogHtml +
+				`<span class="badge">${data.band_count} band${data.band_count > 1 ? 's' : ''}</span>` +
+				`<span class="badge">${data.file_size_mb} MB</span>`;
+
+			// Meta cards
+			const grid = document.getElementById('metaGrid');
+			const bounds = data.bounds;
+			const meta = [
+				{ label: 'CRS', value: data.crs, hi: true },
+				{ label: 'Driver', value: data.driver },
+				{ label: 'Dimensions', value: `${data.width} × ${data.height} px` },
+				{ label: 'Resolution', value: `${data.resolution[0].toFixed(6)} × ${data.resolution[1].toFixed(6)}` },
+				{ label: 'Compression', value: data.compression || 'none' },
+				{ label: 'Bands', value: data.band_count },
+				{ label: 'File Size', value: `${data.file_size_mb} MB` },
+				{ label: 'Bounds W/E', value: `${bounds.left.toFixed(4)}, ${bounds.right.toFixed(4)}` },
+				{ label: 'Bounds N/S', value: `${bounds.top.toFixed(4)}, ${bounds.bottom.toFixed(4)}` },
+			];
+			grid.innerHTML = meta.map(m =>
+				`<div class="meta-card${m.hi ? ' highlight' : ''}">
+					<div class="label">${m.label}</div>
+					<div class="value">${m.value}</div>
+				</div>`
+			).join('');
+
+			// Band stats
+			const container = document.getElementById('bandsContainer');
+			container.innerHTML = data.bands.map(b =>
+				`<div class="band-row">
+					<div>
+						<div class="band-num">Band ${b.band}</div>
+						<div style="font-size:0.7rem;color:var(--muted-2);margin-top:0.25rem;">${b.dtype}</div>
+						<div style="font-size:0.7rem;color:var(--muted-2);">${b.colorinterp}</div>
+					</div>
+					<div class="band-stats">
+						${[['Min', b.min], ['Max', b.max], ['Mean', b.mean], ['Std Dev', b.std]].map(([l, v]) =>
+							`<div class="stat-item">
+								<div class="stat-label">${l}</div>
+								<div class="stat-val">${v != null ? Number(v).toFixed(3) : 'N/A'}</div>
+							</div>`
+						).join('')}
+						${b.nodata != null ? `<div class="stat-item"><div class="stat-label">NoData</div><div class="stat-val">${b.nodata}</div></div>` : ''}
+					</div>
+				</div>`
+			).join('');
+
+			document.getElementById('rasterResults').style.display = 'block';
+		})
+		.catch(err => {
+			document.getElementById('rasterLoading').style.display = 'none';
+			showMsg(document.getElementById('rasterError'), 'error', err.message);
+		});
+}
+
+setupDropZone('rasterDropZone', 'rasterInput', 'rasterChosen', processRaster);
+
+
+// ── TIF to COG ────────────────────────────────────────────────────────────────
+let cogBlob = null, cogFilename = '';
+
+function processCog(file) {
+	hideMsg(document.getElementById('cogError'));
+	hideMsg(document.getElementById('cogSuccess'));
+	document.getElementById('cogResults').style.display = 'none';
+	document.getElementById('cogLoading').style.display = 'block';
+	cogFilename = file.name.replace(/\.tiff?$/, '') + '_cog.tif';
+
+	const fd = new FormData();
+	fd.append('file', file);
+
+	fetch(`${API}/api/convert/tif-to-cog`, { method: 'POST', body: fd })
+		.then(r => {
+			if (!r.ok) return r.json().then(d => { throw new Error(d.error); });
+			return r.blob();
+		})
+		.then(blob => {
+			document.getElementById('cogLoading').style.display = 'none';
+			cogBlob = blob;
+			showMsg(document.getElementById('cogSuccess'), 'success', `COG ready. ${(blob.size / 1024 / 1024).toFixed(2)} MB`);
+
+			document.getElementById('cogInfoGrid').innerHTML = `
+				<div class="cog-info-card"><div class="label">Output File</div><div class="value">${cogFilename}</div></div>
+				<div class="cog-info-card"><div class="label">File Size</div><div class="value">${(blob.size / 1024 / 1024).toFixed(2)} MB</div></div>
+				<div class="cog-info-card"><div class="label">Tile Size</div><div class="value">512 x 512 px</div></div>
+				<div class="cog-info-card"><div class="label">Compression</div><div class="value">DEFLATE</div></div>
+				<div class="cog-info-card"><div class="label">Overviews</div><div class="value">2x, 4x, 8x, 16x, 32x</div></div>
+			`;
+			document.getElementById('cogResults').style.display = 'block';
+		})
+		.catch(err => {
+			document.getElementById('cogLoading').style.display = 'none';
+			showMsg(document.getElementById('cogError'), 'error', err.message);
+		});
+}
+
+document.getElementById('cogDownloadBtn').addEventListener('click', () => {
+	if (!cogBlob) return;
+	const a = document.createElement('a');
+	a.href = URL.createObjectURL(cogBlob);
+	a.download = cogFilename;
+	a.click();
+	URL.revokeObjectURL(a.href);
+});
+
+setupDropZone('cogDropZone', 'cogInput', 'cogChosen', processCog);
+
+
+// ── Nav mobile toggle ─────────────────────────────────────────────────────────
+document.getElementById('menuBtn').addEventListener('click', () => {
+	document.getElementById('mainNav').classList.toggle('active');
+});
+
+document.getElementById('year').textContent = new Date().getFullYear();
+</script>
+
+</body>
+</html>
