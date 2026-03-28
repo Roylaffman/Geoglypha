@@ -1,0 +1,618 @@
+<!--
+	Outlaw Trail Interactive Webmap
+	Author: Ryan Lafferty
+	Description: Standalone Leaflet webmap of the Outlaw Trail (1870-1910),
+	             featuring the Wild Bunch corridor from Montana to New Mexico,
+	             the Redford 1976 expedition route, and annotated waypoints.
+	Hosted on Google Cloud Storage as a public asset linked from Substack.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>The Outlaw Trail — Ryan Lafferty</title>
+
+	<!-- Leaflet 1.9.4 -->
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+	<!-- Leaflet MiniMap 3.6.1 -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.css" />
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-minimap/3.6.1/Control.MiniMap.min.js"></script>
+
+	<!-- Google Fonts: Playfair Display + Crimson Pro -->
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Crimson+Pro:ital,wght@0,400;0,600;1,400;1,600&display=swap" rel="stylesheet" />
+
+	<style>
+		/* ========================================================
+		   CSS Variables — Parchment / Canyon Design System
+		   ======================================================== */
+		:root {
+			--parchment:        #f5ede0;
+			--parchment-dark:   #edddc8;
+			--parchment-alpha:  rgba(245, 237, 224, 0.92);
+			--canyon-rust:      #8b3a1a;
+			--canyon-rust-light:#c2410c;
+			--desert-gold:      #a07830;
+			--panel-border:     #8b3a1a;
+			--text-primary:     #2c1a0e;
+			--text-muted:       #6b5040;
+			--font-heading:     'Playfair Display', Georgia, serif;
+			--font-body:        'Crimson Pro', 'Georgia', serif;
+		}
+
+		/* ========================================================
+		   Base Reset
+		   ======================================================== */
+		*, *::before, *::after {
+			box-sizing: border-box;
+			margin: 0;
+			padding: 0;
+		}
+
+		html, body {
+			width: 100vw;
+			height: 100vh;
+			overflow: hidden;
+			background: #111;
+			font-family: var(--font-body);
+		}
+
+		#map {
+			width: 100vw;
+			height: 100vh;
+		}
+
+		/* ========================================================
+		   Title Panel — Fixed top-left
+		   ======================================================== */
+		#title-panel {
+			position: fixed;
+			top: 16px;
+			left: 16px;
+			z-index: 1000;
+			background: var(--parchment-alpha);
+			border-left: 4px solid var(--canyon-rust);
+			border: 1px solid rgba(139, 58, 26, 0.35);
+			border-left: 4px solid var(--canyon-rust);
+			padding: 14px 18px 12px 16px;
+			max-width: 260px;
+			backdrop-filter: blur(4px);
+			-webkit-backdrop-filter: blur(4px);
+			box-shadow: 0 2px 12px rgba(0,0,0,0.45), 0 0 0 1px rgba(139,58,26,0.12);
+		}
+
+		#title-panel h1 {
+			font-family: var(--font-heading);
+			font-size: 1.45rem;
+			font-weight: 700;
+			color: var(--canyon-rust);
+			line-height: 1.15;
+			letter-spacing: 0.01em;
+		}
+
+		#title-panel .subtitle {
+			font-family: var(--font-body);
+			font-style: italic;
+			font-size: 0.88rem;
+			color: var(--text-muted);
+			margin-top: 4px;
+			line-height: 1.3;
+		}
+
+		#title-panel .divider {
+			width: 100%;
+			height: 1px;
+			background: linear-gradient(to right, var(--canyon-rust), transparent);
+			margin: 8px 0 7px;
+			opacity: 0.5;
+		}
+
+		#title-panel .meta {
+			font-family: var(--font-body);
+			font-size: 0.75rem;
+			color: var(--text-muted);
+			line-height: 1.4;
+		}
+
+		#title-panel .meta strong {
+			color: var(--text-primary);
+			font-weight: 600;
+		}
+
+		/* ========================================================
+		   Legend Panel
+		   ======================================================== */
+		#legend {
+			position: fixed;
+			bottom: 28px;
+			left: 16px;
+			z-index: 1000;
+			background: var(--parchment-alpha);
+			border: 1px solid rgba(139, 58, 26, 0.35);
+			border-left: 4px solid var(--desert-gold);
+			padding: 12px 16px 12px 14px;
+			min-width: 200px;
+			backdrop-filter: blur(4px);
+			-webkit-backdrop-filter: blur(4px);
+			box-shadow: 0 2px 12px rgba(0,0,0,0.45), 0 0 0 1px rgba(139,58,26,0.10);
+		}
+
+		#legend .legend-title {
+			font-family: var(--font-heading);
+			font-size: 0.68rem;
+			font-variant: small-caps;
+			font-weight: 600;
+			letter-spacing: 0.12em;
+			color: var(--canyon-rust);
+			margin-bottom: 9px;
+			text-transform: uppercase;
+		}
+
+		#legend .legend-section {
+			font-family: var(--font-body);
+			font-size: 0.68rem;
+			font-variant: small-caps;
+			letter-spacing: 0.08em;
+			color: var(--text-muted);
+			margin: 8px 0 4px;
+			text-transform: uppercase;
+		}
+
+		.legend-row {
+			display: flex;
+			align-items: center;
+			gap: 8px;
+			margin-bottom: 5px;
+			font-family: var(--font-body);
+			font-size: 0.82rem;
+			color: var(--text-primary);
+		}
+
+		.legend-line {
+			display: inline-block;
+			width: 28px;
+			height: 3px;
+			border-radius: 2px;
+			flex-shrink: 0;
+		}
+
+		.legend-line.dashed {
+			background: none;
+			border-top: 2.5px dashed #38bdf8;
+			height: 0;
+			margin-top: 1px;
+		}
+
+		.legend-dot {
+			display: inline-block;
+			width: 11px;
+			height: 11px;
+			border-radius: 50%;
+			flex-shrink: 0;
+			border: 1.5px solid rgba(255,255,255,0.25);
+		}
+
+		/* ========================================================
+		   Popup Styles
+		   ======================================================== */
+		.outlaw-popup .leaflet-popup-content-wrapper {
+			background: var(--parchment);
+			border: 1px solid rgba(139,58,26,0.3);
+			border-radius: 3px;
+			box-shadow: 0 4px 18px rgba(0,0,0,0.55);
+			padding: 0;
+		}
+
+		.outlaw-popup .leaflet-popup-tip {
+			background: var(--parchment);
+		}
+
+		.outlaw-popup .leaflet-popup-content {
+			margin: 0;
+			min-width: 230px;
+			max-width: 280px;
+		}
+
+		.popup-inner {
+			padding: 13px 15px 12px;
+		}
+
+		.popup-name {
+			font-family: var(--font-heading);
+			font-size: 0.97rem;
+			font-weight: 700;
+			color: var(--canyon-rust);
+			line-height: 1.2;
+			margin-bottom: 3px;
+		}
+
+		.popup-location {
+			font-family: var(--font-body);
+			font-size: 0.78rem;
+			color: var(--text-muted);
+			margin-bottom: 7px;
+		}
+
+		.popup-hr {
+			border: none;
+			border-top: 1px solid rgba(139,58,26,0.2);
+			margin: 6px 0 8px;
+		}
+
+		.popup-notes {
+			font-family: var(--font-body);
+			font-size: 0.84rem;
+			color: var(--text-primary);
+			line-height: 1.45;
+			margin-bottom: 6px;
+		}
+
+		.popup-outlaws {
+			font-family: var(--font-body);
+			font-size: 0.78rem;
+			color: #a07830;
+			font-style: italic;
+			margin-bottom: 5px;
+		}
+
+		.popup-outlaws strong {
+			font-style: normal;
+			color: var(--desert-gold);
+		}
+
+		.popup-redford-badge {
+			display: inline-block;
+			background: rgba(56,189,248,0.15);
+			border: 1px solid rgba(56,189,248,0.5);
+			color: #0ea5e9;
+			font-family: var(--font-body);
+			font-size: 0.72rem;
+			font-weight: 600;
+			padding: 2px 7px;
+			border-radius: 2px;
+			margin-top: 4px;
+		}
+
+		/* ========================================================
+		   Layer Control Styling Override
+		   ======================================================== */
+		.leaflet-control-layers {
+			background: var(--parchment-alpha) !important;
+			border: 1px solid rgba(139,58,26,0.3) !important;
+			border-radius: 3px !important;
+			backdrop-filter: blur(4px);
+		}
+
+		.leaflet-control-layers-expanded {
+			padding: 8px 12px !important;
+		}
+
+		.leaflet-control-layers-separator {
+			border-top-color: rgba(139,58,26,0.2) !important;
+		}
+
+		.leaflet-control-layers label span {
+			font-family: var(--font-body) !important;
+			font-size: 0.84rem !important;
+			color: var(--text-primary) !important;
+		}
+
+		/* MiniMap override */
+		.leaflet-control-minimap {
+			border: 2px solid rgba(139,58,26,0.45) !important;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.5) !important;
+		}
+
+		/* Zoom control */
+		.leaflet-control-zoom a {
+			background: var(--parchment-alpha) !important;
+			color: var(--canyon-rust) !important;
+			border-color: rgba(139,58,26,0.3) !important;
+			font-family: var(--font-heading) !important;
+		}
+
+		.leaflet-control-zoom a:hover {
+			background: var(--parchment-dark) !important;
+		}
+
+		/* Attribution */
+		.leaflet-control-attribution {
+			background: rgba(245,237,224,0.75) !important;
+			font-family: var(--font-body) !important;
+			font-size: 0.68rem !important;
+			color: var(--text-muted) !important;
+		}
+
+		/* Page-load fade-in for panels */
+		@keyframes panelReveal {
+			from { opacity: 0; transform: translateY(-6px); }
+			to   { opacity: 1; transform: translateY(0); }
+		}
+
+		#title-panel {
+			animation: panelReveal 0.6s ease 0.3s both;
+		}
+
+		#legend {
+			animation: panelReveal 0.6s ease 0.5s both;
+		}
+	</style>
+</head>
+<body>
+
+	<!-- Title Panel -->
+	<div id="title-panel">
+		<h1>The Outlaw Trail</h1>
+		<div class="subtitle">1,500 miles of sanctuary, 1870&ndash;1910</div>
+		<div class="divider"></div>
+		<div class="meta">
+			<strong>Wild Bunch corridor</strong> from Montana to New Mexico.<br>
+			Three anchor hideouts: Hole-in-the-Wall, Browns Park, Robbers Roost.
+		</div>
+	</div>
+
+	<!-- Legend -->
+	<div id="legend">
+		<div class="legend-title">Outlaw Trail</div>
+
+		<div class="legend-section">Routes</div>
+		<div class="legend-row">
+			<span class="legend-line" style="background:#c2410c;"></span>
+			Trail Corridor
+		</div>
+		<div class="legend-row">
+			<span class="legend-line dashed"></span>
+			Redford 1976 Route
+		</div>
+
+		<div class="legend-section">Sites</div>
+		<div class="legend-row">
+			<span class="legend-dot" style="background:#c2410c;"></span>
+			Hideout
+		</div>
+		<div class="legend-row">
+			<span class="legend-dot" style="background:#f59e0b;"></span>
+			Robbery
+		</div>
+		<div class="legend-row">
+			<span class="legend-dot" style="background:#a78bfa;"></span>
+			Historical Site
+		</div>
+		<div class="legend-row">
+			<span class="legend-dot" style="background:#34d399;"></span>
+			Landmark
+		</div>
+		<div class="legend-row">
+			<span class="legend-dot" style="background:#94a3b8;"></span>
+			Town
+		</div>
+	</div>
+
+	<!-- Map container -->
+	<div id="map"></div>
+
+	<script>
+	// ============================================================
+	// Author: Ryan Lafferty
+	// Outlaw Trail — Leaflet Webmap
+	// ============================================================
+
+	// ------------------------------------------------------------
+	// Trail Coordinates (lng, lat) — converted to [lat, lng] for Leaflet
+	// ------------------------------------------------------------
+	const TRAIL_COORDS_RAW = [
+		[-108.58, 47.92], [-107.87, 48.35], [-104.38, 44.40],
+		[-106.84, 43.55], [-106.64, 43.71], [-108.21, 43.65],
+		[-108.73, 42.83], [-108.79, 42.53], [-108.73, 42.52],
+		[-111.31, 42.32], [-109.06, 40.92], [-109.42, 40.92],
+		[-109.53, 40.46], [-110.50, 39.78], [-110.59, 39.68],
+		[-110.31, 38.38], [-110.71, 38.37], [-112.31, 38.15],
+		[-107.81, 37.94], [-108.89, 33.40],
+		[-103.88, 36.84], [-103.18, 36.45],
+	];
+
+	const REDFORD_COORDS_RAW = [
+		[-106.84, 43.55], [-106.64, 43.71], [-108.21, 43.65],
+		[-108.73, 42.83], [-108.79, 42.53], [-109.06, 40.92],
+		[-109.42, 40.92], [-109.53, 40.46], [-110.50, 39.78],
+		[-110.71, 38.37], [-110.31, 38.38], [-112.31, 38.15],
+	];
+
+	// Convert [lng, lat] -> [lat, lng]
+	function toLatLng(coords) {
+		return coords.map(function(c) { return [c[1], c[0]]; });
+	}
+
+	const TRAIL_LATLNGS   = toLatLng(TRAIL_COORDS_RAW);
+	const REDFORD_LATLNGS = toLatLng(REDFORD_COORDS_RAW);
+
+	// ------------------------------------------------------------
+	// Waypoints GeoJSON (embedded inline)
+	// ------------------------------------------------------------
+	const WAYPOINTS_GEOJSON = {"type":"FeatureCollection","name":"Outlaw Trail Waypoints","features":[{"type":"Feature","properties":{"name":"Landusky / Rock Creek Ranch","section":"A","section_name":"Montana & Northern Wyoming","state":"MT","county":"Phillips Co.","type":"hideout","outlaws":"Kid Curry, Logan brothers","notes":"Home base of Kid Curry (Harvey Logan). Horse ranch and safe house stocked by Jim Thornhill and Bob Coburn.","on_redford_route":false},"geometry":{"type":"Point","coordinates":[-108.58,47.92]}},{"type":"Feature","properties":{"name":"Malta, MT (Great Northern Train Robbery site)","section":"A","section_name":"Montana & Northern Wyoming","state":"MT","county":"Phillips Co.","type":"robbery","outlaws":"Kid Curry","notes":"Great Northern Train Robbery, July 3, 1901. Kid Curry and gang.","on_redford_route":false},"geometry":{"type":"Point","coordinates":[-107.87,48.35]}},{"type":"Feature","properties":{"name":"Sundance, Wyoming","section":"A","section_name":"Montana & Northern Wyoming","state":"WY","county":"Crook Co.","type":"historical_site","outlaws":"Sundance Kid","notes":"Harry Longabaugh jailed here Aug 1887 - early 1889 for horse theft. Adopted town name as his alias.","on_redford_route":false},"geometry":{"type":"Point","coordinates":[-104.379,44.405]}},{"type":"Feature","properties":{"name":"Belle Fourche Bank Robbery","section":"A","section_name":"Montana & Northern Wyoming","state":"SD","county":"Butte Co.","type":"robbery","outlaws":"Kid Curry, Sundance Kid, Tom O'Day","notes":"Wild Bunch bank robbery June 28, 1897. Tom O'Day captured.","on_redford_route":false},"geometry":{"type":"Point","coordinates":[-103.852,44.670]}},{"type":"Feature","properties":{"name":"Hole-in-the-Wall","section":"B","section_name":"Hole-in-the-Wall Country","state":"WY","county":"Johnson Co.","type":"hideout","outlaws":"Wild Bunch, Butch Cassidy, Sundance Kid, Kid Curry, Black Jack Ketchum","notes":"Primary northern anchor. Hidden valley behind the Red Wall sandstone escarpment, ~40 miles SW of Kaycee. Single defensible pass. At peak: cabins, corrals, livery stable.","on_redford_route":true},"geometry":{"type":"Point","coordinates":[-106.838,43.548]}},{"type":"Feature","properties":{"name":"Kaycee, Wyoming","section":"B","section_name":"Hole-in-the-Wall Country","state":"WY","county":"Johnson Co.","type":"town","outlaws":"Various","notes":"Gateway town to Hole-in-the-Wall. Launch point for posse attempts.","on_redford_route":true},"geometry":{"type":"Point","coordinates":[-106.643,43.706]}},{"type":"Feature","properties":{"name":"Thermopolis, Wyoming","section":"B","section_name":"Hole-in-the-Wall Country","state":"WY","county":"Hot Springs Co.","type":"town","outlaws":"Various","notes":"Outlaw-era saloon network. On Redford 1976 route. Hosts modern Outlaw Trail Ride heritage tourism.","on_redford_route":true},"geometry":{"type":"Point","coordinates":[-108.212,43.646]}},{"type":"Feature","properties":{"name":"Wilcox Train Robbery","section":"B","section_name":"Hole-in-the-Wall Country","state":"WY","county":"Albany Co.","type":"robbery","outlaws":"Wild Bunch","notes":"Union Pacific Overland Flyer stopped and express car dynamited, June 2, 1899. Near Rock River.","on_redford_route":false},"geometry":{"type":"Point","coordinates":[-105.95,41.75]}},{"type":"Feature","properties":{"name":"Wyoming Territorial Prison, Laramie","section":"B","section_name":"Hole-in-the-Wall Country","state":"WY","county":"Albany Co.","type":"historical_site","outlaws":"Butch Cassidy","notes":"Federal prison 1872-1890, state penitentiary 1890-1903. Butch Cassidy imprisoned 1894-1896. Now 197-acre state historic site.","on_redford_route":false},"geometry":{"type":"Point","coordinates":[-105.591,41.305]}},{"type":"Feature","properties":{"name":"South Pass City","section":"B","section_name":"Hole-in-the-Wall Country","state":"WY","county":"Fremont Co.","type":"historical_site","outlaws":"Various","notes":"Restored 1860s-70s gold-mining ghost town on the Continental Divide. On Redford 1976 route.","on_redford_route":true},"geometry":{"type":"Point","coordinates":[-108.792,42.525]}},{"type":"Feature","properties":{"name":"Atlantic City, Wyoming","section":"B","section_name":"Hole-in-the-Wall Country","state":"WY","county":"Fremont Co.","type":"historical_site","outlaws":"Various","notes":"Near-unchanged 1870s gold-mining settlement near Continental Divide. On Redford route. Historian Boren called it a center of frontier lawlessness 1870-1910.","on_redford_route":true},"geometry":{"type":"Point","coordinates":[-108.726,42.519]}},{"type":"Feature","properties":{"name":"Lander, Wyoming","section":"B","section_name":"Hole-in-the-Wall Country","state":"WY","county":"Fremont Co.","type":"town","outlaws":"Various","notes":"Supply town at the foot of the Wind River Range. On Redford 1976 route.","on_redford_route":true},"geometry":{"type":"Point","coordinates":[-108.730,42.833]}},{"type":"Feature","properties":{"name":"Tipton Train Robbery","section":"B","section_name":"Hole-in-the-Wall Country","state":"WY","county":"Sweetwater Co.","type":"robbery","outlaws":"Harvey Logan, Ben Kilpatrick, William Cruzan","notes":"Union Pacific Overland Limited robbed August 29, 1900. ~$50,000-55,000 taken.","on_redford_route":false},"geometry":{"type":"Point","coordinates":[-108.54,41.57]}},{"type":"Feature","properties":{"name":"Montpelier Bank Robbery","section":"C","section_name":"Tri-Border Sanctuary Corridor","state":"ID","county":"Bear Lake Co.","type":"robbery","outlaws":"Butch Cassidy, Elzy Lay, Bob Meeks","notes":"Robbed August 13, 1896. ~$7,000 taken to fund Matt Warner legal defense. Bank survives as a museum.","on_redford_route":false},"geometry":{"type":"Point","coordinates":[-111.308,42.319]}},{"type":"Feature","properties":{"name":"Browns Park","section":"C","section_name":"Tri-Border Sanctuary Corridor","state":"UT/CO/WY","county":"Moffat Co. CO / Daggett Co. UT","type":"hideout","outlaws":"Butch Cassidy, Sundance Kid, Elzy Lay, Matt Warner, Isom Dart, Ann Bassett","notes":"Second major anchor. Remote valley ~35 miles long along the Green River straddling three jurisdictions. Named for fur trapper Baptiste Brown (1820s). Today partly the Browns Park NWR.","on_redford_route":true},"geometry":{"type":"Point","coordinates":[-109.063,40.916]}},{"type":"Feature","properties":{"name":"John Jarvie Historic Site","section":"C","section_name":"Tri-Border Sanctuary Corridor","state":"UT","county":"Daggett Co.","type":"historical_site","outlaws":"Various","notes":"Original 1880s trading post on the Green River used by outlaws for supplies. NPS-affiliated. Within Browns Park.","on_redford_route":false},"geometry":{"type":"Point","coordinates":[-109.120,40.846]}},{"type":"Feature","properties":{"name":"Flaming Gorge NRA","section":"C","section_name":"Tri-Border Sanctuary Corridor","state":"UT/WY","county":"Daggett Co. UT","type":"landmark","outlaws":"Various","notes":"91-mile Green River reservoir. 1964 dam submerged some historic outlaw-era sites. On Redford 1976 route.","on_redford_route":true},"geometry":{"type":"Point","coordinates":[-109.416,40.916]}},{"type":"Feature","properties":{"name":"Vernal, Utah","section":"C","section_name":"Tri-Border Sanctuary Corridor","state":"UT","county":"Uintah Co.","type":"town","outlaws":"Various","notes":"Nearest substantial supply town to Browns Park. On Redford 1976 route.","on_redford_route":true},"geometry":{"type":"Point","coordinates":[-109.529,40.455]}},{"type":"Feature","properties":{"name":"Dinosaur National Monument","section":"C","section_name":"Tri-Border Sanctuary Corridor","state":"UT/CO","county":"Moffat Co. CO / Uintah Co. UT","type":"landmark","outlaws":"Various","notes":"Gates of Lodore canyon is the downstream terminus of the Browns Park outlaw valley.","on_redford_route":false},"geometry":{"type":"Point","coordinates":[-108.997,40.438]}},{"type":"Feature","properties":{"name":"Nine Mile Canyon","section":"C","section_name":"Tri-Border Sanctuary Corridor","state":"UT","county":"Carbon/Duchesne Co.","type":"landmark","outlaws":"Various","notes":"~40-mile canyon transit corridor used by outlaws. Contains 10,000+ Fremont and Ute rock art panels. Road built 1886 by Buffalo Soldiers. On Redford 1976 route.","on_redford_route":true},"geometry":{"type":"Point","coordinates":[-110.500,39.776]}},{"type":"Feature","properties":{"name":"Castle Gate Payroll Robbery","section":"D","section_name":"Robbers Roost & Canyonlands","state":"UT","county":"Carbon Co.","type":"robbery","outlaws":"Butch Cassidy, Elzy Lay","notes":"Pleasant Valley Coal Co. payroll robbed April 21, 1897. ~$8,000 taken. Fled to Robbers Roost cutting telegraph lines. Loot never recovered.","on_redford_route":false},"geometry":{"type":"Point","coordinates":[-110.585,39.681]}},{"type":"Feature","properties":{"name":"Robbers Roost","section":"D","section_name":"Robbers Roost & Canyonlands","state":"UT","county":"Wayne Co.","type":"hideout","outlaws":"Butch Cassidy, Elzy Lay, Wild Bunch","notes":"Third and southernmost main anchor. ~2,000 sq mi between the Colorado, Green, and Dirty Devil Rivers. Where Cassidy and Lay formed the Wild Bunch. No lawman successfully raided it. BLM-managed.","on_redford_route":true},"geometry":{"type":"Point","coordinates":[-110.306,38.377]}},{"type":"Feature","properties":{"name":"Hanksville, Utah","section":"D","section_name":"Robbers Roost & Canyonlands","state":"UT","county":"Wayne Co.","type":"town","outlaws":"Various","notes":"Nearest outpost and supply gateway to Robbers Roost. On Redford 1976 route.","on_redford_route":true},"geometry":{"type":"Point","coordinates":[-110.712,38.370]}},{"type":"Feature","properties":{"name":"Circleville, Utah (Cassidy Boyhood Home)","section":"D","section_name":"Robbers Roost & Canyonlands","state":"UT","county":"Piute Co.","type":"historical_site","outlaws":"Butch Cassidy","notes":"Boyhood home of Robert LeRoy Parker (Butch Cassidy). Parker family arrived ~1879. Cabin preserved on US-89 south of town. Redford met sister Lula Betenson here in 1968 and as the finale of his 1976 expedition.","on_redford_route":true},"geometry":{"type":"Point","coordinates":[-112.305,38.145]}},{"type":"Feature","properties":{"name":"Telluride Bank Robbery","section":"E","section_name":"Colorado & Southern Reaches","state":"CO","county":"San Miguel Co.","type":"robbery","outlaws":"Butch Cassidy, Tom McCarty, Matt Warner","notes":"Cassidy's first known bank robbery: San Miguel Valley Bank, June 24, 1889. ~$21,000 taken. Fled over Lizard Head Pass to Robbers Roost.","on_redford_route":false},"geometry":{"type":"Point","coordinates":[-107.812,37.936]}},{"type":"Feature","properties":{"name":"Powder Springs","section":"E","section_name":"Colorado & Southern Reaches","state":"UT/CO","county":"Moffat Co.","type":"hideout","outlaws":"Various","notes":"Outlaw relay station connecting Browns Park to Robbers Roost.","on_redford_route":false},"geometry":{"type":"Point","coordinates":[-109.20,40.55]}},{"type":"Feature","properties":{"name":"Winnemucca Bank Robbery","section":"E","section_name":"Colorado & Southern Reaches","state":"NV","county":"Humboldt Co.","type":"robbery","outlaws":"Butch Cassidy, Sundance Kid, Will Carver","notes":"First National Bank robbed September 19, 1900. ~$31,640 mostly in gold. Bank site at 352 Bridge Street.","on_redford_route":false},"geometry":{"type":"Point","coordinates":[-117.735,40.973]}},{"type":"Feature","properties":{"name":"Alma, New Mexico","section":"E","section_name":"Colorado & Southern Reaches","state":"NM","county":"Catron Co.","type":"hideout","outlaws":"Butch Cassidy","notes":"One of Cassidy's preferred southern hideouts. Small town in the Mogollon Mountains near the Arizona border.","on_redford_route":false},"geometry":{"type":"Point","coordinates":[-108.89,33.40]}},{"type":"Feature","properties":{"name":"Folsom Train Robbery","section":"E","section_name":"Colorado & Southern Reaches","state":"NM","county":"Union Co.","type":"robbery","outlaws":"Black Jack Ketchum","notes":"Colorado Southern train robbed September 3, 1897. Ketchum returned solo August 16, 1899, was wounded by the conductor, captured the next day.","on_redford_route":false},"geometry":{"type":"Point","coordinates":[-103.881,36.844]}},{"type":"Feature","properties":{"name":"Clayton, New Mexico (Ketchum Execution)","section":"E","section_name":"Colorado & Southern Reaches","state":"NM","county":"Union Co.","type":"historical_site","outlaws":"Black Jack Ketchum","notes":"Ketchum tried and executed April 26, 1901. Improperly calculated gallows drop caused decapitation. One of the most gruesome ends of the outlaw era.","on_redford_route":false},"geometry":{"type":"Point","coordinates":[-103.184,36.448]}}]};
+
+	// ------------------------------------------------------------
+	// Marker color map by type
+	// ------------------------------------------------------------
+	var MARKER_COLORS = {
+		hideout:         '#c2410c',
+		robbery:         '#f59e0b',
+		historical_site: '#a78bfa',
+		landmark:        '#34d399',
+		town:            '#94a3b8'
+	};
+
+	// ------------------------------------------------------------
+	// Build the map
+	// ------------------------------------------------------------
+	var map = L.map('map', {
+		center: [41.5, -108.5],
+		zoom: 5,
+		zoomControl: true,
+	});
+
+	// Move zoom to top-right to avoid colliding with title panel
+	map.zoomControl.setPosition('topright');
+
+	// Base layers
+	var darkBase = L.tileLayer(
+		'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+		{
+			attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+			subdomains: 'abcd',
+			maxZoom: 19
+		}
+	).addTo(map);
+
+	var satelliteBase = L.tileLayer(
+		'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+		{
+			attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics',
+			maxZoom: 18
+		}
+	);
+
+	// Overlay: USGS Shaded Relief
+	var hillshadeOverlay = L.tileLayer(
+		'https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/tile/{z}/{y}/{x}',
+		{
+			attribution: 'USGS The National Map',
+			maxZoom: 16,
+			opacity: 0.35
+		}
+	).addTo(map);
+
+	// ------------------------------------------------------------
+	// Trail polylines
+	// ------------------------------------------------------------
+	var trailLayer = L.polyline(TRAIL_LATLNGS, {
+		color: '#c2410c',
+		weight: 3,
+		opacity: 0.85,
+		lineJoin: 'round',
+		lineCap: 'round'
+	}).addTo(map);
+
+	var redfordLayer = L.polyline(REDFORD_LATLNGS, {
+		color: '#38bdf8',
+		weight: 2.5,
+		opacity: 0.80,
+		dashArray: '8 4',
+		lineJoin: 'round',
+		lineCap: 'round'
+	}).addTo(map);
+
+	// ------------------------------------------------------------
+	// Helper: build popup HTML for a feature
+	// ------------------------------------------------------------
+	function buildPopupHtml(props) {
+		var outlawsHtml = '';
+		if (props.outlaws && props.outlaws !== 'Various') {
+			outlawsHtml = '<div class="popup-outlaws"><strong>Outlaws:</strong> ' + props.outlaws + '</div>';
+		}
+
+		var redfordHtml = '';
+		if (props.on_redford_route === true) {
+			redfordHtml = '<span class="popup-redford-badge">Redford 1976 Route</span>';
+		}
+
+		return '<div class="popup-inner">'
+			+ '<div class="popup-name">' + props.name + '</div>'
+			+ '<div class="popup-location">' + props.state + ' &bull; ' + props.county + '</div>'
+			+ '<hr class="popup-hr" />'
+			+ '<div class="popup-notes">' + props.notes + '</div>'
+			+ outlawsHtml
+			+ redfordHtml
+			+ '</div>';
+	}
+
+	// ------------------------------------------------------------
+	// Waypoints layer
+	// ------------------------------------------------------------
+	var waypointsLayer = L.geoJSON(WAYPOINTS_GEOJSON, {
+		pointToLayer: function(feature, latlng) {
+			var props = feature.properties;
+			var color = MARKER_COLORS[props.type] || '#94a3b8';
+			var isRedford = props.on_redford_route === true;
+
+			var marker = L.circleMarker(latlng, {
+				radius: isRedford ? 7 : 6,
+				fillColor: color,
+				color: isRedford ? '#ffffff' : 'rgba(0,0,0,0.45)',
+				weight: isRedford ? 2 : 1,
+				opacity: 1,
+				fillOpacity: 0.9
+			});
+
+			marker.bindPopup(buildPopupHtml(props), {
+				className: 'outlaw-popup',
+				maxWidth: 300,
+				minWidth: 230
+			});
+
+			// Tooltip on hover
+			marker.bindTooltip(props.name, {
+				direction: 'top',
+				offset: [0, -8],
+				className: '',
+				opacity: 0.92
+			});
+
+			return marker;
+		}
+	}).addTo(map);
+
+	// ------------------------------------------------------------
+	// Layer control
+	// ------------------------------------------------------------
+	var baseLayers = {
+		'Dark (CartoDB)':        darkBase,
+		'Satellite (Esri)':      satelliteBase
+	};
+
+	var overlayLayers = {
+		'USGS Hillshade':        hillshadeOverlay,
+		'Trail Corridor':        trailLayer,
+		'Redford 1976 Route':    redfordLayer,
+		'Waypoints':             waypointsLayer
+	};
+
+	L.control.layers(baseLayers, overlayLayers, {
+		position: 'topright',
+		collapsed: true
+	}).addTo(map);
+
+	// ------------------------------------------------------------
+	// MiniMap inset
+	// ------------------------------------------------------------
+	var miniMapTile = L.tileLayer(
+		'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+		{ subdomains: 'abcd', maxZoom: 19 }
+	);
+
+	var miniMap = new L.Control.MiniMap(miniMapTile, {
+		position: 'bottomright',
+		width: 130,
+		height: 85,
+		zoomLevelOffset: -5,
+		toggleDisplay: true,
+		minimized: false,
+		strings: { hideText: 'Hide', showText: 'Show' }
+	}).addTo(map);
+
+	// ------------------------------------------------------------
+	// Scale bar
+	// ------------------------------------------------------------
+	L.control.scale({
+		position: 'bottomright',
+		imperial: true,
+		metric: true
+	}).addTo(map);
+
+	</script>
+</body>
+</html>

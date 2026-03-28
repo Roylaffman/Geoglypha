@@ -1,5 +1,5 @@
 ---
-title: "Seas of Stone"
+title: "Angkor Wat Hydraulic System"
 subtitle: "The Barays of Angkor and the Hydraulic Civilization of the Khmer Empire"
 author: "Ryan Lafferty"
 date: last-modified
