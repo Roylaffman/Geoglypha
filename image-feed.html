@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Image Archive | Geoglypha</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Lora:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			--bg:        #0d0f0e;
+			--surface:   #141817;
+			--border:    #1f2622;
+			--primary:   #3d6b52;
+			--gold:      #c49a3c;
+			--gold-dim:  #8a6b28;
+			--text:      #d4cfc4;
+			--muted:     #7a7570;
+			--tag-bg:    #1a2620;
+			--tag-text:  #6dbf8a;
+		}
+
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+
+		body {
+			background: var(--bg);
+			color: var(--text);
+			font-family: 'Lora', Georgia, serif;
+			min-height: 100vh;
+		}
+
+		/* ── Header ── */
+		header {
+			background: linear-gradient(180deg, #0a0d0b 0%, #141817 100%);
+			border-bottom: 1px solid var(--border);
+			padding: 1rem 0;
+			position: sticky;
+			top: 0;
+			z-index: 100;
+		}
+
+		.header-inner {
+			max-width: 1400px;
+			margin: 0 auto;
+			padding: 0 2rem;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			gap: 1rem;
+		}
+
+		.logo {
+			font-family: 'Cinzel', serif;
+			font-size: 1.4rem;
+			color: var(--gold);
+			text-decoration: none;
+			letter-spacing: 0.06em;
+			white-space: nowrap;
+		}
+
+		.logo span {
+			color: var(--muted);
+			font-size: 0.75rem;
+			display: block;
+			font-family: 'IBM Plex Mono', monospace;
+			letter-spacing: 0.15em;
+			margin-top: 2px;
+		}
+
+		/* ── Filter Bar ── */
+		.filter-bar {
+			display: flex;
+			gap: 0.4rem;
+			flex-wrap: wrap;
+			justify-content: flex-end;
+			flex: 1;
+		}
+
+		.filter-btn {
+			background: var(--tag-bg);
+			color: var(--tag-text);
+			border: 1px solid #2a3d30;
+			border-radius: 3px;
+			padding: 0.3rem 0.75rem;
+			font-family: 'IBM Plex Mono', monospace;
+			font-size: 0.7rem;
+			letter-spacing: 0.08em;
+			cursor: pointer;
+			transition: all 0.2s;
+			text-transform: lowercase;
+		}
+
+		.filter-btn:hover,
+		.filter-btn.active {
+			background: var(--primary);
+			color: #fff;
+			border-color: var(--primary);
+		}
+
+		.filter-btn.all-btn {
+			color: var(--gold);
+			border-color: var(--gold-dim);
+			background: transparent;
+		}
+
+		.filter-btn.all-btn:hover,
+		.filter-btn.all-btn.active {
+			background: var(--gold);
+			color: var(--bg);
+			border-color: var(--gold);
+		}
+
+		/* ── Hero ── */
+		.hero {
+			padding: 3rem 2rem 2rem;
+			max-width: 1400px;
+			margin: 0 auto;
+			border-bottom: 1px solid var(--border);
+		}
+
+		.hero h1 {
+			font-family: 'Cinzel', serif;
+			font-size: clamp(1.8rem, 4vw, 3rem);
+			color: var(--gold);
+			letter-spacing: 0.04em;
+			margin-bottom: 0.5rem;
+		}
+
+		.hero p {
+			color: var(--muted);
+			font-size: 0.95rem;
+			font-style: italic;
+			max-width: 600px;
+		}
+
+		.image-count {
+			font-family: 'IBM Plex Mono', monospace;
+			font-size: 0.72rem;
+			color: var(--gold-dim);
+			margin-top: 0.4rem;
+			letter-spacing: 0.1em;
+		}
+
+		/* ── Topic Sections ── */
+		.feed {
+			max-width: 1400px;
+			margin: 0 auto;
+			padding: 2rem;
+		}
+
+		.topic-section {
+			margin-bottom: 4rem;
+		}
+
+		.topic-section.hidden { display: none; }
+
+		.topic-header {
+			display: flex;
+			align-items: baseline;
+			gap: 1rem;
+			margin-bottom: 1.25rem;
+			padding-bottom: 0.6rem;
+			border-bottom: 1px solid var(--border);
+		}
+
+		.topic-header h2 {
+			font-family: 'Cinzel', serif;
+			font-size: 1.2rem;
+			color: var(--text);
+			letter-spacing: 0.06em;
+		}
+
+		.topic-header .topic-count {
+			font-family: 'IBM Plex Mono', monospace;
+			font-size: 0.68rem;
+			color: var(--muted);
+			letter-spacing: 0.12em;
+		}
+
+		.topic-desc {
+			font-size: 0.82rem;
+			color: var(--muted);
+			font-style: italic;
+			margin-bottom: 1rem;
+			line-height: 1.5;
+		}
+
+		.topic-link {
+			display: inline-block;
+			margin-bottom: 1rem;
+			font-family: 'IBM Plex Mono', monospace;
+			font-size: 0.7rem;
+			color: var(--gold-dim);
+			text-decoration: none;
+			letter-spacing: 0.1em;
+			border-bottom: 1px solid transparent;
+			transition: color 0.2s, border-color 0.2s;
+		}
+
+		.topic-link:hover {
+			color: var(--gold);
+			border-bottom-color: var(--gold);
+		}
+
+		/* ── Image Grid ── */
+		.image-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+			gap: 0.75rem;
+		}
+
+		.image-card {
+			position: relative;
+			background: var(--surface);
+			border: 1px solid var(--border);
+			border-radius: 4px;
+			overflow: hidden;
+			cursor: pointer;
+			transition: border-color 0.2s, transform 0.2s;
+			aspect-ratio: 4/3;
+		}
+
+		.image-card:hover {
+			border-color: var(--primary);
+			transform: translateY(-2px);
+		}
+
+		.image-card img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+			display: block;
+			opacity: 0;
+			transition: opacity 0.4s;
+		}
+
+		.image-card img.loaded { opacity: 1; }
+
+		.image-card .card-overlay {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			background: linear-gradient(transparent, rgba(0,0,0,0.82));
+			padding: 1.5rem 0.75rem 0.6rem;
+			transform: translateY(100%);
+			transition: transform 0.25s;
+		}
+
+		.image-card:hover .card-overlay { transform: translateY(0); }
+
+		.card-overlay .img-title {
+			font-size: 0.78rem;
+			color: var(--text);
+			font-family: 'Lora', serif;
+			line-height: 1.3;
+		}
+
+		.card-overlay .img-desc {
+			font-size: 0.68rem;
+			color: var(--muted);
+			margin-top: 0.2rem;
+			font-style: italic;
+		}
+
+		.img-placeholder {
+			width: 100%;
+			height: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background: var(--border);
+			color: var(--muted);
+			font-family: 'IBM Plex Mono', monospace;
+			font-size: 0.65rem;
+			letter-spacing: 0.1em;
+			position: absolute;
+			top: 0;
+			left: 0;
+		}
+
+		/* ── Lightbox ── */
+		.lightbox {
+			display: none;
+			position: fixed;
+			inset: 0;
+			background: rgba(0,0,0,0.92);
+			z-index: 999;
+			align-items: center;
+			justify-content: center;
+			padding: 2rem;
+		}
+
+		.lightbox.open { display: flex; }
+
+		.lightbox-inner {
+			position: relative;
+			max-width: 90vw;
+			max-height: 90vh;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: 0.75rem;
+		}
+
+		.lightbox-inner img {
+			max-width: 100%;
+			max-height: 80vh;
+			object-fit: contain;
+			border: 1px solid var(--border);
+			border-radius: 2px;
+		}
+
+		.lightbox-caption {
+			text-align: center;
+			color: var(--text);
+			font-size: 0.85rem;
+		}
+
+		.lightbox-caption span {
+			color: var(--muted);
+			font-size: 0.75rem;
+			display: block;
+			margin-top: 0.25rem;
+			font-family: 'IBM Plex Mono', monospace;
+			letter-spacing: 0.08em;
+		}
+
+		.lightbox-close {
+			position: absolute;
+			top: -2.5rem;
+			right: 0;
+			background: none;
+			border: none;
+			color: var(--muted);
+			font-size: 1.5rem;
+			cursor: pointer;
+			line-height: 1;
+			transition: color 0.2s;
+		}
+
+		.lightbox-close:hover { color: var(--text); }
+
+		/* ── Nav arrows ── */
+		.lightbox-nav {
+			position: fixed;
+			top: 50%;
+			transform: translateY(-50%);
+			background: rgba(20,24,23,0.7);
+			border: 1px solid var(--border);
+			color: var(--muted);
+			font-size: 1.4rem;
+			padding: 0.6rem 0.9rem;
+			cursor: pointer;
+			transition: color 0.2s, background 0.2s;
+			line-height: 1;
+			border-radius: 2px;
+		}
+
+		.lightbox-nav:hover { color: var(--gold); background: rgba(20,24,23,0.95); }
+		.lightbox-prev { left: 1rem; }
+		.lightbox-next { right: 1rem; }
+
+		/* ── Footer ── */
+		footer {
+			border-top: 1px solid var(--border);
+			padding: 2rem;
+			text-align: center;
+			color: var(--muted);
+			font-family: 'IBM Plex Mono', monospace;
+			font-size: 0.72rem;
+			letter-spacing: 0.08em;
+		}
+
+		footer a { color: var(--gold-dim); text-decoration: none; }
+		footer a:hover { color: var(--gold); }
+
+		/* ── Responsive ── */
+		@media (max-width: 768px) {
+			.header-inner { flex-direction: column; align-items: flex-start; }
+			.filter-bar { justify-content: flex-start; }
+			.feed { padding: 1rem; }
+			.image-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.5rem; }
+			.lightbox-nav { display: none; }
+		}
+	</style>
+</head>
+<body>
+
+<header>
+	<div class="header-inner">
+		<a href="index.html" class="logo">
+			Geoglypha
+			<span>image archive</span>
+		</a>
+		<div class="filter-bar" id="filterBar">
+			<button class="filter-btn all-btn active" data-topic="all">all</button>
+		</div>
+	</div>
+</header>
+
+<div class="hero">
+	<h1>Image Archive</h1>
+	<p>Research visuals, maps, and analysis graphics from Geoglypha articles and investigations.</p>
+	<p class="image-count" id="imageCount">loading...</p>
+</div>
+
+<main class="feed" id="feed">
+	<p style="color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:0.8rem;">Loading archive...</p>
+</main>
+
+<div class="lightbox" id="lightbox">
+	<button class="lightbox-nav lightbox-prev" id="lbPrev">&#8249;</button>
+	<div class="lightbox-inner">
+		<button class="lightbox-close" id="lbClose">&times;</button>
+		<img id="lbImg" src="" alt="">
+		<div class="lightbox-caption">
+			<span id="lbTitle"></span>
+			<span id="lbTopic"></span>
+		</div>
+	</div>
+	<button class="lightbox-nav lightbox-next" id="lbNext">&#8250;</button>
+</div>
+
+<footer>
+	<p><a href="index.html">Geoglypha</a> &nbsp;/&nbsp; Image Archive &nbsp;&mdash;&nbsp; Ryan Lafferty &nbsp;&mdash;&nbsp; <span id="yr"></span></p>
+</footer>
+
+<script>
+	document.getElementById('yr').textContent = new Date().getFullYear();
+
+	const MANIFEST_URL = 'images/images-manifest.json';
+	let allImages = [];
+	let currentIndex = 0;
+	let visibleImages = [];
+
+	async function loadManifest() {
+		const res = await fetch(MANIFEST_URL);
+		const data = await res.json();
+		return data;
+	}
+
+	function buildTopicFilter(topics) {
+		const bar = document.getElementById('filterBar');
+		topics.forEach(t => {
+			const btn = document.createElement('button');
+			btn.className = 'filter-btn';
+			btn.dataset.topic = t.id;
+			btn.textContent = t.label.toLowerCase();
+			btn.addEventListener('click', () => filterTopic(t.id));
+			bar.appendChild(btn);
+		});
+	}
+
+	function filterTopic(topicId) {
+		document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+		document.querySelector(`[data-topic="${topicId}"]`).classList.add('active');
+
+		document.querySelectorAll('.topic-section').forEach(section => {
+			if (topicId === 'all') {
+				section.classList.remove('hidden');
+			} else {
+				section.classList.toggle('hidden', section.dataset.topic !== topicId);
+			}
+		});
+
+		updateVisibleImages(topicId);
+	}
+
+	function updateVisibleImages(topicId) {
+		if (topicId === 'all') {
+			visibleImages = allImages;
+		} else {
+			visibleImages = allImages.filter(img => img.topicId === topicId);
+		}
+	}
+
+	function slugToPath(topicId, filename) {
+		return `images/${topicId}/${encodeURIComponent(filename)}`;
+	}
+
+	function buildFeed(data) {
+		const feed = document.getElementById('feed');
+		feed.innerHTML = '';
+
+		let totalImages = 0;
+
+		data.topics.forEach(topic => {
+			const validImages = topic.images.filter(img => img.filename);
+			if (!validImages.length) return;
+
+			totalImages += validImages.length;
+
+			// Track for lightbox
+			validImages.forEach(img => {
+				allImages.push({ ...img, topicId: topic.id, topicLabel: topic.label });
+			});
+
+			const section = document.createElement('section');
+			section.className = 'topic-section';
+			section.dataset.topic = topic.id;
+
+			const header = document.createElement('div');
+			header.className = 'topic-header';
+			header.innerHTML = `
+				<h2>${topic.label}</h2>
+				<span class="topic-count">${validImages.length} image${validImages.length !== 1 ? 's' : ''}</span>
+			`;
+			section.appendChild(header);
+
+			if (topic.description) {
+				const desc = document.createElement('p');
+				desc.className = 'topic-desc';
+				desc.textContent = topic.description;
+				section.appendChild(desc);
+			}
+
+			if (topic.articleLink) {
+				const link = document.createElement('a');
+				link.href = topic.articleLink;
+				link.className = 'topic-link';
+				link.textContent = '&#8594; view article';
+				link.innerHTML = '&#8594; view article';
+				section.appendChild(link);
+			}
+
+			const grid = document.createElement('div');
+			grid.className = 'image-grid';
+
+			validImages.forEach(img => {
+				const globalIndex = allImages.length - validImages.length + validImages.indexOf(img);
+				const card = document.createElement('div');
+				card.className = 'image-card';
+				card.title = img.title || img.filename;
+
+				const placeholder = document.createElement('div');
+				placeholder.className = 'img-placeholder';
+				placeholder.textContent = img.filename.split('.')[0].slice(0, 20).toLowerCase();
+
+				const image = document.createElement('img');
+				const src = slugToPath(topic.id, img.filename);
+				image.alt = img.title || img.filename;
+				image.loading = 'lazy';
+				image.addEventListener('load', () => {
+					image.classList.add('loaded');
+					placeholder.style.display = 'none';
+				});
+				image.src = src;
+
+				const overlay = document.createElement('div');
+				overlay.className = 'card-overlay';
+				overlay.innerHTML = `
+					<div class="img-title">${img.title || img.filename}</div>
+					${img.description ? `<div class="img-desc">${img.description}</div>` : ''}
+				`;
+
+				card.appendChild(placeholder);
+				card.appendChild(image);
+				card.appendChild(overlay);
+				card.addEventListener('click', () => openLightbox(globalIndex));
+				grid.appendChild(card);
+			});
+
+			section.appendChild(grid);
+			feed.appendChild(section);
+		});
+
+		visibleImages = [...allImages];
+		document.getElementById('imageCount').textContent =
+			`${totalImages} images across ${data.topics.length} topics`;
+	}
+
+	// ── Lightbox ──
+	function openLightbox(index) {
+		currentIndex = index;
+		showLightboxImage(visibleImages[currentIndex]);
+		document.getElementById('lightbox').classList.add('open');
+		document.body.style.overflow = 'hidden';
+	}
+
+	function closeLightbox() {
+		document.getElementById('lightbox').classList.remove('open');
+		document.body.style.overflow = '';
+	}
+
+	function showLightboxImage(img) {
+		if (!img) return;
+		const el = document.getElementById('lbImg');
+		el.src = slugToPath(img.topicId, img.filename);
+		el.alt = img.title || img.filename;
+		document.getElementById('lbTitle').textContent = img.title || img.filename;
+		document.getElementById('lbTopic').textContent = img.topicLabel;
+	}
+
+	document.getElementById('lbClose').addEventListener('click', closeLightbox);
+	document.getElementById('lightbox').addEventListener('click', e => {
+		if (e.target === document.getElementById('lightbox')) closeLightbox();
+	});
+
+	document.getElementById('lbPrev').addEventListener('click', () => {
+		currentIndex = (currentIndex - 1 + visibleImages.length) % visibleImages.length;
+		showLightboxImage(visibleImages[currentIndex]);
+	});
+
+	document.getElementById('lbNext').addEventListener('click', () => {
+		currentIndex = (currentIndex + 1) % visibleImages.length;
+		showLightboxImage(visibleImages[currentIndex]);
+	});
+
+	document.addEventListener('keydown', e => {
+		if (!document.getElementById('lightbox').classList.contains('open')) return;
+		if (e.key === 'Escape') closeLightbox();
+		if (e.key === 'ArrowLeft') document.getElementById('lbPrev').click();
+		if (e.key === 'ArrowRight') document.getElementById('lbNext').click();
+	});
+
+	// ── Init ──
+	loadManifest().then(data => {
+		buildTopicFilter(data.topics);
+		buildFeed(data);
+		document.querySelector('[data-topic="all"]').addEventListener('click', () => filterTopic('all'));
+	}).catch(err => {
+		document.getElementById('feed').innerHTML =
+			`<p style="color:var(--muted);font-family:'IBM Plex Mono',monospace;font-size:0.8rem;">Error loading manifest: ${err.message}</p>`;
+	});
+</script>
+</body>
+</html>

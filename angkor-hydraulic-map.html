@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angkor Hydraulic Network — Ryan Lafferty</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<style>
+  :root {
+    --bg-deep:   #080e14;
+    --bg-mid:    #0d1825;
+    --bg-panel:  #0f1c2a;
+    --bg-card:   #14253a;
+    --gold:      #d4a857;
+    --gold-dim:  #8a6e35;
+    --river:     #3a8fd4;
+    --canal:     #3aad6a;
+    --teal:      #4ec9c0;
+    --red:       #e8665a;
+    --amber:     #d97a40;
+    --text:      #c8d8e8;
+    --text-dim:  #7090a8;
+    --border:    rgba(212,168,87,0.20);
+    --sidebar-w: 320px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg-deep);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ── film grain ─────────────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.4;
+  }
+
+  /* ── sidebar ────────────────────────────────────── */
+  #sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gold-dim) transparent;
+  }
+
+  #sidebar::-webkit-scrollbar { width: 4px; }
+  #sidebar::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+
+  .sidebar-header {
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(160deg, #0a1620 0%, #0d1825 100%);
+  }
+
+  .sidebar-header .era {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+    opacity: 0.85;
+  }
+
+  .sidebar-header h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 1.3;
+    color: #e8d9b8;
+    margin-bottom: 8px;
+  }
+
+  .sidebar-header p {
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-dim);
+  }
+
+  /* ── stats grid ─────────────────────────────────── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 16px 16px 8px;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+
+  .stat-card .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+
+  .stat-card .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--gold);
+  }
+
+  /* ── section ────────────────────────────────────── */
+  .sidebar-section {
+    padding: 14px 16px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-section h2 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold-dim);
+    margin-bottom: 12px;
+  }
+
+  /* ── layer toggles ──────────────────────────────── */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .toggle-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .toggle-switch {
+    width: 32px;
+    height: 16px;
+    background: #1e3048;
+    border-radius: 8px;
+    position: relative;
+    transition: background 0.2s;
+    border: 1px solid #2a4060;
+  }
+
+  .toggle-switch.on { background: var(--gold-dim); border-color: var(--gold); }
+  .toggle-switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #7090a8;
+    transition: transform 0.2s, background 0.2s;
+  }
+  .toggle-switch.on::after { transform: translateX(16px); background: var(--gold); }
+
+  /* ── legend ─────────────────────────────────────── */
+  .legend-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 5px 0;
+    font-size: 11.5px;
+    color: var(--text-dim);
+  }
+
+  .legend-line {
+    width: 28px;
+    height: 3px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .legend-line.dashed {
+    background: repeating-linear-gradient(90deg, currentColor 0px, currentColor 5px, transparent 5px, transparent 9px);
+  }
+
+  .legend-circle {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(255,255,255,0.3);
+    flex-shrink: 0;
+  }
+
+  /* ── basemap buttons ────────────────────────────── */
+  .basemap-row {
+    display: flex;
+    gap: 6px;
+    padding: 4px 0;
+  }
+
+  .bm-btn {
+    flex: 1;
+    padding: 6px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.18s;
+    text-align: center;
+  }
+
+  .bm-btn:hover, .bm-btn.active {
+    background: #1a2f48;
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  /* ── popup ──────────────────────────────────────── */
+  #map-popup {
+    position: absolute;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--gold);
+    border-radius: 6px;
+    padding: 14px 16px;
+    min-width: 220px;
+    max-width: 280px;
+    z-index: 500;
+    display: none;
+    pointer-events: none;
+    backdrop-filter: blur(4px);
+  }
+
+  #map-popup .popup-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: #e8d9b8;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+
+  #map-popup .popup-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 11.5px;
+    padding: 3px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  #map-popup .popup-key {
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  #map-popup .popup-val {
+    color: var(--gold);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    text-align: right;
+  }
+
+  /* ── map ─────────────────────────────────────────── */
+  #map {
+    flex: 1;
+    height: 100vh;
+  }
+
+  /* ── hamburger ───────────────────────────────────── */
+  #hamburger {
+    display: none;
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 200;
+    width: 42px;
+    height: 42px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 20px;
+    color: var(--gold);
+    align-items: center;
+    justify-content: center;
+  }
+
+  #sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 90;
+  }
+
+  /* ── mobile ──────────────────────────────────────── */
+  @media (max-width: 768px) {
+    #hamburger { display: flex; }
+    #sidebar {
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      transform: translateX(-110%);
+      transition: transform 0.28s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      z-index: 100;
+      box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+    }
+    #sidebar.open { transform: translateX(0); }
+    #sidebar-overlay.open { display: block; }
+    #map-popup { max-width: 88vw; }
+  }
+
+  /* ── close btn on popup ─────────────────────────── */
+  #popup-close {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--text-dim);
+    line-height: 1;
+    pointer-events: all;
+  }
+  #popup-close:hover { color: var(--gold); }
+
+  /* ── MapLibre attribution ────────────────────────── */
+  .maplibregl-ctrl-bottom-right { bottom: 6px; right: 6px; }
+  .maplibregl-ctrl-attrib { background: rgba(8,14,20,0.7) !important; color: var(--text-dim) !important; font-size: 10px !important; }
+</style>
+</head>
+<body>
+
+<button id="hamburger" onclick="toggleSidebar()">&#9776;</button>
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div id="sidebar">
+
+  <!-- Header -->
+  <div class="sidebar-header">
+    <div class="era">802 CE &mdash; 1431 CE</div>
+    <h1>Angkor Hydraulic Network</h1>
+    <p>The Khmer Empire's water machine: four great barays, 600 km of canals, and a flow system that sustained a million people.</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="label">Barays</div>
+      <div class="value">4</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Total Capacity</div>
+      <div class="value">113 MM³</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Peak Annual Flow</div>
+      <div class="value">1,925 MM³</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Canal Network</div>
+      <div class="value">~600 km</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Irrigated Area</div>
+      <div class="value">~1,000 km²</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Active Period</div>
+      <div class="value" style="font-size:11px">802–1431 CE</div>
+    </div>
+  </div>
+
+  <!-- Layers -->
+  <div class="sidebar-section">
+    <h2>Layers</h2>
+    <div class="toggle-row" onclick="toggleLayer('barays')">
+      <span class="toggle-label">
+        <span class="toggle-dot" style="background:#3a8fd4"></span>
+        Barays (storage reservoirs)
+      </span>
+      <div class="toggle-switch on" id="sw-barays"></div>
+    </div>
+    <div class="toggle-row" onclick="toggleLayer('moats')">
+      <span class="toggle-label">
+        <span class="toggle-dot" style="background:#4ec9c0"></span>
+        Moats &amp; basins
+      </span>
+      <div class="toggle-switch on" id="sw-moats"></div>
+    </div>
+    <div class="toggle-row" onclick="toggleLayer('canals')">
+      <span class="toggle-label">
+        <span class="toggle-dot" style="background:#d4a857"></span>
+        Canal network
+      </span>
+      <div class="toggle-switch on" id="sw-canals"></div>
+    </div>
+    <div class="toggle-row" onclick="toggleLayer('nodes')">
+      <span class="toggle-label">
+        <span class="toggle-dot" style="background:#e8665a"></span>
+        Flow nodes
+      </span>
+      <div class="toggle-switch on" id="sw-nodes"></div>
+    </div>
+    <div class="toggle-row" onclick="toggleLayer('edges')">
+      <span class="toggle-label">
+        <span class="toggle-dot" style="background:#6a8ca8"></span>
+        Flow edges (animated)
+      </span>
+      <div class="toggle-switch on" id="sw-edges"></div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="sidebar-section">
+    <h2>Canal Types</h2>
+    <div class="legend-row">
+      <div class="legend-line" style="background:#3a8fd4"></div>
+      River (natural channel)
+    </div>
+    <div class="legend-row">
+      <div class="legend-line" style="background:#d4a857"></div>
+      Inlet canal (filling)
+    </div>
+    <div class="legend-row">
+      <div class="legend-line" style="background:#3aad6a"></div>
+      Distribution canal
+    </div>
+    <div class="legend-row">
+      <div class="legend-line" style="background:#e8665a"></div>
+      Spillway
+    </div>
+    <div class="legend-row">
+      <div class="legend-line" style="background:#d97a40"></div>
+      Overflow canal
+    </div>
+    <div class="legend-row">
+      <div class="legend-circle" style="background:#3a8fd4"></div>
+      Source / river node
+    </div>
+    <div class="legend-row">
+      <div class="legend-circle" style="background:#d4a857"></div>
+      Reservoir / spillway control
+    </div>
+    <div class="legend-row">
+      <div class="legend-circle" style="background:#3aad6a"></div>
+      Irrigation distribution
+    </div>
+    <div class="legend-row">
+      <div class="legend-circle" style="background:#e8665a"></div>
+      Outflow sink (Tonle Sap)
+    </div>
+  </div>
+
+  <!-- Flow edge legend -->
+  <div class="sidebar-section">
+    <h2>Flow Edges</h2>
+    <div class="legend-row">
+      <div class="legend-line dashed" style="color:#3a8fd4"></div>
+      Natural drainage
+    </div>
+    <div class="legend-row">
+      <div class="legend-line dashed" style="color:#d4a857"></div>
+      Controlled intake
+    </div>
+    <div class="legend-row">
+      <div class="legend-line dashed" style="color:#4ec9c0"></div>
+      Distribution flow
+    </div>
+    <div class="legend-row">
+      <div class="legend-line dashed" style="color:#3aad6a"></div>
+      Irrigation delivery
+    </div>
+    <div class="legend-row">
+      <div class="legend-line dashed" style="color:#e8665a"></div>
+      Overflow / return
+    </div>
+  </div>
+
+  <!-- Basemap -->
+  <div class="sidebar-section">
+    <h2>Basemap</h2>
+    <div class="basemap-row">
+      <button class="bm-btn active" id="bm-dark" onclick="setBasemap('dark')">Dark</button>
+      <button class="bm-btn" id="bm-sat"  onclick="setBasemap('sat')">Satellite</button>
+      <button class="bm-btn" id="bm-topo" onclick="setBasemap('topo')">Topo</button>
+    </div>
+  </div>
+
+  <!-- Charts link -->
+  <div class="sidebar-section" style="margin-top:auto">
+    <p style="font-size:11px; color:var(--text-dim); line-height:1.6;">
+      View the full sedimentation timeline, water budget Sankey, and construction chronology in the
+      <a href="angkor-sedimentation-timeline-charts.html" style="color:var(--gold); text-decoration:none;">
+        D3 Analysis Dashboard &rarr;
+      </a>
+    </p>
+  </div>
+
+</div><!-- /sidebar -->
+
+<!-- Map container -->
+<div id="map"></div>
+
+<!-- Popup -->
+<div id="map-popup">
+  <span id="popup-close" onclick="closePopup()">&#x2715;</span>
+  <div id="popup-content"></div>
+</div>
+
+<script>
+// ── Inline data ───────────────────────────────────────────────────────────────
+const BARAYS_GJ = {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[103.7631, 13.4441], [103.8377, 13.4441], [103.8377, 13.4241], [103.7631, 13.4241], [103.7631, 13.4441]]]}, "properties": {"id": "west_baray", "name": "West Baray (Baray Teuk Thla)", "name_km": "\u1794\u17b6\u179a\u17b6\u1799\u178e\u17cd\u1791\u17b9\u1780\u1790\u17d2\u179b\u17b6", "year_built": 1025, "ruler": "Suryavarman I / Udayadityavarman II", "volume_mm3": 50.5, "surface_km2": 16.4, "status": "partial", "esa_color": "#3a8fd4", "center": [103.8, 13.434], "feature_type": "baray"}}, {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[103.916, 13.442], [103.986, 13.442], [103.986, 13.426], [103.916, 13.426], [103.916, 13.442]]]}, "properties": {"id": "east_baray", "name": "East Baray (Yashodharatataka)", "name_km": "\u1799\u179f\u17c4\u1792\u179a\u178f\u178f\u1780", "year_built": 900, "ruler": "Yasovarman I", "volume_mm3": 46.0, "surface_km2": 13.7, "status": "dry", "esa_color": "#d4a857", "center": [103.951, 13.434], "feature_type": "baray"}}, {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[103.8781, 13.4674], [103.9115, 13.4674], [103.9115, 13.4588], [103.8781, 13.4588], [103.8781, 13.4674]]]}, "properties": {"id": "jayatataka", "name": "Jayatataka (North Baray)", "name_km": "\u1787\u17d0\u1799\u178f\u178f\u1780", "year_built": 1185, "ruler": "Jayavarman VII", "volume_mm3": 8.7, "surface_km2": 3.2, "status": "seasonal", "esa_color": "#4ec9c0", "center": [103.895, 13.463], "feature_type": "baray"}}, {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[104.016, 13.36], [104.051, 13.36], [104.051, 13.352], [104.016, 13.352], [104.016, 13.36]]]}, "properties": {"id": "indratataka", "name": "Indratataka (Roluos Baray)", "name_km": "\u17a5\u1793\u17d2\u1791\u17d2\u179a\u178f\u178f\u1780", "year_built": 889, "ruler": "Indravarman I", "volume_mm3": 7.5, "surface_km2": 3.3, "status": "dry", "esa_color": "#e8665a", "center": [104.033, 13.356], "feature_type": "baray"}}]};
+const MOATS_GJ  = {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[103.859, 13.418], [103.875, 13.418], [103.875, 13.407], [103.859, 13.407], [103.859, 13.418]]]}, "properties": {"id": "angkor_wat_moat", "name": "Angkor Wat Moat", "volume_mm3": 3.0, "width_m": 190, "type": "moat", "color": "#4ec9c0", "center": [103.867, 13.413], "feature_type": "moat"}}, {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[103.844, 13.458], [103.874, 13.458], [103.874, 13.428], [103.844, 13.428], [103.844, 13.458]]]}, "properties": {"id": "angkor_thom_moat", "name": "Angkor Thom Moat", "volume_mm3": 5.0, "width_m": 100, "type": "moat", "color": "#4ec9c0", "center": [103.859, 13.443], "feature_type": "moat"}}, {"type": "Feature", "geometry": {"type": "Polygon", "coordinates": [[[103.964, 13.436], [103.971, 13.436], [103.971, 13.432], [103.964, 13.432], [103.964, 13.436]]]}, "properties": {"id": "srah_srang", "name": "Srah Srang (Royal Basin)", "volume_mm3": 0.6, "width_m": 700, "type": "basin", "color": "#3aad6a", "center": [103.967, 13.434], "feature_type": "moat"}}]};
+const CANALS_GJ = {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.89, 13.515], [103.889, 13.5], [103.888, 13.49], [103.886, 13.475], [103.878, 13.468], [103.872, 13.455], [103.869, 13.445], [103.868, 13.435], [103.867, 13.42], [103.866, 13.41], [103.863, 13.395], [103.858, 13.375], [103.85, 13.36], [103.845, 13.345]]}, "properties": {"id": "siem_reap_river", "name": "Siem Reap River (channelized)", "type": "river", "flow_capacity_m3s": "30\u201380 (wet) / 1\u20133 (dry)", "length_km": 45, "color": "#3a8fd4", "width": 4, "feature_type": "canal"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.74, 13.52], [103.745, 13.505], [103.748, 13.49], [103.75, 13.47], [103.752, 13.455], [103.756, 13.445], [103.763, 13.44]]}, "properties": {"id": "puok_river", "name": "Puok River", "type": "river", "flow_capacity_m3s": "20\u201350 (wet) / 0.5\u20132 (dry)", "length_km": 35, "color": "#3a8fd4", "width": 3, "feature_type": "canal"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.88, 13.48], [103.89, 13.472], [103.905, 13.462], [103.915, 13.456]]}, "properties": {"id": "ne_inlet_east_baray", "name": "NE Inlet Canal (to East Baray)", "type": "inlet_canal", "flow_capacity_m3s": "15\u201330", "length_km": 5, "color": "#d4a857", "width": 3, "feature_type": "canal"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.945, 13.436], [103.945, 13.43], [103.945, 13.42], [103.944, 13.41]]}, "properties": {"id": "east_baray_south_outlet", "name": "East Baray South Outlet", "type": "distribution_canal", "flow_capacity_m3s": "5\u201315", "length_km": 3, "color": "#3aad6a", "width": 2, "feature_type": "canal"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.908, 13.445], [103.895, 13.442], [103.98, 13.438], [103.967, 13.436]]}, "properties": {"id": "east_baray_west_outlet", "name": "East Baray West Outlet (to Srah Srang / Ta Prohm)", "type": "distribution_canal", "flow_capacity_m3s": "3\u201310", "length_km": 2, "color": "#3aad6a", "width": 2, "feature_type": "canal"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.878, 13.467], [103.865, 13.46], [103.848, 13.452], [103.838, 13.444]]}, "properties": {"id": "west_baray_ne_inlet", "name": "West Baray NE Inlet Canal", "type": "inlet_canal", "flow_capacity_m3s": "10\u201325", "length_km": 8, "color": "#d4a857", "width": 3, "feature_type": "canal"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.8, 13.424], [103.8, 13.41], [103.798, 13.395], [103.796, 13.38]]}, "properties": {"id": "west_baray_south_outlet", "name": "West Baray South Outlet", "type": "distribution_canal", "flow_capacity_m3s": "3\u20138", "length_km": 2, "color": "#3aad6a", "width": 2, "feature_type": "canal"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.876, 13.468], [103.878, 13.466]]}, "properties": {"id": "bampenh_reach", "name": "Bampenh Reach Spillway", "type": "spillway", "flow_capacity_m3s": "5\u201315", "length_km": 0.3, "color": "#e8665a", "width": 3, "feature_type": "canal"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.868, 13.445], [103.853, 13.445], [103.845, 13.445], [103.84, 13.445]]}, "properties": {"id": "angkor_thom_canal", "name": "Angkor Thom Distribution Canal", "type": "distribution_canal", "flow_capacity_m3s": "2\u20135", "length_km": 3, "color": "#4ec9c0", "width": 2, "feature_type": "canal"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.862, 13.463], [103.858, 13.458], [103.855, 13.453], [103.852, 13.447]]}, "properties": {"id": "jayatataka_preah_khan_overflow", "name": "Jayatataka \u2192 Preah Khan Overflow", "type": "overflow_canal", "flow_capacity_m3s": "5\u201315 (wet season)", "length_km": 1.5, "color": "#d97a40", "width": 2, "feature_type": "canal"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.87, 13.43], [103.87, 13.41], [103.87, 13.39], [103.87, 13.37]]}, "properties": {"id": "ns_distribution_north", "name": "N-S Distribution Canals (north sector)", "type": "distribution_network", "flow_capacity_m3s": "variable", "length_km": 40, "color": "#3aad6a", "width": 1, "feature_type": "canal"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.94, 13.42], [103.94, 13.4], [103.94, 13.38], [103.938, 13.36]]}, "properties": {"id": "ns_distribution_east", "name": "N-S Distribution Canals (east sector)", "type": "distribution_network", "flow_capacity_m3s": "variable", "length_km": 35, "color": "#3aad6a", "width": 1, "feature_type": "canal"}}]};
+const NODES_GJ  = {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "Point", "coordinates": [104.025, 13.53]}, "properties": {"id": "kulen_hills", "name": "Phnom Kulen (487m)", "type": "source", "lon": 104.025, "lat": 13.53, "flow_mm3": 1925, "color": "#3a8fd4"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [103.878, 13.49]}, "properties": {"id": "siem_reap_r", "name": "Siem Reap River", "type": "river", "lon": 103.878, "lat": 13.49, "flow_mm3": 1000, "color": "#3a8fd4"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [103.748, 13.465]}, "properties": {"id": "puok_r", "name": "Puok River", "type": "river", "lon": 103.748, "lat": 13.465, "flow_mm3": 550, "color": "#3a8fd4"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [104.04, 13.39]}, "properties": {"id": "roluos_r", "name": "Roluos River", "type": "river", "lon": 104.04, "lat": 13.39, "flow_mm3": 375, "color": "#3a8fd4"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [103.877, 13.467]}, "properties": {"id": "bampenh", "name": "Bampenh Reach Spillway", "type": "control", "lon": 103.877, "lat": 13.467, "flow_mm3": 475, "color": "#d4a857"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [103.8, 13.434]}, "properties": {"id": "west_baray", "name": "West Baray", "type": "reservoir", "lon": 103.8, "lat": 13.434, "flow_mm3": 50.5, "color": "#d4a857"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [103.951, 13.434]}, "properties": {"id": "east_baray", "name": "East Baray", "type": "reservoir", "lon": 103.951, "lat": 13.434, "flow_mm3": 46.0, "color": "#d4a857"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [103.895, 13.463]}, "properties": {"id": "jayatataka", "name": "Jayatataka", "type": "reservoir", "lon": 103.895, "lat": 13.463, "flow_mm3": 8.7, "color": "#d4a857"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [104.033, 13.356]}, "properties": {"id": "indratataka", "name": "Indratataka", "type": "reservoir", "lon": 104.033, "lat": 13.356, "flow_mm3": 7.5, "color": "#d97a40"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [103.859, 13.443]}, "properties": {"id": "angkor_thom_m", "name": "Angkor Thom Moat", "type": "moat", "lon": 103.859, "lat": 13.443, "flow_mm3": 5.0, "color": "#4ec9c0"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [103.867, 13.413]}, "properties": {"id": "angkor_wat_m", "name": "Angkor Wat Moat", "type": "moat", "lon": 103.867, "lat": 13.413, "flow_mm3": 3.0, "color": "#4ec9c0"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [103.967, 13.434]}, "properties": {"id": "srah_srang", "name": "Srah Srang", "type": "basin", "lon": 103.967, "lat": 13.434, "flow_mm3": 0.6, "color": "#4ec9c0"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [103.875, 13.36]}, "properties": {"id": "irrigation", "name": "Irrigation Network", "type": "distribution", "lon": 103.875, "lat": 13.36, "flow_mm3": 400, "color": "#3aad6a"}}, {"type": "Feature", "geometry": {"type": "Point", "coordinates": [103.85, 13.31]}, "properties": {"id": "tonle_sap", "name": "Tonl\u00e9 Sap Lake", "type": "sink", "lon": 103.85, "lat": 13.31, "flow_mm3": 1150, "color": "#e8665a"}}]};
+const EDGES_GJ  = {"type": "FeatureCollection", "features": [{"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[104.025, 13.53], [103.95150000000001, 13.513], [103.878, 13.49]]}, "properties": {"source": "kulen_hills", "target": "siem_reap_r", "volume": 1000, "edge_type": "natural", "color": "#3a8fd4"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[104.025, 13.53], [103.88650000000001, 13.500499999999999], [103.748, 13.465]]}, "properties": {"source": "kulen_hills", "target": "puok_r", "volume": 550, "edge_type": "natural", "color": "#3a8fd4"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[104.025, 13.53], [104.0325, 13.463000000000001], [104.04, 13.39]]}, "properties": {"source": "kulen_hills", "target": "roluos_r", "volume": 375, "edge_type": "natural", "color": "#3a8fd4"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.878, 13.49], [103.8775, 13.4815], [103.877, 13.467]]}, "properties": {"source": "siem_reap_r", "target": "bampenh", "volume": 475, "edge_type": "controlled", "color": "#d4a857"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.877, 13.467], [103.91399999999999, 13.4535], [103.951, 13.434]]}, "properties": {"source": "bampenh", "target": "east_baray", "volume": 300, "edge_type": "controlled", "color": "#d4a857"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.877, 13.467], [103.886, 13.468], [103.895, 13.463]]}, "properties": {"source": "bampenh", "target": "jayatataka", "volume": 75, "edge_type": "controlled", "color": "#d4a857"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.877, 13.467], [103.8385, 13.4535], [103.8, 13.434]]}, "properties": {"source": "bampenh", "target": "west_baray", "volume": 100, "edge_type": "controlled", "color": "#d4a857"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.748, 13.465], [103.774, 13.4525], [103.8, 13.434]]}, "properties": {"source": "puok_r", "target": "west_baray", "volume": 450, "edge_type": "controlled", "color": "#d4a857"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[104.04, 13.39], [104.0365, 13.376000000000001], [104.033, 13.356]]}, "properties": {"source": "roluos_r", "target": "indratataka", "volume": 375, "edge_type": "controlled", "color": "#d4a857"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.878, 13.49], [103.8685, 13.4695], [103.859, 13.443]]}, "properties": {"source": "siem_reap_r", "target": "angkor_thom_m", "volume": 45, "edge_type": "controlled", "color": "#d4a857"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.878, 13.49], [103.8725, 13.4545], [103.867, 13.413]]}, "properties": {"source": "siem_reap_r", "target": "angkor_wat_m", "volume": 22, "edge_type": "controlled", "color": "#d4a857"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.951, 13.434], [103.959, 13.437], [103.967, 13.434]]}, "properties": {"source": "east_baray", "target": "srah_srang", "volume": 20, "edge_type": "distribution", "color": "#4ec9c0"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.951, 13.434], [103.913, 13.399999999999999], [103.875, 13.36]]}, "properties": {"source": "east_baray", "target": "irrigation", "volume": 150, "edge_type": "irrigation", "color": "#3aad6a"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.8, 13.434], [103.8375, 13.399999999999999], [103.875, 13.36]]}, "properties": {"source": "west_baray", "target": "irrigation", "volume": 225, "edge_type": "irrigation", "color": "#3aad6a"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.895, 13.463], [103.877, 13.456], [103.859, 13.443]]}, "properties": {"source": "jayatataka", "target": "angkor_thom_m", "volume": 30, "edge_type": "distribution", "color": "#4ec9c0"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[104.033, 13.356], [103.95400000000001, 13.361], [103.875, 13.36]]}, "properties": {"source": "indratataka", "target": "irrigation", "volume": 25, "edge_type": "irrigation", "color": "#3aad6a"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.875, 13.36], [103.8625, 13.338000000000001], [103.85, 13.31]]}, "properties": {"source": "irrigation", "target": "tonle_sap", "volume": 1150, "edge_type": "overflow", "color": "#e8665a"}}, {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[103.859, 13.443], [103.86699999999999, 13.404499999999999], [103.875, 13.36]]}, "properties": {"source": "angkor_thom_m", "target": "irrigation", "volume": 15, "edge_type": "overflow", "color": "#e8665a"}}]};
+
+const TILES = {
+  dark: "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png",
+  sat:  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+  topo: "https://tile.opentopomap.org/{z}/{x}/{y}.png",
+};
+
+// ── MapLibre init ─────────────────────────────────────────────────────────────
+const map = new maplibregl.Map({
+  container: 'map',
+  style: {
+    version: 8,
+    sources: {
+      basemap: {
+        type: 'raster',
+        tiles: [TILES.dark],
+        tileSize: 256,
+        attribution: '&copy; CartoDB &copy; OpenStreetMap'
+      }
+    },
+    layers: [{ id: 'basemap', type: 'raster', source: 'basemap' }]
+  },
+  center: [103.875, 13.415],
+  zoom: 11.8,
+  maxZoom: 17,
+  attributionControl: false,
+});
+
+map.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right');
+map.addControl(new maplibregl.NavigationControl(), 'top-right');
+
+// ── Load layers on map ready ─────────────────────────────────────────────────
+map.on('load', () => {
+
+  // Barays
+  map.addSource('barays', { type: 'geojson', data: BARAYS_GJ });
+  map.addLayer({ id: 'barays-fill', type: 'fill', source: 'barays',
+    paint: { 'fill-color': '#3a8fd4', 'fill-opacity': 0.28 } });
+  map.addLayer({ id: 'barays-outline', type: 'line', source: 'barays',
+    paint: { 'line-color': '#d4a857', 'line-width': 1.5, 'line-opacity': 0.8 } });
+
+  // Moats
+  map.addSource('moats', { type: 'geojson', data: MOATS_GJ });
+  map.addLayer({ id: 'moats-fill', type: 'fill', source: 'moats',
+    paint: { 'fill-color': '#4ec9c0', 'fill-opacity': 0.22 } });
+  map.addLayer({ id: 'moats-outline', type: 'line', source: 'moats',
+    paint: { 'line-color': '#4ec9c0', 'line-width': 1.2, 'line-opacity': 0.7 } });
+
+  // Canals
+  map.addSource('canals', { type: 'geojson', data: CANALS_GJ });
+  map.addLayer({ id: 'canals-line', type: 'line', source: 'canals',
+    paint: {
+      'line-color': ['get', 'color'],
+      'line-width': ['coalesce', ['get', 'width'], 2],
+      'line-opacity': 0.9
+    }
+  });
+
+  // Flow edges (static base)
+  map.addSource('edges', { type: 'geojson', data: EDGES_GJ });
+  map.addLayer({ id: 'edges-base', type: 'line', source: 'edges',
+    paint: {
+      'line-color': ['get', 'color'],
+      'line-width': ['interpolate', ['linear'], ['get', 'volume'], 15, 1, 500, 3, 1000, 5],
+      'line-opacity': 0.25,
+    }
+  });
+  // Flow edges (animated dashes)
+  map.addLayer({ id: 'edges-anim', type: 'line', source: 'edges',
+    paint: {
+      'line-color': ['get', 'color'],
+      'line-width': ['interpolate', ['linear'], ['get', 'volume'], 15, 1, 500, 2.5, 1000, 4],
+      'line-dasharray': [2, 4],
+      'line-opacity': 0.7,
+    }
+  });
+
+  // Flow nodes (circles)
+  map.addSource('nodes', { type: 'geojson', data: NODES_GJ });
+  map.addLayer({ id: 'nodes-halo', type: 'circle', source: 'nodes',
+    paint: {
+      'circle-radius': ['interpolate', ['linear'], ['get', 'flow_mm3'], 0.5, 8, 50, 16, 500, 26, 2000, 36],
+      'circle-color': ['get', 'color'],
+      'circle-opacity': 0.12,
+    }
+  });
+  map.addLayer({ id: 'nodes-circle', type: 'circle', source: 'nodes',
+    paint: {
+      'circle-radius': ['interpolate', ['linear'], ['get', 'flow_mm3'], 0.5, 4, 50, 8, 500, 14, 2000, 20],
+      'circle-color': ['get', 'color'],
+      'circle-opacity': 0.85,
+      'circle-stroke-width': 1.5,
+      'circle-stroke-color': 'rgba(255,255,255,0.3)',
+    }
+  });
+  map.addLayer({ id: 'nodes-labels', type: 'symbol', source: 'nodes',
+    minzoom: 11,
+    layout: {
+      'text-field': ['get', 'name'],
+      'text-font': ['Open Sans Regular'],
+      'text-size': 10,
+      'text-offset': [0, 1.4],
+      'text-anchor': 'top',
+      'text-max-width': 10,
+    },
+    paint: {
+      'text-color': '#c8d8e8',
+      'text-halo-color': 'rgba(8,14,20,0.85)',
+      'text-halo-width': 1.5,
+      'text-opacity': 0.85,
+    }
+  });
+
+  // ── Animate flow edges ───────────────────────────────────────────────────
+  const dashSeq = [
+    [0, 4, 3], [0.5, 4, 2.5], [1, 4, 2], [1.5, 4, 1.5],
+    [2, 4, 1], [2.5, 4, 0.5], [3, 4, 0], [0, 3, 3]
+  ];
+  let animStep = 0;
+  function animateEdges(ts) {
+    const next = Math.floor(ts / 80) % dashSeq.length;
+    if (next !== animStep) {
+      animStep = next;
+      if (map.getLayer('edges-anim')) {
+        map.setPaintProperty('edges-anim', 'line-dasharray', dashSeq[animStep]);
+      }
+    }
+    requestAnimationFrame(animateEdges);
+  }
+  requestAnimationFrame(animateEdges);
+
+  // ── Click: barays ────────────────────────────────────────────────────────
+  map.on('click', 'barays-fill', e => {
+    const p = e.features[0].properties;
+    showPopup(e.lngLat, p.name, [
+      ['Year built', p.year_built],
+      ['Ruler', p.ruler],
+      ['Volume', (p.volume_mm3 || '') + ' MM³'],
+      ['Surface area', (p.surface_km2 || '') + ' km²'],
+      ['Status', p.status],
+    ]);
+  });
+
+  // ── Click: moats ─────────────────────────────────────────────────────────
+  map.on('click', 'moats-fill', e => {
+    const p = e.features[0].properties;
+    showPopup(e.lngLat, p.name, [
+      ['Volume', (p.volume_mm3 || '') + ' MM³'],
+      ['Width', (p.width_m ? p.width_m + ' m' : 'varies')],
+      ['Type', p.type || p.feature_type],
+    ]);
+  });
+
+  // ── Click: canals ─────────────────────────────────────────────────────────
+  map.on('click', 'canals-line', e => {
+    const p = e.features[0].properties;
+    showPopup(e.lngLat, p.name, [
+      ['Type', (p.type || '').replace(/_/g, ' ')],
+      ['Capacity', (p.flow_capacity_m3s || 'varies') + ' m³/s'],
+      ['Length', (p.length_km || '') + ' km'],
+    ]);
+  });
+
+  // ── Click: flow nodes ────────────────────────────────────────────────────
+  map.on('click', 'nodes-circle', e => {
+    const p = e.features[0].properties;
+    showPopup(e.lngLat, p.name, [
+      ['Type', (p.type || '').replace(/_/g, ' ')],
+      ['Annual flow', (p.flow_mm3 || '') + ' MM³'],
+    ]);
+  });
+
+  // ── Click: flow edges ───────────────────────────────────────────────────
+  map.on('click', 'edges-base', e => {
+    const p = e.features[0].properties;
+    showPopup(e.lngLat, p.source + ' → ' + p.target, [
+      ['Volume', p.volume + ' MM³'],
+      ['Type', (p.edge_type || '').replace(/_/g, ' ')],
+    ]);
+  });
+
+  // ── Cursor changes ───────────────────────────────────────────────────────
+  ['barays-fill','moats-fill','canals-line','nodes-circle','edges-base'].forEach(id => {
+    map.on('mouseenter', id, () => map.getCanvas().style.cursor = 'pointer');
+    map.on('mouseleave', id, () => map.getCanvas().style.cursor = '');
+  });
+
+});
+
+// ── Popup ─────────────────────────────────────────────────────────────────────
+const popupEl = document.getElementById('map-popup');
+const popupContent = document.getElementById('popup-content');
+let popupLngLat = null;
+
+function showPopup(lngLat, title, rows) {
+  popupLngLat = lngLat;
+  let html = `<div class="popup-title">${title}</div>`;
+  rows.forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') {
+      html += `<div class="popup-row"><span class="popup-key">${k}</span><span class="popup-val">${v}</span></div>`;
+    }
+  });
+  popupContent.innerHTML = html;
+  positionPopup(lngLat);
+  popupEl.style.display = 'block';
+  popupEl.style.pointerEvents = 'all';
+}
+
+function positionPopup(lngLat) {
+  const pt = map.project(lngLat);
+  const margin = 12;
+  const pw = 290, ph = 150;
+  const mapW = map.getCanvas().offsetWidth;
+  const mapH = map.getCanvas().offsetHeight;
+  const sidebarW = window.innerWidth > 768 ? 320 : 0;
+
+  let left = pt.x + sidebarW + margin;
+  let top  = pt.y + margin;
+
+  if (left + pw > window.innerWidth - margin) left = pt.x + sidebarW - pw - margin;
+  if (top  + ph > mapH + margin)              top  = pt.y - ph - margin;
+
+  popupEl.style.left = left + 'px';
+  popupEl.style.top  = top  + 'px';
+}
+
+function closePopup() {
+  popupEl.style.display = 'none';
+  popupEl.style.pointerEvents = 'none';
+}
+
+map.on('click', e => {
+  const clickedLayers = ['barays-fill','moats-fill','canals-line','nodes-circle','edges-base'];
+  const features = map.queryRenderedFeatures(e.point, { layers: clickedLayers });
+  if (!features.length) closePopup();
+});
+
+// ── Layer toggles ─────────────────────────────────────────────────────────────
+const LAYER_GROUPS = {
+  barays: ['barays-fill', 'barays-outline'],
+  moats:  ['moats-fill',  'moats-outline'],
+  canals: ['canals-line'],
+  nodes:  ['nodes-halo',  'nodes-circle', 'nodes-labels'],
+  edges:  ['edges-base',  'edges-anim'],
+};
+
+const layerState = { barays: true, moats: true, canals: true, nodes: true, edges: true };
+
+function toggleLayer(group) {
+  layerState[group] = !layerState[group];
+  const vis = layerState[group] ? 'visible' : 'none';
+  (LAYER_GROUPS[group] || []).forEach(id => {
+    if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
+  });
+  const sw = document.getElementById('sw-' + group);
+  if (sw) sw.classList.toggle('on', layerState[group]);
+}
+
+// ── Basemap switch ────────────────────────────────────────────────────────────
+function setBasemap(key) {
+  map.getSource('basemap').setTiles([TILES[key]]);
+  document.querySelectorAll('.bm-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('bm-' + key).classList.add('active');
+}
+
+// ── Mobile sidebar ────────────────────────────────────────────────────────────
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
+}
+</script>
+</body>
+</html>

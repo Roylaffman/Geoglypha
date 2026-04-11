@@ -1,0 +1,450 @@
+{
+	"version": "1.1",
+	"lastUpdated": "2026-04-10",
+	"author": "Ryan Lafferty",
+	"description": "Geoglypha image catalog — Substack research and article images organized by topic.",
+	"topics": [
+		{
+			"id": "angkor-barays",
+			"label": "Angkor Hydraulics",
+			"description": "Khmer water management systems, Angkor Wat hydraulic networks, and baray reservoir analysis",
+			"articleLink": "angkor-barays.html",
+			"images": [
+				{
+					"filename": "west-baray.jpg",
+					"title": "West Baray",
+					"description": "The West Baray — 8km x 2.2km, holding 53 million cubic meters of water. Built by Suryavarman I and Udayadityavarman II between 1000 and 1066 CE. One of two massive Khmer reservoirs hand-dug from the Cambodian plain, still partially filled today. The earthen dikes rise nearly 12 meters. Workers moved an estimated 8 million cubic meters of earth to build it — by hand."
+				},
+				{
+					"filename": "AngkorWat-SankeyDiagram.jpg",
+					"title": "Angkor Wat Hydraulic Flow",
+					"description": "Sankey diagram tracing water flow through the Angkor Wat hydraulic system — from the Kulen Hills watershed through canals, barays, moats, and temple foundations. The system was designed to fill slowly and drain slowly, moderating the brutal seasonality of the Cambodian monsoon climate."
+				},
+				{
+					"filename": "AngkorWat___.jpg",
+					"title": "Angkor Wat System Overview",
+					"description": "System overview of the Angkor hydraulic network. The Angkor moat encircles 1.5km x 1.3km, with a 190-meter width engineered to regulate groundwater beneath the temple foundations. Khmer engineers used water-filled trenches and celestial sight lines to achieve consistent gradients across the flat plain."
+				},
+				{
+					"filename": "Flowchart-AngkorWat.jpg",
+					"title": "Angkor Water Management Flowchart",
+					"description": "Process flowchart of the Angkor Wat water management system — from sacred headwaters at Kbal Spean, where over 1,000 lingas were carved into the riverbed to sanctify the flow, downstream through the urban moat network to household trapeangs. Sacred function and hydrological function were inseparable from the first point of origin."
+				},
+				{
+					"filename": "Screenshot 2026-04-06 122052.jpg",
+					"title": "Hydraulic System Diagram",
+					"description": "System network diagram of the Angkor hydraulic infrastructure, showing how the three-tier system — upland watershed, central reservoirs, and downstream canal network — integrated regional, urban, and residential scales into one coherent machine capable of supporting a city of one million people."
+				},
+				{
+					"filename": "SystemNetworkAngkorWat.jpg",
+					"title": "System Network: Angkor Wat",
+					"description": "Network analysis visualization of the Angkor hydraulic system. The same engineering that made Angkor possible made it brittle: the system was designed for a predictable seasonal monsoon rhythm and could not tolerate the alternating droughts and catastrophic rainfall events of the 14th-15th centuries. LiDAR surveys by the Greater Angkor Project later mapped the precise failure points."
+				},
+				{
+					"filename": "sedimentation.jpg",
+					"title": "Canal Sedimentation Analysis",
+					"description": "Sedimentation analysis showing the silting failure that fractured the Khmer hydraulic system. Drought years stripped the watershed bare, then intense rainfall flushed enormous sediment loads into the canal network. In some areas, erosion cut channels 8 meters below the surrounding terrain. Key arteries silted shut. The system that enabled three rice harvests a year collapsed in sections, then across entire districts."
+				}
+			]
+		},
+		{
+			"id": "chimney-rock",
+			"label": "Chimney Rock",
+			"description": "Chimney Rock State Park NC — geology, DEM analysis, Hurricane Helene damage, and climbing areas",
+			"articleLink": "chimney-rock.html",
+			"images": [
+				{
+					"filename": "Chimney Rock.jpg",
+					"title": "Chimney Rock",
+					"description": "Chimney Rock, Rutherford County, NC — a 315-foot monadnick of Henderson Gneiss formed 535 million years ago, isolated by erosion along fracture joints. On September 27, 2024, Hurricane Helene sent the Rocky Broad River surging through the gorge below. The park entrance bridge, the Old Rock Cafe, and over one-third of village structures were destroyed. The rock is unchanged."
+				},
+				{
+					"filename": "Chimney RockDEM.jpg",
+					"title": "Chimney Rock DEM",
+					"description": "Bare-earth LiDAR DEM of Chimney Rock State Park and Hickory Nut Gorge — NC Floodplain Mapping Program 2020, FEMA RiskMAP acquisition for the Rocky Broad River watershed. Resolution 1-2 meters. This pre-storm terrain baseline was acquired four years before Hurricane Helene reshaped the gorge floor and destroyed sections of the access road."
+				},
+				{
+					"filename": "ChimneyRock.jpg",
+					"title": "Chimney Rock Vista",
+					"description": "Reference photograph of Chimney Rock State Park. Elevation ranges from roughly 1,000 feet on the gorge floor to over 2,900 feet at the upper ridgeline. Hickory Nut Falls — at 404 feet, the tallest waterfall east of the Mississippi — drops from the same sandstone and gneiss formation. The gorge served as a Cherokee seasonal trade and travel corridor; arrowheads have been recovered throughout its 14-mile length."
+				},
+				{
+					"filename": "Rumbling Bald_climbing.jpg",
+					"title": "Rumbling Bald Climbing",
+					"description": "Rumbling Bald Mountain climbing area near Lake Lure, NC — part of the broader Chimney Rock / Hickory Nut Gorge story map. A dense concentration of granite sport and trad routes above the same Rocky Broad River watershed that Helene scoured in September 2024."
+				},
+				{
+					"filename": "climbingmap.jpg",
+					"title": "Climbing Area Map",
+					"description": "GIS map of climbing areas in the Chimney Rock / Hickory Nut Gorge region, built for the Quarto story map. The Rocky Broad watershed drains south through the gorge, concentrating both the climbing infrastructure and the Helene flood damage in the same narrow corridor."
+				},
+				{
+					"filename": "openbeta.jpg",
+					"title": "OpenBeta Crag Data",
+					"description": "OpenBeta community crag data for the Chimney Rock area — an open-source climbing route database used as a layer in the GIS story map. Cross-referenced against park boundary polygons sourced from NC LOSRC and DuckDB/Overture Maps place data."
+				}
+			]
+		},
+		{
+			"id": "critical-minerals",
+			"label": "Critical Minerals",
+			"description": "Rare earth elements, mineral supply chains, and geopolitical resource maps across the Americas",
+			"articleLink": "critical-minerals.html",
+			"images": [
+				{
+					"filename": "Mining Sites List.jpg",
+					"title": "Critical Mineral Sites List",
+					"description": "Tabular reference for the 17 critical mineral sites mapped across 7 countries in the Americas — covering lithium (green), rare earths (orange), and strategic metals including copper, nickel, and cobalt (blue). Sites include Rhyolite Ridge and Thacker Pass in Nevada, Mountain Pass in California, Twin Metals in Minnesota, and major Lithium Triangle operations in Chile, Argentina, and Bolivia."
+				},
+				{
+					"filename": "critical-minerals-map.jpg",
+					"title": "Critical Minerals Map",
+					"description": "Folium interactive map of 17 critical mineral sites across 7 countries in the Americas. Green markers indicate lithium deposits, orange rare earths, blue strategic metals. The geography of critical minerals is the geography of 21st-century power — the energy transition requires securing the lithium, rare earths, cobalt, and copper that make EVs and wind turbines possible. Built with Folium + PostGIS. Data: USGS Mineral Commodity Summaries."
+				},
+				{
+					"filename": "lithium-production.png",
+					"title": "Global Lithium Production by Country",
+					"description": "Bar chart of global lithium production by country (2024 est.), with Americas countries highlighted in green. Australia leads with 47% of world output (86,000 tonnes) despite holding far less in reserves than South America. The Lithium Triangle — Chile, Argentina, Bolivia — holds roughly 60% of known reserves but faces regulatory, political, and infrastructure barriers to full extraction. Source: USGS Mineral Commodity Summaries."
+				},
+				{
+					"filename": "ree-dominance.png",
+					"title": "China's Rare Earth Dominance",
+					"description": "Donut chart showing China's dominance in rare earth oxide production (2024 est.) — controlling roughly 60% of global rare earth mining and 85% of processing. Mountain Pass in California's Mojave Desert is the sole Western Hemisphere rare earth source, producing about 15% of global oxide. The permanent magnets in every EV motor and wind turbine depend on neodymium and praseodymium that, more often than not, pass through Chinese refineries. Source: USGS."
+				},
+				{
+					"filename": "static-overview.png",
+					"title": "Americas Critical Minerals Overview Map",
+					"description": "Static overview map of 17 critical mineral sites across 7 countries — from Nevada's lithium deposits to Bolivia's Salar de Uyuni (21 million tonnes, world's largest reserves) to Chile's Salar de Atacama (producing one-third of global supply). The map shows how the energy transition doesn't just require building EVs — it requires securing the supply chains that make them possible. Data: USGS Mineral Commodity Summaries, IEA Critical Minerals Report 2024."
+				}
+			]
+		},
+		{
+			"id": "everglades",
+			"label": "Everglades",
+			"description": "Historical Florida coastline analysis — the Ten Thousand Islands, rum-running, and the Square Grouper era",
+			"articleLink": "everglades-historical.html",
+			"images": [
+				{
+					"filename": "coastline-classified.png",
+					"title": "1978 Coastline — Classified",
+					"description": "1978 NOAA coastline survey of the Ten Thousand Islands: 5,689 individual features classified as SHORELINE and ALONGSHORE FEATURE, rendered from NAD83 projection into WGS84 via PostGIS. The survey captured this landscape at a critical moment — just before the biggest drug busts of the era. To the uninitiated, the map is a chaotic splatter of green and blue. To the smugglers who navigated it by instinct, it was a precise network of arterial highways."
+				},
+				{
+					"filename": "coastline-full.png",
+					"title": "1978 Coastline — Full Survey",
+					"description": "Full 1978 NOAA Florida coastline dataset showing the complete Ten Thousand Islands labyrinth — the same mangrove tunnels and shifting channels that sheltered rum-runners in the 1920s and marijuana smugglers in the 1970s. The Barron River, Chatham River, Lopez River, and the Wilderness Waterway formed the smugglers' highway. The same geography that hid the Calusa for millennia hadn't changed. The mangroves still grew. The channels still shifted."
+				}
+			]
+		},
+		{
+			"id": "greco-roman",
+			"label": "Greco-Roman",
+			"description": "Argonaut sea routes, ancient Mediterranean exploration, and Greco-Roman geographic networks",
+			"articleLink": "roman-roads.html",
+			"images": [
+				{
+					"filename": "ArgonautsRoute.jpg",
+					"title": "Argonauts Route",
+					"description": "Research visualization for the Argonaut sea route GIS project — covering the full Mediterranean basin, Adriatic, Aegean, Sea of Marmara, Bosphorus, and western Black Sea through to ancient Colchis on the Georgian coast. Bathymetric data sourced from EMODnet DTM 2024 (~115m resolution) and GEBCO 2024 grid. Land topography from Copernicus DEM GLO-30 at 30m resolution across Greece, Turkey, and Georgia."
+				}
+			]
+		},
+		{
+			"id": "helene",
+			"label": "Hurricane Helene",
+			"description": "Google Earth Engine analysis of Hurricane Helene flood extent and damage — September 2024",
+			"articleLink": "",
+			"images": [
+				{
+					"filename": "HeleneGEE.jpg",
+					"title": "Helene — Google Earth Engine Analysis",
+					"description": "Google Earth Engine analysis of Hurricane Helene's flood extent and damage footprint, September 27, 2024. Helene dropped 1-2 feet of rain across the southern Appalachians. The Rocky Broad River surged through Chimney Rock Village, destroying the park entrance bridge and over one-third of village structures. The same storm event is a key narrative layer in the Chimney Rock story map — the 2020 LiDAR DEM serves as the pre-storm terrain baseline."
+				}
+			]
+		},
+		{
+			"id": "lithium",
+			"label": "Lithium Analysis",
+			"description": "Lithium supply chain, global stockpiles, extraction gaps, processing chokepoints, and the energy transition",
+			"articleLink": "lithium_analysis.html",
+			"images": [
+				{
+					"filename": "Lithium Story.png",
+					"title": "The Lithium Standoff",
+					"description": "Title graphic for 'The Lithium Standoff: Who Mines It, Who Refines It, and Why Your EV Battery Is a Geopolitical Weapon.' Every EV contains roughly 8 kg of lithium. A Tesla Model S uses 62.6 kg. In 2024, 87% of all lithium produced on Earth went straight into batteries. Global demand is forecast to hit 1 million metric tonnes by 2025 and surpass 2 million by 2030."
+				},
+				{
+					"filename": "Lithium-Recycling-Map.jpg",
+					"title": "Lithium Recycling Infrastructure Map",
+					"description": "Geographic distribution of lithium recycling capacity. Only 1-3% of lithium is currently recycled globally. A 2025 study in Nature Communications found that hitting an 84% collection rate by 2060 is required to stabilize lithium supply. The EU has mandated 6% recycled content in EV batteries by 2030. The global recycling market is projected to grow from $5-16 billion today to $24-47 billion by 2032."
+				},
+				{
+					"filename": "Lithium-Salton-Sea.jpg",
+					"title": "Lithium at the Salton Sea",
+					"description": "The Salton Sea in California's Imperial Valley — a DOE 2024 assessment identified significant lithium concentrations in geothermal brines beneath the lake. One of the most promising domestic lithium sources, with the potential to supply EV batteries without the water-intensive evaporation ponds used in the Atacama Desert."
+				},
+				{
+					"filename": "Lithium-Sourcing-Map.jpg",
+					"title": "Global Lithium Sourcing",
+					"description": "Global map of lithium sourcing geography. The supply chain is lopsided: Australia and China together produce nearly 80% of the world's lithium. The Americas — despite sitting on enormous deposits — contribute about 30%, almost entirely from Chile's Atacama Desert. The 2022 Inflation Reduction Act triggered a wave of new mine permits, but permitting and production are separated by years."
+				},
+				{
+					"filename": "Lithium-Traditonal Sources.png",
+					"title": "Traditional Brine Extraction Sources",
+					"description": "The traditional lithium brine extraction process — pump brine from underground, spread in evaporation ponds, let the desert sun concentrate the lithium over 12-18 months. The heart of global supply sits in the Lithium Triangle where Chile, Argentina, and Bolivia meet. The Salar de Atacama alone produces a third of global supply. The process is cheap but water-intensive, in the driest non-polar place on Earth."
+				},
+				{
+					"filename": "LithiumInfographic.png",
+					"title": "Lithium Supply Chain Infographic",
+					"description": "Full-chain lithium supply infographic — from brine and hard rock extraction through refining and battery manufacturing to end-use in EVs and grid storage. The paradox at every level: clean energy metals require dirty extraction, reserves leaders can't get them out of the ground, and the cheapest recycling method doesn't recycle the thing we need most."
+				},
+				{
+					"filename": "Minerals-Americas.jpg",
+					"title": "Critical Minerals of the Americas",
+					"description": "Map of critical mineral geography across the Americas — overlapping with the 17-site critical minerals analysis. Bolivia's Salar de Uyuni holds 21 million tonnes (world's largest reserves) but produced only 600 tonnes in 2024. Argentina has opened its doors to foreign investment including Chinese firm Ganfeng Lithium. The US sits on 14 million metric tonnes — more than Chile — but a structural 8.5-year permitting timeline keeps them in the ground."
+				},
+				{
+					"filename": "RareEarth-Solar.jpg",
+					"title": "Rare Earth and Solar Supply Chain",
+					"description": "The intersection of rare earth supply chains and solar energy infrastructure. China controls not just rare earth mining but 85% of global rare earth processing — meaning the permanent magnets in every wind turbine and the components in solar panels still route through Chinese facilities. MP Materials' Mountain Pass mine is rebuilding domestic processing capacity, but closing the gap will take years and billions in capital."
+				},
+				{
+					"filename": "RhyoliteRidge.jpg",
+					"title": "Rhyolite Ridge, Nevada",
+					"description": "Rhyolite Ridge lithium-boron deposit, Esmeralda County, Nevada — operated by Ioneer in joint venture with Sibanye-Stillwater. Received federal approval in 2024, making it the first lithium mine permitted under the Biden administration. Construction planned for 2026, production by 2029. Located in the same Nevada desert where America's only operating lithium mine, Silver Peak, has been running since 1966."
+				},
+				{
+					"filename": "Solar-Infographic.jpg",
+					"title": "Solar Energy Infographic",
+					"description": "Solar energy and critical mineral dependencies — the minerals required to manufacture photovoltaic panels and the supply chain geography that connects them. The energy transition doesn't run on sunlight alone; it runs on silicon, silver, indium, and the rare earth elements that concentrate in a handful of processing facilities."
+				},
+				{
+					"filename": "TheWarBelow.jpg",
+					"title": "The War Below",
+					"description": "Reference to Ernest Scheyder's 'The War Below' (2023), the key investigative source on US lithium permitting delays. The US takes 8.5 years on average to permit a lithium mine — 3-4x longer than Australia or Canada. A 2023 study in Science of the Total Environment examining 72 proposed US sites found the regulatory complexity is structural, not accidental. That delay is a strategic vulnerability: US reserves exceed Chile's, but they stay in the ground."
+				},
+				{
+					"filename": "carbon-price.png",
+					"title": "Carbon Cost of Lithium Extraction",
+					"description": "The carbon intensity of lithium production by method: recycled lithium produces roughly 2.5 tonnes of CO2 per tonne of lithium — about 8x less than hard rock mining in Australia (20.4 tonnes) and roughly 6x less than traditional brine evaporation in Chile (15 tonnes). The strongest argument for building recycling infrastructure now. Sources: MIT Climate Lab (2024), industry data."
+				},
+				{
+					"filename": "demand-breakdown.png",
+					"title": "Where Lithium Goes",
+					"description": "Donut chart showing end-use breakdown of global lithium demand: 87% goes directly into batteries in 2024. The remaining 13% covers ceramics, glass, lubricants, and other industrial uses. With EV adoption scaling worldwide and grid storage demand accelerating, forecasts project demand hitting 2 million metric tonnes by 2030. Source: USGS Mineral Commodity Summaries (2025)."
+				},
+				{
+					"filename": "energy-density.png",
+					"title": "Battery Energy Density Evolution",
+					"description": "The march toward weightlessness: battery energy density from lead-acid through lithium-ion to the 2025 frontier. Researchers at Tsinghua University achieved 604 Wh/kg in a solid-state cell in early 2025 — more than double today's best commercial lithium-ion at 255 Wh/kg (published in Nature). Lithium-sulfur batteries offer a theoretical ceiling of 2,600 Wh/kg — roughly 10x current Li-ion. If reached, EVs would be lighter than gasoline cars."
+				},
+				{
+					"filename": "environmental-tradeoff.png",
+					"title": "DLE Environmental Tradeoff",
+					"description": "Direct Lithium Extraction (DLE) vs. traditional evaporation ponds: DLE achieves 97% less land use and up to 81% reduction in water use — but can produce 7x higher CO2 emissions. A 2023 review in Nature Reviews Earth & Environment found 95%+ lithium recovery rates, though only 30% of DLE systems have been tested on real brines rather than lab conditions. There is no free lunch in the energy transition."
+				},
+				{
+					"filename": "extraction-gap.png",
+					"title": "The Extraction Gap",
+					"description": "The central paradox of global lithium: Australia leads production with 47% of world output despite holding only 7 million metric tonnes in reserves, while Bolivia sits on 23 million tonnes and produced only 600 tonnes in 2024. Reserves don't equal production. What separates them is permitting infrastructure, political will, and capital. Source: USGS Mineral Commodity Summaries (2025)."
+				},
+				{
+					"filename": "global-stockpile.png",
+					"title": "Global Lithium Reserves",
+					"description": "Horizontal bar chart of global lithium reserves by country. Bolivia and Argentina lead the Americas. Chile's Salar de Atacama alone produces a third of global supply through SQM and Albemarle. The US holds 14 million metric tonnes — more than Chile — concentrated in Nevada clay deposits and brine systems. The reserves are there. What's missing is the political and regulatory infrastructure to extract them at scale. Source: USGS (2025)."
+				},
+				{
+					"filename": "processing-choke-point.png",
+					"title": "China's Processing Chokepoint",
+					"description": "China controls roughly 60% of global lithium refining capacity — plus 75% of cobalt processing, 95% of manganese, and nearly all graphite. This means raw lithium from Australia or Chile still routes through Chinese processing plants before becoming battery-grade material. The question isn't just who digs it up. It's who turns it into something useful. Source: APM Research Lab (2024) citing Reuters."
+				},
+				{
+					"filename": "recycling-gap.png",
+					"title": "The Recycling Gap",
+					"description": "Pyrometallurgy — the cheapest and most common recycling method — recovers zero lithium. It treats lithium as slag waste while recovering cobalt and nickel. Only hydrometallurgy and direct recycling actually close the lithium loop. Currently only 1-3% of lithium is recycled globally. A 2025 study in Nature Communications found the industry must hit 84% collection by 2060 to stabilize supply. The EU has mandated 6% recycled content by 2030. Sources: Nature Communications (2025), industry data."
+				},
+				{
+					"filename": "regulatory-gap.png",
+					"title": "US Permitting Delay",
+					"description": "The US takes 8.5 years on average to permit a lithium mine — vs. 2.5 years in Australia and Canada. A 2023 study in Science of the Total Environment examined 72 proposed US sites and found the complexity is structural. The 2022 Inflation Reduction Act triggered new applications at Rhyolite Ridge, Thacker Pass, and elsewhere, but applications and production are separated by years of construction, environmental review, and political fights that can stall a project indefinitely. Source: Scheyder, The War Below (2023)."
+				}
+			]
+		},
+		{
+			"id": "magic",
+			"label": "Magic and the Occult",
+			"description": "Esoteric research, sacred mushrooms, tarot, and the intersection of mysticism and neuroscience",
+			"articleLink": "",
+			"images": [
+				{
+					"filename": "Nueral Network.jpg",
+					"title": "Neural Network",
+					"description": "Neural network visualization used in esoteric and AI research context — exploring the structural parallels between artificial neural architectures and the systems of correspondence found in ceremonial magic and Kabbalistic frameworks. Part of an ongoing inquiry into the overlap between computational models and pre-modern cosmological maps."
+				},
+				{
+					"filename": "TheSacredMushroomandTheCross.jpg",
+					"title": "The Sacred Mushroom and the Cross",
+					"description": "Reference image for John Marco Allegro's 'The Sacred Mushroom and the Cross' (1970) — the controversial philological argument that early Christianity was a mushroom cult built on Amanita muscaria ritual. A key text in the ethnobotanical and psychedelic history of religion, and a touchstone for research into the origins of sacred imagery and sacramental practice."
+				},
+				{
+					"filename": "christian Tarot.jpg",
+					"title": "Christian Tarot",
+					"description": "Christian tarot imagery — exploring the intersection of medieval Catholic symbolism and the esoteric Tarot tradition. The major arcana absorbed and preserved pre-Tridentine Christian iconography at the same moment the Church was suppressing it, creating a parallel archive of devotional imagery that survived in the hands of card players and occultists."
+				},
+				{
+					"filename": "infograph1.jpg",
+					"title": "Esoteric Systems Infographic",
+					"description": "Research infographic mapping correspondences across esoteric systems — the symbolic grammar connecting ceremonial magic, Kabbalah, astrology, and alchemical traditions. These systems of correspondence were the pre-modern equivalent of a unified field theory: attempts to map the structural relationships between celestial, terrestrial, and human-body phenomena into a single coherent framework."
+				}
+			]
+		},
+		{
+			"id": "outlawtrail",
+			"label": "Outlaw Trail",
+			"description": "The Outlaw Trail and Robert Redford's 1976 expedition — 1,500 miles of Wild Bunch sanctuary through the American West",
+			"articleLink": "outlaw-trail-map.html",
+			"images": [
+				{
+					"filename": "Hole_in_the_wall.jpg",
+					"title": "Hole in the Wall",
+					"description": "Hole in the Wall — a hidden valley behind the Red Wall sandstone escarpment in Johnson County, Wyoming, roughly 40 miles southwest of Kaycee. A single narrow pass through the rock opens into a bowl large enough to winter cattle and horses. At its peak the valley held cabins, corrals, and a livery stable. Posses attempting to enter did so one at a time, through a gap held by men with rifles. The geometry made it nearly impregnable."
+				},
+				{
+					"filename": "TheOutlawTrail.jpg",
+					"title": "The Outlaw Trail",
+					"description": "Interactive story map of the Outlaw Trail corridor (1870-1910) — 1,500 miles from Montana to the Mexican border, supporting the Wild Bunch's train and bank robbing operation. The trail was not a romantic myth. It was infrastructure: hideouts spaced 200 miles apart, relay stations with fresh horses, sympathetic ranchers, and canyon systems that defeated posses as efficiently as any wall. Built with Folium and Quarto; waypoint data compiled from the Historical Marker Database, BLM records, and the original 1976 National Geographic expedition account."
+				},
+				{
+					"filename": "TheOutlawTrail2.jpg",
+					"title": "Outlaw Trail — Redford's Route",
+					"description": "Robert Redford's 1976 expedition route overlaid on the Outlaw Trail corridor — approximately 600 miles of the southern half of the trail covered over three weeks, north to south from Hole-in-the-Wall to the Parker cabin in Circleville, Utah. Where the original route passed under Lake Powell (flooded by the Glen Canyon Dam in 1963), the expedition traveled by boat. The expedition was documented in the November 1976 issue of National Geographic and adapted into a television special broadcast December 24, 1978."
+				}
+			]
+		},
+		{
+			"id": "rana-boylii",
+			"label": "Rana Boylii",
+			"description": "Foothill yellow-legged frog — species distribution, ESA listings, DPS range loss, and California river management",
+			"articleLink": "",
+			"images": [
+				{
+					"filename": "Rana Clade.jpg",
+					"title": "Rana Boylii Clade Map",
+					"description": "Visualization of the six management clades of Rana boylii (Foothill Yellow-legged Frog) in California. California's mountain ranges acted as barriers for thousands of years, isolating frog populations that became distinct lineages — each adapted to the specific chemistry, hydrology, and temperature of its home watershed. Losing a clade is losing an evolutionary experiment that cannot be rerun. CDFW recognizes six clades; frogs cannot be translocated between them and expected to survive."
+				},
+				{
+					"filename": "dps-range-loss.png",
+					"title": "DPS Range Loss",
+					"description": "Estimated range loss by Distinct Population Segment (DPS). The South Coast and South Sierra DPS are now federally Endangered under the ESA — listed in 2023-2024 by the US Fish & Wildlife Service. An estimated 45-55% of the frog's historical range is gone. In the Sierra Nevada, roughly two-thirds of historic populations have been lost. The frog is effectively absent from Southern California."
+				},
+				{
+					"filename": "gbif-by-decade.png",
+					"title": "GBIF Observations by Decade",
+					"description": "GBIF Rana boylii occurrence records in California by decade — drawn from 6,253 documented observations. The steep post-2010 rise reflects iNaturalist's growth in community science data collection, not population recovery. The pre-iNaturalist record is sparse but consistent: the frog's documented presence has contracted from a continuous arc of Pacific Coast drainages (Willamette River to San Gabriel Mountains) to a fragmented, declining distribution."
+				},
+				{
+					"filename": "rana-boylii-artistic.png",
+					"title": "Rana Boylii",
+					"description": "Artistic rendering of Rana boylii — the Foothill Yellow-legged Frog. A species bound to moving water with a specificity that borders on ecological inflexibility: it needs the cobbles of fast-flowing riffles, the partial sunlight that feeds its tadpoles, and the unobstructed seasonal pulse of a California river rising with winter rain and dropping through the long dry summer. For tens of thousands of years, the rivers delivered. Today, nearly half have been changed beyond its tolerance."
+				},
+				{
+					"filename": "static-overview.png",
+					"title": "Rana Boylii Range Overview",
+					"description": "Static overview map of Rana boylii's current California range (green), six management clade boundaries (dashed outlines), and 6,253 GBIF observation records. Red dot marks a personal sighting from the Sierra Nevada foothills — at the boundary of two distinct ecoregions and exactly where two genetic clades meet. This area has very few iNaturalist records. Data: CDFW CWHR datasets ds589 and ds2865, EPA Level III Ecoregions, GBIF taxonKey 2426814."
+				}
+			]
+		},
+		{
+			"id": "roman-roads",
+			"label": "Roman Roads",
+			"description": "The 250,000-mile Roman road network mapped from the Itiner-e Digital Atlas",
+			"articleLink": "roman-roads.html",
+			"images": [
+				{
+					"filename": "terrain-overview.png",
+					"title": "Roman Roads — Terrain Overview",
+					"description": "Roman road network overlaid on an Esri hillshade terrain basemap. Roads cross the Alps via the Great St. Bernard Pass, span the Apennines, thread through the Balkans, and hug the coastlines of Gaul and Hispania — a testament to Roman surveying and engineering. Via Appia south to Brundisium. Via Aurelia along the western coast. Via Flaminia northeast across the Apennines. Via Egnatia linking the Adriatic to Byzantium. The terrain shows not just ancient roads but the skeleton of European geography. Data: Itiner-e Digital Atlas, Aarhus University (2024), CC BY 4.0."
+				}
+			]
+		},
+		{
+			"id": "sino-tibetan-towers",
+			"label": "Sino-Tibetan Towers",
+			"description": "Stone towers of western Sichuan and eastern Tibet — dry-stone masonry, star-plan geometry, and seismic resilience",
+			"articleLink": "sino-tibetan-towers.html",
+			"images": [
+				{
+					"filename": "danba-prettymaps.png",
+					"title": "Danba County — PrettyMaps",
+					"description": "Street map of Danba County seat rendered via prettymaps from OpenStreetMap data. The Dadu River corridor concentrates both settlement and tower density — the same deep gorges that made the towers strategically essential for defense and trade control also produced the flat, tabular stone used in dry-stack masonry construction. From a single vantage above the valley floor near Suopo, 13 towers are visible simultaneously."
+				},
+				{
+					"filename": "tibetan-towers.jpg",
+					"title": "Tower Distribution Map",
+					"description": "Regional distribution map of stone tower clusters across western Sichuan and eastern Tibet. Seven major site clusters are documented: Danba County holds the densest concentration. Towers follow the eastern escarpment of the Tibetan Plateau, where elevation drops from above 4,000 meters to below 1,500 meters over less than 100 km. The Dadu, Min, and Yalong rivers cut the gorges that gave builders both their stone and their strategic positions."
+				}
+			]
+		},
+		{
+			"id": "stone-towers",
+			"label": "Stone Towers",
+			"description": "Architecture and geometry of the Sichuan tower tradition — from square plans to 13-pointed stars, dry stone, and seismic engineering",
+			"articleLink": "sino-tibetan-towers.html",
+			"images": [
+				{
+					"filename": "StoneTowers_distra.jpg",
+					"title": "Stone Towers Distribution",
+					"description": "Distribution analysis of stone tower types across the Sino-Tibetan borderlands. Approximately 250 towers survive in recognizable form; estimates of the tradition's peak range into the thousands. Square plans make up roughly 55% of surviving stock. The 13-pointed star represents perhaps a dozen structures — each re-entrant angle acting as a seismic buttress, distributing lateral force across multiple axes. The 2008 Wenchuan earthquake (M8.0) collapsed many square-plan towers while star-plan towers came through largely intact."
+				},
+				{
+					"filename": "Towers Tibet.jpg",
+					"title": "Towers of Tibet",
+					"description": "Photograph of Tibetan stone towers in western Sichuan — some rising 60 meters without a gram of mortar, built over a span of nearly 1,500 years by Qiang and Gyalrong Tibetan communities. Wall thickness tapers from 0.8 meters at the base to 0.3 meters at the summit, producing the characteristic battered profile that lowers the center of gravity and resists lateral forces. The Inca used the same principle. These builders worked in dry stone, on active fault lines, in remote mountain valleys — with no written building manuals."
+				},
+				{
+					"filename": "Towers Tibet2.jpg",
+					"title": "Towers of Tibet II",
+					"description": "Stone towers at a Gyalrong Tibetan settlement in western Sichuan. Oral tradition recorded in Danba holds that wealthier families built taller and more geometrically complex towers to signal status — the same competitive dynamic that produced San Gimignano in Tuscany and the tower houses of Svaneti in Georgia. No other tradition produced star-plan tower forms. None match this combination of dry-stone construction, seismic context, and heights above 50 meters."
+				},
+				{
+					"filename": "danba-osmnx.png",
+					"title": "Danba County — OSMnx",
+					"description": "Danba County seat and surrounding valley rendered from OpenStreetMap data via OSMnx. The Suopo tower cluster sits northeast of this view, above the river terrace. From a ridge above the village group, 13 towers are visible at once — ranging in plan from simple squares to 13-pointed star configurations. Nearby, Jiaju Tibetan Village preserves towers still integrated into occupied residential buildings. People live in them and around them."
+				},
+				{
+					"filename": "danba-prettymaps.png",
+					"title": "Danba PrettyMaps",
+					"description": "Danba County seat rendered via prettymaps — showing the Dadu River corridor and the settlement layout that grew up around the tower tradition. The Tea-Horse Road ran through this valley, and the towers' distribution along major trade corridors suggests they may have served as waypoints, toll stations, or signal infrastructure for commercial traffic moving between Sichuan and Tibet."
+				},
+				{
+					"filename": "stone-towers-plan-chart.png",
+					"title": "Tower Plan Type Distribution",
+					"description": "Bar chart of estimated tower plan type distribution: square (ubiquitous, ~55%), hexagonal, octagonal, five- and six-pointed stars, eight-pointed stars, twelve-pointed stars, and the extremely rare 13-pointed star — architecturally unexplained, found only in a handful of structures in Danba County. The gradient from square to star is itself a signal: the most complex forms required the most skill and resources, associated with the wealthiest Gyalrong builders. Data: Darragon (2003), Li & Chen (2009)."
+				},
+				{
+					"filename": "switchbacks.jpg",
+					"title": "Switchbacks — Sino-Tibetan Terrain",
+					"description": "Mountain switchbacks in the deep river valleys of the Sino-Tibetan borderlands — the terrain that shaped the tower tradition. Elevations drop from above 4,000 meters to below 1,500 meters over horizontal distances of less than 100 km. The same canyon systems that made the valleys difficult to attack also concentrated movement along predictable routes, making tower placement strategically decisive."
+				},
+				{
+					"filename": "tibetan-towers.jpg",
+					"title": "Tibetan Towers",
+					"description": "Stone towers of the Sichuan-Tibet border region — the most concentrated surviving example of a construction tradition with no global parallel. No other tradition produced star-plan tower forms. No other tradition achieved comparable heights in dry-stone construction in a seismic zone. The knowledge required to build a 60-meter 13-pointed star tower without mortar, on an active fault, was transmitted across generations in communities without written building manuals. The World Monuments Fund placed them on its Watch List in 2006."
+				}
+			]
+		},
+		{
+			"id": "songlines",
+			"label": "Songlines",
+			"description": "Aboriginal Australian songlines and the music geography of Central Australia",
+			"articleLink": "",
+			"images": [
+				{
+					"filename": "Songs of Central Australia .jpg",
+					"title": "Songs of Central Australia",
+					"description": "Reference to the tradition of Central Australian song — the acoustic geography underlying the Aboriginal Australian songline network. Songlines encode navigational, ecological, and cosmological knowledge into sung routes that map the continent. A song is a path. The land is a score. This image references the same tradition that Bruce Chatwin examined in 'The Songlines' (1987) and that Aboriginal communities continue to maintain as living geographic knowledge."
+				}
+			]
+		}
+	]
+}

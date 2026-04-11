@@ -466,7 +466,7 @@
 			subdomains: 'abcd',
 			maxZoom: 19
 		}
-	).addTo(map);
+	);
 
 	var satelliteBase = L.tileLayer(
 		'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -474,7 +474,7 @@
 			attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics',
 			maxZoom: 18
 		}
-	);
+	).addTo(map);
 
 	// Overlay: USGS Shaded Relief
 	var hillshadeOverlay = L.tileLayer(

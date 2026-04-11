@@ -240,69 +240,136 @@
             margin-bottom: 0.5rem;
         }
         
-        /* Gallery Section */
-        .gallery {
+        /* Maps Showcase Section */
+        .maps-showcase {
             padding: 4rem 0;
-            background-color: #fff;
+            background-color: #111;
         }
-        
-        .gallery-intro {
+
+        .maps-showcase .section-title {
+            color: #f2edd7;
+        }
+
+        .maps-intro {
             text-align: center;
-            max-width: 800px;
-            margin: 0 auto 3rem;
+            color: #aaa;
+            font-size: 1rem;
+            margin-top: -2rem;
+            margin-bottom: 2.5rem;
+            letter-spacing: 0.03em;
         }
-        
-        .gallery-grid {
+
+        .maps-hero-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: 2fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
         }
-        
-        .gallery-item {
+
+        .maps-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .maps-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .map-card {
+            display: block;
             position: relative;
-            height: 250px;
-            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            text-decoration: none;
+            background-size: cover;
+            background-position: center;
         }
-        
-        .gallery-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.5s;
+
+        .map-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.12) 55%, transparent 100%);
+            transition: background 0.4s;
         }
-        
-        .gallery-item:hover .gallery-img {
-            transform: scale(1.1);
+
+        .map-card:hover::after {
+            background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.05) 100%);
         }
-        
-        .gallery-caption {
+
+        .map-card--hero { height: 500px; }
+        .maps-stack .map-card { flex: 1; min-height: 245px; }
+        .maps-row .map-card { height: 240px; }
+
+        .map-card:hover img,
+        .map-card:hover { transform: none; }
+
+        .map-card-body {
             position: absolute;
             bottom: 0;
             left: 0;
-            width: 100%;
-            padding: 1rem;
-            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
-            color: var(--light-text);
-            transform: translateY(100%);
+            right: 0;
+            padding: 1.4rem 1.6rem;
+            z-index: 1;
+            transform: translateY(4px);
             transition: transform 0.3s;
         }
-        
-        .gallery-item:hover .gallery-caption {
-            transform: translateY(0);
-        }
-        
-        .gallery-caption h4 {
-            font-family: var(--header-font);
+
+        .map-card:hover .map-card-body { transform: translateY(0); }
+
+        .map-tag {
+            display: inline-block;
+            font-size: 0.68rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--accent-color);
             margin-bottom: 0.5rem;
+            font-family: var(--body-font);
         }
-        
+
+        .map-card-body h3 {
+            font-family: var(--header-font);
+            font-size: 1.25rem;
+            color: #f5f5f5;
+            margin-bottom: 0.35rem;
+            line-height: 1.3;
+        }
+
+        .map-card--hero .map-card-body h3 { font-size: 1.7rem; }
+
+        .map-card-body p {
+            font-size: 0.82rem;
+            color: rgba(245,245,245,0.72);
+            line-height: 1.5;
+            max-width: 38ch;
+            opacity: 0;
+            transition: opacity 0.3s 0.05s;
+        }
+
+        .map-card:hover .map-card-body p { opacity: 1; }
+        .map-card--hero .map-card-body p { opacity: 1; }
+
         .view-more-btn {
             display: block;
-            margin: 3rem auto 0;
+            margin: 2.5rem auto 0;
             text-align: center;
             width: fit-content;
+        }
+
+        @media (max-width: 900px) {
+            .maps-hero-grid { grid-template-columns: 1fr; }
+            .map-card--hero { height: 320px; }
+            .maps-stack { flex-direction: row; }
+            .maps-stack .map-card { min-height: 200px; }
+            .maps-row { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 600px) {
+            .maps-row { grid-template-columns: 1fr; }
+            .maps-stack { flex-direction: column; }
         }
         
         /* Weather Section */
@@ -671,7 +738,8 @@
                     <li><a href="history.html">History</a></li>
                     <li><a href="#projects">Projects</a></li>
                     <li><a href="https://www.geoglypha1.org/weather">Weather</a></li>
-                    <li><a href="graphita/graphitia.html">Gallery</a></li>
+                    <li><a href="graphita/">Gallery</a></li>
+                    <li><a href="/gallery/">AIC</a></li>
                     <li><a href="https://tools.geoglypha1.org">Tools</a></li>
                     <li><a href="supplies.html" style="color:#D8B4FE;">Supplies</a></li>
                     <li><a href="stack.html" style="color:#86EFAC;">Stack</a></li>
@@ -735,7 +803,7 @@
                     </div>
                 </div>
                 <div class="project-card">
-                    <div class="project-img" style="background-image: url('https://via.placeholder.com/600x400/a0937d/ffffff?text=Coming+Soon');"></div>
+                    <div class="project-img" style="background-image: url('images/spider-nasca.jpg');"></div>
                     <div class="project-content">
                         <h3>Fazenda Colorada Geoglyphs</h3>
                         <p>Using Machine Learning to Identify Amazonian Geoglyphs.</p>
@@ -751,7 +819,7 @@
                     </div>
                 </div>
                 <div class="project-card">
-                    <div class="project-img" style="background-image: url('stonehengess.jpg');"></div>
+                    <div class="project-img" style="background-image: url('stonehengess.jpg'); background-position: center top;"></div>
                     <div class="project-content">
                         <h3>Stonehenge</h3>
                         <p>A 3D model of the world-famous Stonehenge.</p>
@@ -767,7 +835,7 @@
                     </div>
                 </div>
                 <div class="project-card">
-                    <div class="project-img" style="background-image: url('https://storage.googleapis.com/www.geoglypha1.org/Lithium-Traditonal%20Sources.png');"></div>
+                    <div class="project-img" style="background-image: url('https://www.geoglypha1.org/Lithium-Traditonal%20Sources.png');"></div>
                     <div class="project-content">
                         <h3>The Lithium Standoff</h3>
                         <p>Geopolitics, ecology, and physics of the global lithium race.</p>
@@ -778,58 +846,82 @@
         </div>
     </section>
 
-    <!-- Gallery Section -->
-    <section class="gallery" id="gallery">
+    <!-- Featured Maps Section -->
+    <section class="maps-showcase" id="maps">
         <div class="container">
-            <h2 class="section-title">Image Gallery</h2>
-            <div class="gallery-intro">
-                <p>Explore our collection of images showcasing historical sites, archaeological discoveries, and geographical features from around the world. Check out the black and white image, its a link to a lo-fi art project!</p>
-            </div>
-            <div class="gallery-grid">
-                <div class="gallery-item">
-                    <img src="images/scifi-desert.jpg" alt="Sci-Fi Desert" class="gallery-img">
-                    <div class="gallery-caption">
-                        <h4>Sci-Fi Desert</h4>
-                        <p>A surreal desert landscape blending science fiction and geography.</p>
+            <h2 class="section-title">Featured Maps</h2>
+            <p class="maps-intro">Interactive maps, spatial analysis, and geographic storytelling.</p>
+
+            <div class="maps-hero-grid">
+                <a href="https://www.geoglypha1.org/chimney-rock.html"
+                   class="map-card map-card--hero"
+                   style="background-image: url('images/chimney-rock/openbeta.jpg');"
+                   target="_blank" rel="noopener">
+                    <div class="map-card-body">
+                        <span class="map-tag">Interactive Map</span>
+                        <h3>Chimney Rock</h3>
+                        <p>535 million years of Blue Ridge geology mapped at the gorge scale. DEM hillshade, climbing areas, waterfalls, and the Helene impact zone.</p>
                     </div>
-                </div>
-                <div class="gallery-item">
-                    <img src="images/bluetower.jpg" alt="Blue Tower" class="gallery-img">
-                    <div class="gallery-caption">
-                        <h4>Blue Tower</h4>
-                        <p>Architectural study in blue tones.</p>
-                    </div>
-                </div>
-                <div class="gallery-item">
-                    <img src="images/desert.jpg" alt="Desert Landscape" class="gallery-img">
-                    <div class="gallery-caption">
-                        <h4>Desert Landscape</h4>
-                        <p>The stark beauty of arid terrain.</p>
-                    </div>
-                </div>
-                <div class="gallery-item">
-                    <img src="images/ironworks.jpg" alt="Ironworks" class="gallery-img">
-                    <div class="gallery-caption">
-                        <h4>Ironworks</h4>
-                        <p>Industrial heritage captured in black and white.</p>
-                    </div>
-                </div>
-                <div class="gallery-item">
-                    <img src="images/narmer-palette.jpg" alt="Narmer Palette" class="gallery-img">
-                    <div class="gallery-caption">
-                        <h4>Narmer Palette</h4>
-                        <p>Ancient Egyptian artifact depicting the unification of Upper and Lower Egypt.</p>
-                    </div>
-                </div>
-                <div class="gallery-item">
-                    <img src="https://storage.googleapis.com/geoglypha1/graphita/images/placeholder1.png" alt="Lo-fi Black and White" class="gallery-img">
-                    <div class="gallery-caption">
-                        <h4>Lo-fi Black and White</h4>
-                        <p>Images created for a thermal printer!</p>
-                    </div>
+                </a>
+
+                <div class="maps-stack">
+                    <a href="https://www.geoglypha1.org/angkor-barays.html"
+                       class="map-card"
+                       style="background-image: url('images/west-baray.jpg');"
+                       target="_blank" rel="noopener">
+                        <div class="map-card-body">
+                            <span class="map-tag">Story Map</span>
+                            <h3>Angkor Wat Hydraulic System</h3>
+                            <p>How the Khmer Empire engineered water across 1,000 square kilometers.</p>
+                        </div>
+                    </a>
+                    <a href="https://www.geoglypha1.org/forest-carbon.html"
+                       class="map-card"
+                       style="background-image: url('images/helene_analysis.jpg');"
+                       target="_blank" rel="noopener">
+                        <div class="map-card-body">
+                            <span class="map-tag">Remote Sensing</span>
+                            <h3>After the Storm</h3>
+                            <p>Sentinel-1 SAR and Landsat NDVI analysis of Hurricane Helene forest damage.</p>
+                        </div>
+                    </a>
                 </div>
             </div>
-            <a href="graphita/graphitia.html" class="btn view-more-btn">View Full Gallery</a>
+
+            <div class="maps-row">
+                <a href="https://www.geoglypha1.org/argonauts_map.html"
+                   class="map-card"
+                   style="background-image: url('Argonaut_route1.jpg');"
+                   target="_blank" rel="noopener">
+                    <div class="map-card-body">
+                        <span class="map-tag">Story Map</span>
+                        <h3>The Argonauts</h3>
+                        <p>Tracing Jason's voyage across the ancient Mediterranean and Black Sea.</p>
+                    </div>
+                </a>
+                <a href="https://www.geoglypha1.org/sino-tibetan-towers.html"
+                   class="map-card"
+                   style="background-image: url('images/sino-tibetan-towers/danba-prettymaps.png'); background-position: top center;"
+                   target="_blank" rel="noopener">
+                    <div class="map-card-body">
+                        <span class="map-tag">Quarto Report</span>
+                        <h3>Stone Sentinels</h3>
+                        <p>The enigmatic watchtowers of the Sino-Tibetan borderlands.</p>
+                    </div>
+                </a>
+                <a href="https://www.geoglypha1.org/everglades-history.html"
+                   class="map-card"
+                   style="background-image: url('images/WatsonsPlace-RabbitKey.jpg');"
+                   target="_blank" rel="noopener">
+                    <div class="map-card-body">
+                        <span class="map-tag">Spatial History</span>
+                        <h3>The Outlaw Coast</h3>
+                        <p>Smuggling routes, lost settlements, and two centuries of contested Florida borderland ecology.</p>
+                    </div>
+                </a>
+            </div>
+
+            <a href="geography.html" class="btn view-more-btn">View All Maps</a>
         </div>
     </section>
 
@@ -979,7 +1071,8 @@
                         <li><a href="history.html">History</a></li>
                         <li><a href="https://www.geoglypha1.org/weather">Weather</a></li>
                         <li><a href="#projects">Projects</a></li>
-                        <li><a href="graphita/graphitia.html">Gallery</a></li>
+                        <li><a href="graphita/">Gallery</a></li>
+                        <li><a href="/gallery/">AIC</a></li>
                         <li><a href="https://tools.geoglypha1.org">Tools</a></li>
                         <li><a href="supplies.html">Supplies</a></li>
                         <li><a href="#about">About</a></li>

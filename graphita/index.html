@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Graphitia — Ryan Lafferty</title>
+	<link rel="stylesheet" href="gallery.css" />
+</head>
+<body>
+
+	<header id="site-header">
+		<nav>
+			<a href="/" class="nav-brand">← geoglypha</a>
+			<div class="nav-filters" id="filter-bar">
+				<button class="filter-btn active" data-filter="all">all</button>
+				<button class="filter-btn" data-filter="painting">painting</button>
+				<button class="filter-btn" data-filter="drawing">drawing</button>
+				<button class="filter-btn" data-filter="print">print</button>
+				<button class="filter-btn" data-filter="map">maps</button>
+			</div>
+			<span id="piece-count"></span>
+		</nav>
+	</header>
+
+	<main>
+		<div id="gallery-grid"></div>
+		<div id="empty-state" class="hidden">no works in this category yet</div>
+	</main>
+
+	<!-- Lightbox -->
+	<div id="lightbox" class="hidden" role="dialog" aria-modal="true" aria-label="Artwork viewer">
+		<button id="lightbox-close" aria-label="Close">&times;</button>
+
+		<button id="lb-prev" class="lb-nav" aria-label="Previous artwork">&#8592;</button>
+		<button id="lb-next" class="lb-nav" aria-label="Next artwork">&#8594;</button>
+
+		<div id="lightbox-inner">
+			<div id="lb-img-wrap">
+				<img id="lightbox-img" src="" alt="" />
+			</div>
+			<div id="lightbox-meta">
+				<p id="lb-title"></p>
+				<p id="lb-artist"></p>
+				<p id="lb-date"></p>
+				<p id="lb-medium"></p>
+				<p id="lb-description"></p>
+				<div class="lb-footer">
+					<a id="lb-link" href="#" target="_blank" rel="noopener">view full &#8594;</a>
+					<span id="lb-counter"></span>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="gallery.js"></script>
+</body>
+</html>

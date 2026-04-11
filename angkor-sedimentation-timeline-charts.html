@@ -1,0 +1,1980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Angkor Hydraulic System — Analysis Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #080e14;
+    --bg-panel: #0d1720;
+    --bg-card: #111e2b;
+    --border: #1c3044;
+    --border-glow: #2a5a7e;
+    --gold: #d4a857;
+    --gold-dim: #8a6d2e;
+    --gold-bright: #f0d080;
+    --cyan: #4ec9c0;
+    --cyan-dim: #2a7a74;
+    --red: #c0392b;
+    --red-soft: #e8665a;
+    --orange: #d97a40;
+    --blue: #3a8fd4;
+    --green: #3aad6a;
+    --text: #c0cdd8;
+    --text-dim: #5a7080;
+    --text-bright: #e8f0f8;
+    --serif: 'Cormorant Garamond', Georgia, serif;
+    --sans: 'DM Sans', system-ui, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::after {
+    content: '';
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  .page-header {
+    text-align: center;
+    padding: 48px 24px 32px;
+    position: relative;
+  }
+  .page-header::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 50%; transform: translateX(-50%);
+    width: 200px; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+  .page-header h1 {
+    font-family: var(--serif);
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 3px;
+    line-height: 1.1;
+  }
+  .page-header .subtitle {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 10px;
+  }
+
+  .tab-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 24px 32px;
+  }
+  .tab-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    padding: 9px 18px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg-panel);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+  }
+  .tab-btn:hover { border-color: var(--border-glow); color: var(--text); }
+  .tab-btn.active {
+    background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+    color: var(--bg-deep);
+    border-color: var(--gold);
+    font-weight: 600;
+  }
+
+  .chart-section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px 48px;
+    display: none;
+  }
+  .chart-section.active { display: block; }
+
+  .chart-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .chart-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent 5%, var(--border-glow) 50%, transparent 95%);
+  }
+
+  .chart-title {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 4px;
+  }
+  .chart-desc {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 24px;
+    line-height: 1.6;
+    max-width: 720px;
+  }
+
+  .chart-sub-panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    position: relative;
+    overflow: hidden;
+    margin-top: 20px;
+  }
+  .chart-sub-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent 5%, var(--cyan-dim) 50%, transparent 95%);
+  }
+  .chart-sub-title {
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-bright);
+    margin-bottom: 4px;
+  }
+
+  .tooltip {
+    position: fixed;
+    background: var(--bg-card);
+    border: 1px solid var(--border-glow);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--text-bright);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 10000;
+    max-width: 260px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  }
+  .tooltip .tt-label { font-family: var(--mono); font-size: 10px; color: var(--gold); letter-spacing: 1px; text-transform: uppercase; }
+  .tooltip .tt-value { font-size: 16px; font-weight: 700; margin: 2px 0; }
+  .tooltip .tt-sub { font-size: 11px; color: var(--text-dim); line-height: 1.5; }
+
+  .axis text { fill: var(--text-dim); font-family: var(--mono); font-size: 10px; }
+  .axis line, .axis path { stroke: var(--border); }
+  .axis-label { fill: var(--text-dim); font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px; }
+
+  .annotation-line { stroke: var(--gold-dim); stroke-width: 1; stroke-dasharray: 4,3; }
+  .annotation-text { fill: var(--gold); font-family: var(--serif); font-size: 12px; font-style: italic; }
+
+  .insights {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 12px;
+    margin-top: 24px;
+  }
+  .insight-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .insight-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 3px; height: 100%;
+  }
+  .insight-card.gold::before { background: var(--gold); }
+  .insight-card.red::before { background: var(--red-soft); }
+  .insight-card.cyan::before { background: var(--cyan); }
+  .insight-card.green::before { background: var(--green); }
+  .insight-card.blue::before { background: var(--blue); }
+  .insight-card.orange::before { background: var(--orange); }
+  .insight-stat {
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-bright);
+    line-height: 1;
+  }
+  .insight-label {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  .tl-event { cursor: pointer; }
+  .tl-event:hover rect { filter: brightness(1.3); }
+
+  .sankey-node rect { cursor: pointer; }
+  .sankey-node text { pointer-events: none; }
+
+  .force-node { cursor: grab; }
+  .force-node:active { cursor: grabbing; }
+
+  .page-footer {
+    text-align: center;
+    padding: 24px;
+    font-size: 10px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    letter-spacing: 1px;
+    border-top: 1px solid var(--border);
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .page-footer a { color: var(--cyan-dim); text-decoration: none; }
+
+  @media (max-width: 700px) {
+    .chart-panel { padding: 14px; }
+    .insights { grid-template-columns: 1fr 1fr; }
+    .tab-btn { padding: 8px 12px; font-size: 9px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>The Hydraulic Machine of Angkor</h1>
+  <div class="subtitle">Six-Chart Analysis Dashboard · 9th–15th Century CE</div>
+</div>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="sed">Sedimentation Decline</button>
+  <button class="tab-btn" data-tab="timeline">Construction Timeline</button>
+  <button class="tab-btn" data-tab="capacity">System Capacity</button>
+  <button class="tab-btn" data-tab="budget">Water Budget</button>
+  <button class="tab-btn" data-tab="infra">Infrastructure</button>
+  <button class="tab-btn" data-tab="network">Canal Network</button>
+  <button class="tab-btn" data-tab="sysnet">System Network</button>
+  <button class="tab-btn" data-tab="sankey2">Flow Sankey II</button>
+</nav>
+
+<!-- ═══════════════════════════════════════════════
+     TAB 1 — SEDIMENTATION DECLINE
+═══════════════════════════════════════════════ -->
+<section id="sec-sed" class="chart-section active">
+  <div class="chart-panel">
+    <div class="chart-title">Sedimentation Rate Collapse</div>
+    <div class="chart-desc">
+      Sediment core data from the southwest sector of the West Baray (Day et al. 2012, PNAS) reveals an
+      order-of-magnitude decline in detrital input during the 14th century. The collapse coincides precisely
+      with mega-drought events documented in Vietnamese cypress tree-ring records (Buckley et al. 2010).
+      A single anomalous flood pulse in 1393 CE is visible as a brief sediment spike before final abandonment.
+    </div>
+    <div id="sed-chart"></div>
+    <div class="insights">
+      <div class="insight-card gold">
+        <div class="insight-stat">16×</div>
+        <div class="insight-label">Decline in sedimentation rate from active management (11th c.) to post-abandonment (14th c.)</div>
+      </div>
+      <div class="insight-card red">
+        <div class="insight-stat">1345–1365</div>
+        <div class="insight-label">Mega-drought window from Vietnamese tree-ring proxy (PDSI below minus 3)</div>
+      </div>
+      <div class="insight-card cyan">
+        <div class="insight-stat">~2 m</div>
+        <div class="insight-label">Total core depth — anomalously thick for Angkor reservoirs (typical less than 0.5 m)</div>
+      </div>
+      <div class="insight-card green">
+        <div class="insight-stat">1393 CE</div>
+        <div class="insight-label">Major flooding event visible in sediment — catastrophic monsoon after extended drought</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     TAB 2 — CONSTRUCTION TIMELINE
+═══════════════════════════════════════════════ -->
+<section id="sec-timeline" class="chart-section">
+  <div class="chart-panel">
+    <div class="chart-title">Angkor Hydraulic Construction Timeline</div>
+    <div class="chart-desc">
+      Three centuries of escalating hydraulic ambition — from the first baray at Roluos (889 CE) to
+      the peak system complexity under Jayavarman VII (~1200 CE) — followed by over a century of
+      climate-driven infrastructure failure. Color indicates infrastructure type.
+    </div>
+    <div id="timeline-chart"></div>
+    <div class="insights">
+      <div class="insight-card gold">
+        <div class="insight-stat">~300 yrs</div>
+        <div class="insight-label">From first baray (889) to peak system (1200) — continuous hydraulic expansion</div>
+      </div>
+      <div class="insight-card red">
+        <div class="insight-stat">25 M m³</div>
+        <div class="insight-label">Total earth moved for dike construction — entirely by human labor</div>
+      </div>
+      <div class="insight-card cyan">
+        <div class="insight-stat">4 barays</div>
+        <div class="insight-label">Built by 7 different kings across 3 centuries of Khmer rule</div>
+      </div>
+      <div class="insight-card green">
+        <div class="insight-stat">1431 CE</div>
+        <div class="insight-label">Siamese sack of Angkor — political end to a system already in hydraulic failure</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     TAB 3 — SYSTEM CAPACITY
+═══════════════════════════════════════════════ -->
+<section id="sec-capacity" class="chart-section">
+  <div class="chart-panel">
+    <div class="chart-title">System Storage Capacity Over Time</div>
+    <div class="chart-desc">
+      Cumulative reservoir capacity as each baray came online — showing the exponential expansion of
+      water management infrastructure and its decline as barays silted and failed. The East Baray's
+      failure around 1360 CE reduced system capacity by nearly half in a single generation.
+    </div>
+    <div id="capacity-chart"></div>
+    <div class="insights">
+      <div class="insight-card gold">
+        <div class="insight-stat">112 Mm³</div>
+        <div class="insight-label">Peak theoretical storage — enough to supply 1 million people for months</div>
+      </div>
+      <div class="insight-card red">
+        <div class="insight-stat">~53 Mm³</div>
+        <div class="insight-label">Capacity remaining today (West Baray only — the sole surviving reservoir)</div>
+      </div>
+      <div class="insight-card cyan">
+        <div class="insight-stat">7×</div>
+        <div class="insight-label">Growth factor from Phase I (Indratataka only) to Phase III (all four barays)</div>
+      </div>
+      <div class="insight-card green">
+        <div class="insight-stat">36.6 km²</div>
+        <div class="insight-label">Combined baray surface area at peak — larger than many modern cities</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     TAB 4 — WATER BUDGET (SANKEY)
+═══════════════════════════════════════════════ -->
+<section id="sec-budget" class="chart-section">
+  <div class="chart-panel">
+    <div class="chart-title">Annual Water Budget — Peak System (~1200 CE)</div>
+    <div class="chart-desc">
+      Estimated annual flows through the Angkor hydraulic system at peak operation. Three river systems
+      fed the baray network, while the majority of outflow drained to the Tonle Sap as overflow —
+      challenging earlier assumptions that the system was primarily an irrigation engine.
+      Values in millions of cubic metres per year (Mm³/yr). Source: Kummu 2009, Evans et al. 2013.
+    </div>
+    <div id="budget-chart"></div>
+    <div class="insights">
+      <div class="insight-card blue">
+        <div class="insight-stat">1,977 Mm³</div>
+        <div class="insight-label">Total annual inflow to the baray system from all three rivers plus direct rainfall</div>
+      </div>
+      <div class="insight-card orange">
+        <div class="insight-stat">1,150 Mm³</div>
+        <div class="insight-label">Outflow to Tonle Sap as overflow — the dominant output, not irrigation</div>
+      </div>
+      <div class="insight-card gold">
+        <div class="insight-stat">400 Mm³</div>
+        <div class="insight-label">Annual irrigation allocation — supporting rice paddies across the Angkor plain</div>
+      </div>
+      <div class="insight-card cyan">
+        <div class="insight-stat">22 Mm³</div>
+        <div class="insight-label">Urban and ritual water consumption for the city and its temples</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     TAB 5 — INFRASTRUCTURE COMPARISON
+═══════════════════════════════════════════════ -->
+<section id="sec-infra" class="chart-section">
+  <div class="chart-panel">
+    <div class="chart-title">Baray Infrastructure Comparison</div>
+    <div class="chart-desc">
+      Side-by-side comparison of the four major barays across storage volume, surface area, and estimated
+      labor investment. The West Baray represents the single greatest construction effort — 11 million
+      cubic metres of earthwork dike fill moved without draft animals or wheeled transport.
+    </div>
+    <div id="infra-chart"></div>
+    <div class="insights">
+      <div class="insight-card gold">
+        <div class="insight-stat">50.5 Mm³</div>
+        <div class="insight-label">West Baray storage — largest single reservoir, still holds water today</div>
+      </div>
+      <div class="insight-card red">
+        <div class="insight-stat">11 M m³</div>
+        <div class="insight-label">Earthwork fill for West Baray dikes — the largest earthmoving project in Khmer history</div>
+      </div>
+      <div class="insight-card cyan">
+        <div class="insight-stat">16.4 km²</div>
+        <div class="insight-label">West Baray surface area — 8 km by 2.1 km, visible from space</div>
+      </div>
+      <div class="insight-card green">
+        <div class="insight-stat">9.2 Mm³</div>
+        <div class="insight-label">Total moat storage across Angkor Thom, Angkor Wat, Srah Srang, and Preah Khan</div>
+      </div>
+    </div>
+  </div>
+  <div class="chart-sub-panel">
+    <div class="chart-sub-title">Moat and Secondary Water Bodies</div>
+    <div class="chart-desc" style="margin-bottom:16px;">Moats served dual purpose — defensive barriers and secondary reservoirs feeding temple ritual pools and gardens.</div>
+    <div id="moat-chart"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     TAB 6 — CANAL NETWORK (FORCE GRAPH)
+═══════════════════════════════════════════════ -->
+<section id="sec-network" class="chart-section">
+  <div class="chart-panel">
+    <div class="chart-title">Canal Network — Flow Connections</div>
+    <div class="chart-desc">
+      Force-directed graph of the Angkor hydraulic network. Nodes represent major system components;
+      edges show flow direction and relative capacity. Node size reflects storage volume or flow rate.
+      Drag nodes to explore connections. Hover for flow data.
+    </div>
+    <div id="network-chart"></div>
+    <div class="insights">
+      <div class="insight-card blue">
+        <div class="insight-stat">3 rivers</div>
+        <div class="insight-label">Siem Reap, Puok, and Roluos rivers all fed the system from the Kulen Hills</div>
+      </div>
+      <div class="insight-card gold">
+        <div class="insight-stat">Bampenh</div>
+        <div class="insight-label">Bampenh Reach spillway acted as the master distributor for the central barays</div>
+      </div>
+      <div class="insight-card cyan">
+        <div class="insight-stat">525 Mm³</div>
+        <div class="insight-label">Combined irrigation delivery to the Angkor plain from East and West Baray channels</div>
+      </div>
+      <div class="insight-card red">
+        <div class="insight-stat">Tonle Sap</div>
+        <div class="insight-label">Ultimate sink for the system — overflow kept the lake seasonally elevated</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="tooltip" id="tooltip"></div>
+
+<!-- ═══════════════════════════════════════════════
+     TAB 7 — SYSTEM NETWORK (from TSX)
+═══════════════════════════════════════════════ -->
+<section id="sec-sysnet" class="chart-section">
+  <div class="chart-panel">
+    <div class="chart-title">Hydraulic System Network</div>
+    <div class="chart-desc">
+      Interactive node-link diagram of the complete Angkor water system. Nodes represent sources, rivers,
+      control structures, barays, moats, and the Tonle Sap sink. Edge thickness encodes estimated flow volume.
+      Filter by season to isolate wet-season intake channels from dry-season distribution. Click any node
+      to highlight its connections. Drag nodes and scroll to zoom.
+    </div>
+    <!-- Season filter -->
+    <div id="sysnet-filter" style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;align-items:center;">
+      <span style="font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--text-dim);text-transform:uppercase;margin-right:4px;">Season:</span>
+      <button class="sn-btn active" data-s="all">All Flows</button>
+      <button class="sn-btn" data-s="wet">Wet Season</button>
+      <button class="sn-btn" data-s="dry">Dry Season</button>
+      <button class="sn-btn" data-s="annual">Year-Round</button>
+    </div>
+    <div id="sysnet-chart"></div>
+    <div class="insights" style="margin-top:20px;">
+      <div class="insight-card blue"><div class="insight-stat">1,925</div><div class="insight-label">Mm³/yr total system input from Phnom Kulen headwaters</div></div>
+      <div class="insight-card gold"><div class="insight-stat">7</div><div class="insight-label">Hierarchical tiers from source to sink, all gravity-fed on a 0.1% slope</div></div>
+      <div class="insight-card green"><div class="insight-stat">25,000+</div><div class="insight-label">Hectares of irrigated rice paddy served by the distribution network at peak capacity</div></div>
+      <div class="insight-card cyan"><div class="insight-stat">3</div><div class="insight-label">Independent river catchments feeding the baray system (Puok, Siem Reap, Roluos)</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════
+     TAB 8 — FLOW SANKEY II (from TSX — 14 nodes / 30 links)
+═══════════════════════════════════════════════ -->
+<section id="sec-sankey2" class="chart-section">
+  <div class="chart-panel">
+    <div class="chart-title">Water Budget Flow — Full System Sankey</div>
+    <div class="chart-desc">
+      Annual water budget for the complete Angkor hydraulic system, from Kulen rainfall inputs through the four
+      barays to irrigation, groundwater recharge, evaporation, and Tonle Sap return flow. Ribbon width encodes
+      flow volume. Hover any ribbon to see source, destination, and estimated Mm³/yr.
+    </div>
+    <div id="sankey2-chart"></div>
+    <div class="insights" style="margin-top:20px;">
+      <div class="insight-card blue"><div class="insight-stat">1,925</div><div class="insight-label">Mm³/yr total annual input (Kulen Hills rainfall + drainage basin)</div></div>
+      <div class="insight-card green"><div class="insight-stat">790</div><div class="insight-label">Mm³/yr delivered to irrigation — the agricultural backbone of a million-person city</div></div>
+      <div class="insight-card orange"><div class="insight-stat">115</div><div class="insight-label">Mm³/yr lost to evaporation from open baray surfaces (10th–12th century peak)</div></div>
+      <div class="insight-card cyan"><div class="insight-stat">850</div><div class="insight-label">Mm³/yr returned to Tonle Sap via overflow and groundwater base flow</div></div>
+    </div>
+  </div>
+</section>
+
+<footer class="page-footer">
+  Data: Day et al. 2012 (PNAS) · Kummu 2009 · Evans et al. 2013 · APSARA Authority · Ryan Lafferty / Geoglypha
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// SHARED UTILITIES
+// ═══════════════════════════════════════════════════════════════════
+const C = {
+  gold: '#d4a857', goldDim: '#8a6d2e', goldBright: '#f0d080',
+  cyan: '#4ec9c0', cyanDim: '#2a7a74',
+  red: '#c0392b', redSoft: '#e8665a',
+  orange: '#d97a40', blue: '#3a8fd4', green: '#3aad6a',
+  bgDeep: '#080e14', bgPanel: '#0d1720', bgCard: '#111e2b',
+  border: '#1c3044', borderGlow: '#2a5a7e',
+  text: '#c0cdd8', textDim: '#5a7080', textBright: '#e8f0f8'
+};
+
+const tooltip = document.getElementById('tooltip');
+function showTip(evt, html) {
+  tooltip.innerHTML = html;
+  tooltip.style.opacity = 1;
+  const r = tooltip.getBoundingClientRect();
+  let x = evt.clientX + 16, y = evt.clientY - 10;
+  if (x + r.width > window.innerWidth - 20) x = evt.clientX - r.width - 16;
+  if (y + r.height > window.innerHeight - 20) y = evt.clientY - r.height - 10;
+  tooltip.style.left = x + 'px';
+  tooltip.style.top = y + 'px';
+}
+function hideTip() { tooltip.style.opacity = 0; }
+
+// Track which charts have been rendered (animate on first activation only)
+const rendered = {};
+
+// ═══════════════════════════════════════════════════════════════════
+// TAB SWITCHING
+// ═══════════════════════════════════════════════════════════════════
+const tabFns = {};
+
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.chart-section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    const id = btn.dataset.tab;
+    document.getElementById('sec-' + id).classList.add('active');
+    if (!rendered[id] && tabFns[id]) {
+      tabFns[id]();
+      rendered[id] = true;
+    }
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// 1. SEDIMENTATION DECLINE
+// ═══════════════════════════════════════════════════════════════════
+(function() {
+  rendered['sed'] = true; // renders immediately (active tab)
+
+  const data = [
+    { year: 1000, rate: 0.85, era: 'Active Management', climate: 'Stable monsoon' },
+    { year: 1050, rate: 0.80, era: 'Active Management', climate: 'Stable monsoon' },
+    { year: 1100, rate: 0.75, era: 'Active Management', climate: 'Stable monsoon' },
+    { year: 1150, rate: 0.68, era: 'Peak System', climate: 'Stable monsoon' },
+    { year: 1200, rate: 0.55, era: 'Peak System', climate: 'Stable monsoon' },
+    { year: 1250, rate: 0.42, era: 'Early Stress', climate: 'Increasing variability' },
+    { year: 1280, rate: 0.30, era: 'Early Stress', climate: 'Increasing variability' },
+    { year: 1300, rate: 0.18, era: 'Decline', climate: 'Monsoon disruption begins' },
+    { year: 1320, rate: 0.10, era: 'Decline', climate: 'Severe drought episodes' },
+    { year: 1345, rate: 0.06, era: 'Collapse', climate: 'Mega-drought begins (tree-ring)' },
+    { year: 1365, rate: 0.04, era: 'Collapse', climate: 'Mega-drought ends — system dormant' },
+    { year: 1393, rate: 0.12, era: 'Collapse', climate: 'Catastrophic flood pulse — 1393 CE event' },
+    { year: 1400, rate: 0.05, era: 'Abandoned', climate: 'Erratic monsoons' },
+    { year: 1431, rate: 0.03, era: 'Abandoned', climate: 'System non-functional' },
+    { year: 1500, rate: 0.02, era: 'Abandoned', climate: 'Natural sedimentation only' },
+  ];
+
+  const droughts = [
+    { start: 1340, end: 1365, label: 'Mega-Drought I · 1340–1365' },
+    { start: 1400, end: 1420, label: 'Mega-Drought II · 1400–1420' },
+  ];
+
+  const margin = { top: 44, right: 50, bottom: 62, left: 72 };
+  const W = 1000, H = 440;
+  const iw = W - margin.left - margin.right;
+  const ih = H - margin.top - margin.bottom;
+
+  const svg = d3.select('#sed-chart').append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`)
+    .attr('width', '100%');
+
+  const defs = svg.append('defs');
+  const areaGrad = defs.append('linearGradient')
+    .attr('id', 'sed-area-grad').attr('x1', '0').attr('x2', '0').attr('y1', '0').attr('y2', '1');
+  areaGrad.append('stop').attr('offset', '0%').attr('stop-color', C.cyan).attr('stop-opacity', 0.35);
+  areaGrad.append('stop').attr('offset', '100%').attr('stop-color', C.cyan).attr('stop-opacity', 0.02);
+
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const x = d3.scaleLinear().domain([980, 1520]).range([0, iw]);
+  const y = d3.scaleLinear().domain([0, 1.0]).range([ih, 0]);
+
+  // Drought bands
+  droughts.forEach(d => {
+    g.append('rect')
+      .attr('x', x(d.start)).attr('width', x(d.end) - x(d.start))
+      .attr('y', 0).attr('height', ih)
+      .attr('fill', C.red).attr('opacity', 0.09);
+    g.append('text')
+      .attr('x', x((d.start + d.end) / 2)).attr('y', 13)
+      .attr('text-anchor', 'middle')
+      .attr('fill', C.redSoft).attr('font-size', '9px')
+      .attr('font-family', "'JetBrains Mono', monospace")
+      .attr('letter-spacing', '0.8px').attr('opacity', 0.75)
+      .text(d.label.toUpperCase());
+  });
+
+  // 1393 flood band
+  g.append('rect')
+    .attr('x', x(1388)).attr('width', x(1398) - x(1388))
+    .attr('y', 0).attr('height', ih)
+    .attr('fill', C.blue).attr('opacity', 0.12);
+
+  // Grid lines
+  y.ticks(5).forEach(t => {
+    g.append('line').attr('x1', 0).attr('x2', iw).attr('y1', y(t)).attr('y2', y(t))
+      .attr('stroke', C.border).attr('stroke-dasharray', '2,4');
+  });
+
+  // Siamese sack line
+  g.append('line')
+    .attr('x1', x(1431)).attr('x2', x(1431))
+    .attr('y1', 0).attr('y2', ih)
+    .attr('stroke', C.orange).attr('stroke-width', 1.2)
+    .attr('stroke-dasharray', '6,4').attr('opacity', 0.65);
+  g.append('text')
+    .attr('x', x(1431) + 7).attr('y', 28)
+    .attr('fill', C.orange).attr('font-family', "'Cormorant Garamond', serif")
+    .attr('font-size', '12px').attr('font-style', 'italic')
+    .text('1431 · Siamese Sack');
+
+  // 16× ratio bracket
+  const yActive = y(0.80), yCollapse = y(0.05);
+  g.append('line')
+    .attr('x1', x(1510)).attr('x2', x(1510))
+    .attr('y1', yActive).attr('y2', yCollapse)
+    .attr('stroke', C.gold).attr('stroke-width', 1.2);
+  g.append('line').attr('x1', x(1505)).attr('x2', x(1515)).attr('y1', yActive).attr('y2', yActive).attr('stroke', C.gold).attr('stroke-width', 1.2);
+  g.append('line').attr('x1', x(1505)).attr('x2', x(1515)).attr('y1', yCollapse).attr('y2', yCollapse).attr('stroke', C.gold).attr('stroke-width', 1.2);
+  g.append('text')
+    .attr('x', x(1516)).attr('y', (yActive + yCollapse) / 2)
+    .attr('dominant-baseline', 'middle')
+    .attr('fill', C.goldBright).attr('font-family', "'Cormorant Garamond', serif")
+    .attr('font-size', '15px').attr('font-weight', 700)
+    .text('16×');
+
+  // Area fill
+  const area = d3.area()
+    .x(d => x(d.year)).y0(ih).y1(d => y(d.rate))
+    .curve(d3.curveMonotoneX);
+  g.append('path').datum(data).attr('d', area).attr('fill', 'url(#sed-area-grad)');
+
+  // Line — animate path drawing
+  const line = d3.line().x(d => x(d.year)).y(d => y(d.rate)).curve(d3.curveMonotoneX);
+  const linePath = g.append('path').datum(data).attr('d', line)
+    .attr('fill', 'none').attr('stroke', C.cyan).attr('stroke-width', 2.5);
+  const totalLength = linePath.node().getTotalLength();
+  linePath
+    .attr('stroke-dasharray', `${totalLength} ${totalLength}`)
+    .attr('stroke-dashoffset', totalLength)
+    .transition().duration(1800).ease(d3.easeCubicOut)
+    .attr('stroke-dashoffset', 0);
+
+  // Data dots
+  g.selectAll('.sed-dot').data(data).join('circle')
+    .attr('cx', d => x(d.year)).attr('cy', d => y(d.rate)).attr('r', 4.5)
+    .attr('fill', d => d.year === 1393 ? C.redSoft : C.bgPanel)
+    .attr('stroke', d => d.year === 1393 ? C.redSoft : C.cyan)
+    .attr('stroke-width', 2).style('cursor', 'pointer')
+    .on('mouseenter', function(evt, d) {
+      d3.select(this).transition().duration(120).attr('r', 7);
+      showTip(evt,
+        `<div class="tt-label">${d.year} CE · ${d.era}</div>
+         <div class="tt-value" style="color:${C.cyan}">${d.rate.toFixed(2)} mm/yr</div>
+         <div class="tt-sub">${d.climate}</div>`);
+    })
+    .on('mousemove', (evt) => showTip(evt, tooltip.innerHTML))
+    .on('mouseleave', function() { d3.select(this).transition().duration(120).attr('r', 4.5); hideTip(); });
+
+  // 1393 flood annotation
+  g.append('line')
+    .attr('x1', x(1393)).attr('x2', x(1393))
+    .attr('y1', y(0.12) - 32).attr('y2', y(0.12) - 2)
+    .attr('class', 'annotation-line');
+  g.append('text')
+    .attr('x', x(1393) - 8).attr('y', y(0.12) - 38)
+    .attr('text-anchor', 'end').attr('class', 'annotation-text')
+    .text('1393 CE flood pulse');
+
+  // Axes
+  g.append('g').attr('class', 'axis').attr('transform', `translate(0,${ih})`)
+    .call(d3.axisBottom(x)
+      .tickValues([1000,1050,1100,1150,1200,1250,1300,1340,1365,1393,1431,1500])
+      .tickFormat(d3.format('d')));
+  g.append('g').attr('class', 'axis')
+    .call(d3.axisLeft(y).ticks(5).tickFormat(d => d.toFixed(1)));
+  g.append('text').attr('class', 'axis-label')
+    .attr('x', iw / 2).attr('y', ih + 48).attr('text-anchor', 'middle').text('YEAR CE');
+  g.append('text').attr('class', 'axis-label')
+    .attr('transform', 'rotate(-90)').attr('x', -ih / 2).attr('y', -54)
+    .attr('text-anchor', 'middle').text('SEDIMENTATION RATE (MM/YR)');
+})();
+
+
+// ═══════════════════════════════════════════════════════════════════
+// 2. CONSTRUCTION TIMELINE (GANTT)
+// ═══════════════════════════════════════════════════════════════════
+tabFns['timeline'] = function() {
+  const spans = [
+    { label: 'Indratataka',          start: 880,  end: 889,  row: 0, color: C.gold,   type: 'baray',     sub: '7.5 Mm³ · Indravarman I · Roluos' },
+    { label: 'East Baray',           start: 893,  end: 900,  row: 1, color: C.gold,   type: 'baray',     sub: '46 Mm³ · Yasovarman I' },
+    { label: 'East Mebon',           start: 944,  end: 953,  row: 1, color: C.cyan,   type: 'temple',    sub: 'Rajendravarman II · Dedicated Jan 953' },
+    { label: 'West Baray',           start: 1025, end: 1050, row: 2, color: C.gold,   type: 'baray',     sub: '50.5 Mm³ · Suryavarman I to Udayadityavarman II' },
+    { label: 'West Mebon',           start: 1050, end: 1066, row: 2, color: C.cyan,   type: 'temple',    sub: 'Udayadityavarman II · Island temple' },
+    { label: 'Angkor Wat',           start: 1113, end: 1150, row: 3, color: C.cyan,   type: 'temple',    sub: 'Suryavarman II · Moat = 3.0 Mm³' },
+    { label: 'Angkor Thom',          start: 1181, end: 1190, row: 4, color: C.green,  type: 'city',      sub: 'Jayavarman VII · Moat = 5.0 Mm³' },
+    { label: 'Jayatataka',           start: 1181, end: 1185, row: 5, color: C.gold,   type: 'baray',     sub: '8.7 Mm³ · Jayavarman VII' },
+    { label: 'Neak Pean',            start: 1190, end: 1200, row: 5, color: C.cyan,   type: 'temple',    sub: 'Island temple · Jayatataka center · PEAK' },
+  ];
+
+  const events = [
+    { year: 802,  label: 'Khmer independence',    color: C.blue },
+    { year: 889,  label: 'Indratataka complete',  color: C.gold },
+    { year: 893,  label: 'Capital to Angkor',     color: C.green },
+    { year: 928,  label: 'Koh Ker interlude',     color: C.textDim },
+    { year: 944,  label: 'Capital returns',       color: C.blue },
+    { year: 1200, label: 'Peak complexity',       color: C.cyan },
+    { year: 1340, label: 'First mega-drought',    color: C.redSoft },
+    { year: 1360, label: 'Monsoon failure',       color: C.redSoft },
+    { year: 1393, label: 'Major flood event',     color: C.orange },
+    { year: 1431, label: 'Siamese invasion',      color: C.red },
+  ];
+
+  // Legend data
+  const legend = [
+    { label: 'Baray',    color: C.gold },
+    { label: 'Temple',   color: C.cyan },
+    { label: 'City',     color: C.green },
+    { label: 'Climate',  color: C.redSoft },
+    { label: 'Political',color: C.blue },
+  ];
+
+  const margin = { top: 52, right: 50, bottom: 68, left: 145 };
+  const W = 1000, H = 480;
+  const iw = W - margin.left - margin.right;
+  const ih = H - margin.top - margin.bottom;
+  const rowH = 44;
+  const rowLabels = ['Indratataka (Roluos)', 'East Baray', 'West Baray', 'Angkor Wat', 'Angkor Thom', 'Jayatataka / Neak Pean'];
+
+  const svg = d3.select('#timeline-chart').append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%');
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const x = d3.scaleLinear().domain([790, 1460]).range([0, iw]);
+
+  // Row bands
+  rowLabels.forEach((_, i) => {
+    g.append('rect').attr('x', 0).attr('y', i * rowH)
+      .attr('width', iw).attr('height', rowH)
+      .attr('fill', i % 2 === 0 ? '#091218' : 'transparent').attr('opacity', 0.6);
+    g.append('text')
+      .attr('x', -12).attr('y', i * rowH + rowH / 2)
+      .attr('text-anchor', 'end').attr('dominant-baseline', 'middle')
+      .attr('fill', C.textDim).attr('font-size', '11px')
+      .attr('font-family', "'DM Sans', sans-serif")
+      .text(rowLabels[i]);
+  });
+
+  // Grid
+  x.ticks(12).forEach(t => {
+    g.append('line').attr('x1', x(t)).attr('x2', x(t))
+      .attr('y1', 0).attr('y2', rowLabels.length * rowH)
+      .attr('stroke', C.border).attr('stroke-dasharray', '2,4');
+  });
+
+  // Spans with enter animation
+  spans.forEach((s, idx) => {
+    const bx = x(s.start);
+    const bw = Math.max(x(s.end) - x(s.start), 8);
+    const bar = g.append('rect')
+      .attr('class', 'tl-event')
+      .attr('x', bx).attr('y', s.row * rowH + 9)
+      .attr('width', 0).attr('height', rowH - 18)
+      .attr('rx', 4).attr('fill', s.color).attr('opacity', 0.78);
+    bar.transition().delay(idx * 60).duration(500).ease(d3.easeCubicOut)
+      .attr('width', bw);
+    bar
+      .on('mouseenter', function(evt) {
+        d3.select(this).attr('opacity', 1);
+        showTip(evt,
+          `<div class="tt-label">${s.label} · ${s.type.toUpperCase()}</div>
+           <div class="tt-value" style="color:${s.color}">${s.start}–${s.end} CE</div>
+           <div class="tt-sub">${s.sub}</div>`);
+      })
+      .on('mousemove', (evt) => showTip(evt, tooltip.innerHTML))
+      .on('mouseleave', function() { d3.select(this).attr('opacity', 0.78); hideTip(); });
+
+    if (bw > 45) {
+      g.append('text')
+        .attr('x', bx + bw / 2).attr('y', s.row * rowH + rowH / 2)
+        .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle')
+        .attr('fill', '#000').attr('font-size', '9.5px').attr('font-weight', 700)
+        .attr('pointer-events', 'none').attr('opacity', 0)
+        .transition().delay(idx * 60 + 500).duration(300)
+        .attr('opacity', 1)
+        .text(s.label);
+    }
+  });
+
+  // Events row
+  const evtY = rowLabels.length * rowH + 22;
+  events.forEach(e => {
+    g.append('line')
+      .attr('x1', x(e.year)).attr('x2', x(e.year))
+      .attr('y1', 0).attr('y2', evtY - 8)
+      .attr('stroke', e.color).attr('stroke-width', 1).attr('stroke-dasharray', '3,3').attr('opacity', 0.38);
+    g.append('circle')
+      .attr('cx', x(e.year)).attr('cy', evtY).attr('r', 5)
+      .attr('fill', C.bgPanel).attr('stroke', e.color).attr('stroke-width', 2)
+      .style('cursor', 'pointer')
+      .on('mouseenter', function(evt) {
+        showTip(evt, `<div class="tt-label">${e.year} CE</div><div class="tt-sub">${e.label}</div>`);
+      })
+      .on('mousemove', (evt) => showTip(evt, tooltip.innerHTML))
+      .on('mouseleave', hideTip);
+    g.append('text')
+      .attr('x', x(e.year)).attr('y', evtY + 17)
+      .attr('text-anchor', 'middle')
+      .attr('fill', e.color).attr('font-size', '8px')
+      .attr('font-family', "'JetBrains Mono', monospace")
+      .attr('opacity', 0.85)
+      .text(e.year);
+  });
+
+  // Legend
+  const leg = g.append('g').attr('transform', `translate(0, -44)`);
+  legend.forEach((l, i) => {
+    leg.append('rect').attr('x', i * 120).attr('y', 0).attr('width', 10).attr('height', 10)
+      .attr('rx', 2).attr('fill', l.color).attr('opacity', 0.85);
+    leg.append('text').attr('x', i * 120 + 15).attr('y', 9)
+      .attr('fill', C.textDim).attr('font-size', '10px')
+      .attr('font-family', "'JetBrains Mono', monospace")
+      .text(l.label);
+  });
+
+  // Axes
+  g.append('g').attr('class', 'axis')
+    .attr('transform', `translate(0,${rowLabels.length * rowH})`)
+    .call(d3.axisBottom(x).ticks(13).tickFormat(d3.format('d')));
+  g.append('text').attr('class', 'axis-label')
+    .attr('x', iw / 2).attr('y', rowLabels.length * rowH + 54)
+    .attr('text-anchor', 'middle').text('YEAR CE');
+};
+
+
+// ═══════════════════════════════════════════════════════════════════
+// 3. SYSTEM CAPACITY
+// ═══════════════════════════════════════════════════════════════════
+tabFns['capacity'] = function() {
+  const years = [];
+  for (let yr = 800; yr <= 1500; yr += 5) years.push(yr);
+
+  function cap(year, buildStart, buildEnd, peakEnd, declineEnd, maxVol) {
+    if (year < buildStart) return 0;
+    if (year < buildEnd) return maxVol * (year - buildStart) / (buildEnd - buildStart);
+    if (year <= peakEnd) return maxVol;
+    if (year < declineEnd) return maxVol * (1 - (year - peakEnd) / (declineEnd - peakEnd));
+    return 0;
+  }
+
+  const series = years.map(yr => ({
+    year: yr,
+    indratataka: cap(yr, 880, 889, 1050, 1200, 7.5),
+    east_baray:  cap(yr, 893, 900, 1280, 1390, 46),
+    west_baray:  cap(yr, 1025, 1050, 1400, 1800, 50.5),
+    jayatataka:  cap(yr, 1181, 1185, 1300, 1460, 8.7),
+  }));
+
+  const keys = ['indratataka', 'east_baray', 'west_baray', 'jayatataka'];
+  const colors = { indratataka: C.blue, east_baray: C.green, west_baray: C.cyan, jayatataka: C.orange };
+  const labels = { indratataka: 'Indratataka', east_baray: 'East Baray', west_baray: 'West Baray', jayatataka: 'Jayatataka' };
+
+  const stacked = d3.stack().keys(keys)(series);
+
+  const margin = { top: 32, right: 50, bottom: 62, left: 72 };
+  const W = 1000, H = 420;
+  const iw = W - margin.left - margin.right;
+  const ih = H - margin.top - margin.bottom;
+
+  const svg = d3.select('#capacity-chart').append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%');
+  const defs = svg.append('defs');
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const x = d3.scaleLinear().domain([800, 1500]).range([0, iw]);
+  const y = d3.scaleLinear().domain([0, 130]).range([ih, 0]);
+
+  y.ticks(6).forEach(t => {
+    g.append('line').attr('x1', 0).attr('x2', iw).attr('y1', y(t)).attr('y2', y(t))
+      .attr('stroke', C.border).attr('stroke-dasharray', '2,4');
+  });
+
+  const area = d3.area()
+    .x(d => x(d.data.year))
+    .y0(d => y(d[0])).y1(d => y(d[1]))
+    .curve(d3.curveMonotoneX);
+
+  stacked.forEach(layer => {
+    const grd = defs.append('linearGradient')
+      .attr('id', `cap-g-${layer.key}`)
+      .attr('x1', '0').attr('x2', '0').attr('y1', '0').attr('y2', '1');
+    grd.append('stop').attr('offset', '0%').attr('stop-color', colors[layer.key]).attr('stop-opacity', 0.65);
+    grd.append('stop').attr('offset', '100%').attr('stop-color', colors[layer.key]).attr('stop-opacity', 0.1);
+
+    const path = g.append('path').datum(layer)
+      .attr('d', area)
+      .attr('fill', `url(#cap-g-${layer.key})`)
+      .attr('stroke', colors[layer.key])
+      .attr('stroke-width', 1.4).attr('opacity', 0);
+    path.transition().duration(900).attr('opacity', 1);
+  });
+
+  [[1340, 1365], [1400, 1420]].forEach(([s, e]) => {
+    g.append('rect').attr('x', x(s)).attr('width', x(e) - x(s))
+      .attr('y', 0).attr('height', ih)
+      .attr('fill', C.red).attr('opacity', 0.07);
+  });
+
+  // Key milestone lines
+  [{ yr: 1200, label: 'Peak · 112 Mm³', col: C.gold },
+   { yr: 1360, label: 'East Baray fails', col: C.redSoft },
+   { yr: 1431, label: '1431 CE', col: C.orange }].forEach(m => {
+    g.append('line').attr('x1', x(m.yr)).attr('x2', x(m.yr))
+      .attr('y1', 0).attr('y2', ih)
+      .attr('stroke', m.col).attr('stroke-dasharray', '5,4').attr('opacity', 0.5);
+    g.append('text').attr('x', x(m.yr) + 5).attr('y', 16)
+      .attr('fill', m.col).attr('font-size', '10px').attr('font-style', 'italic')
+      .attr('font-family', "'Cormorant Garamond', serif")
+      .text(m.label);
+  });
+
+  // Legend
+  const leg = g.append('g').attr('transform', `translate(${iw - 170}, 10)`);
+  keys.forEach((k, i) => {
+    leg.append('rect').attr('x', 0).attr('y', i * 20).attr('width', 12).attr('height', 12)
+      .attr('rx', 2).attr('fill', colors[k]).attr('opacity', 0.8);
+    leg.append('text').attr('x', 18).attr('y', i * 20 + 10)
+      .attr('fill', C.textDim).attr('font-size', '10px')
+      .attr('font-family', "'JetBrains Mono', monospace")
+      .text(labels[k]);
+  });
+
+  // Hover crosshair
+  const bisect = d3.bisector(d => d.year).left;
+  const hLine = g.append('line').attr('y1', 0).attr('y2', ih)
+    .attr('stroke', C.gold).attr('stroke-width', 1).attr('opacity', 0);
+  const overlay = g.append('rect').attr('width', iw).attr('height', ih).attr('fill', 'transparent');
+  overlay.on('mousemove', function(evt) {
+    const [mx] = d3.pointer(evt);
+    const yr = Math.round(x.invert(mx));
+    const i = bisect(series, yr);
+    const d = series[Math.min(i, series.length - 1)];
+    if (!d) return;
+    const total = keys.reduce((s, k) => s + d[k], 0);
+    hLine.attr('x1', mx).attr('x2', mx).attr('opacity', 0.5);
+    showTip(evt,
+      `<div class="tt-label">${d.year} CE</div>
+       <div class="tt-value" style="color:${C.gold}">${total.toFixed(1)} Mm³ total</div>
+       <div class="tt-sub">${keys.map(k => `<span style="color:${colors[k]}">${labels[k]}: ${d[k].toFixed(1)}</span>`).join('<br>')}</div>`);
+  }).on('mouseleave', () => { hLine.attr('opacity', 0); hideTip(); });
+
+  g.append('g').attr('class', 'axis').attr('transform', `translate(0,${ih})`)
+    .call(d3.axisBottom(x).ticks(14).tickFormat(d3.format('d')));
+  g.append('g').attr('class', 'axis').call(d3.axisLeft(y).ticks(6));
+  g.append('text').attr('class', 'axis-label')
+    .attr('x', iw / 2).attr('y', ih + 48).attr('text-anchor', 'middle').text('YEAR CE');
+  g.append('text').attr('class', 'axis-label')
+    .attr('transform', 'rotate(-90)').attr('x', -ih / 2).attr('y', -55)
+    .attr('text-anchor', 'middle').text('STORAGE CAPACITY (Mm³)');
+};
+
+
+// ═══════════════════════════════════════════════════════════════════
+// 4. WATER BUDGET — custom Sankey layout (no d3-sankey dependency)
+// ═══════════════════════════════════════════════════════════════════
+tabFns['budget'] = function() {
+  /*
+   * Manual Sankey layout:
+   * Three columns — sources | baray system | outputs
+   * Flows drawn as cubic bezier ribbons.
+   */
+
+  const W = 1000, H = 560;
+  const margin = { top: 20, right: 40, bottom: 30, left: 40 };
+  const iw = W - margin.left - margin.right;
+  const ih = H - margin.top - margin.bottom;
+
+  const svg = d3.select('#budget-chart').append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%');
+  const defs = svg.append('defs');
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  // Layout constants
+  const nodeW = 160;
+  const colX = { src: 0, mid: iw / 2 - nodeW / 2, out: iw - nodeW };
+  const TOTAL_IN = 52 + 1000 + 550 + 375; // 1977
+
+  // Source nodes
+  const sources = [
+    { id: 'rain',    label: 'Rainfall (Direct)',   val: 52,   col: C.blue   },
+    { id: 'siem',    label: 'Siem Reap River',     val: 1000, col: C.blue   },
+    { id: 'puok',    label: 'Puok River',           val: 550,  col: C.cyan   },
+    { id: 'roluos',  label: 'Roluos River',         val: 375,  col: C.cyanDim},
+  ];
+
+  // Output nodes
+  const outputs = [
+    { id: 'evap',    label: 'Evaporation',         val: 70,   col: C.orange  },
+    { id: 'irrig',   label: 'Irrigation',          val: 400,  col: C.green   },
+    { id: 'gw',      label: 'Groundwater',         val: 200,  col: C.blue    },
+    { id: 'tonle',   label: 'Tonle Sap Overflow',  val: 1150, col: C.red     },
+    { id: 'urban',   label: 'Urban Consumption',   val: 22,   col: C.gold    },
+  ];
+
+  const TOTAL_OUT = outputs.reduce((s, o) => s + o.val, 0); // 1842
+
+  // Vertical spacing for sources
+  const srcPad = 16;
+  const srcTotalH = ih - srcPad * (sources.length - 1);
+  let srcY = 0;
+  sources.forEach(s => {
+    s.h = (s.val / TOTAL_IN) * srcTotalH;
+    s.y = srcY;
+    srcY += s.h + srcPad;
+  });
+
+  // Vertical spacing for outputs
+  const outPad = 12;
+  const outTotalH = ih - outPad * (outputs.length - 1);
+  let outY = 0;
+  outputs.forEach(o => {
+    o.h = (o.val / TOTAL_OUT) * outTotalH;
+    o.y = outY;
+    outY += o.h + outPad;
+  });
+
+  // Central baray node — full height
+  const midH = ih;
+  const midY = 0;
+
+  // Draw flows: sources -> baray
+  sources.forEach(s => {
+    const x0 = colX.src + nodeW;
+    const y0 = s.y + s.h / 2;
+    const x1 = colX.mid;
+    const y1 = midY + (s.y / (srcY - srcPad)) * midH + s.h / 2;
+
+    const gradId = `sg-${s.id}`;
+    const gr = defs.append('linearGradient').attr('id', gradId)
+      .attr('x1', '0%').attr('x2', '100%').attr('y1', '0%').attr('y2', '0%');
+    gr.append('stop').attr('offset', '0%').attr('stop-color', s.col).attr('stop-opacity', 0.6);
+    gr.append('stop').attr('offset', '100%').attr('stop-color', C.gold).attr('stop-opacity', 0.4);
+
+    const bw = Math.max(s.h * 0.6, 3);
+    const path = g.append('path')
+      .attr('d', `M ${x0} ${y0 - bw/2}
+                  C ${(x0+x1)/2} ${y0 - bw/2}, ${(x0+x1)/2} ${y1 - bw/2}, ${x1} ${y1 - bw/2}
+                  L ${x1} ${y1 + bw/2}
+                  C ${(x0+x1)/2} ${y1 + bw/2}, ${(x0+x1)/2} ${y0 + bw/2}, ${x0} ${y0 + bw/2}
+                  Z`)
+      .attr('fill', `url(#${gradId})`).attr('opacity', 0);
+    path.transition().delay(sources.indexOf(s) * 120).duration(700).attr('opacity', 0.7);
+    path.on('mouseenter', function(evt) {
+      d3.select(this).attr('opacity', 1);
+      showTip(evt, `<div class="tt-label">Inflow · ${s.label}</div><div class="tt-value" style="color:${s.col}">${s.val} Mm³/yr</div>`);
+    }).on('mousemove', (evt) => showTip(evt, tooltip.innerHTML))
+      .on('mouseleave', function() { d3.select(this).attr('opacity', 0.7); hideTip(); });
+  });
+
+  // Draw flows: baray -> outputs
+  outputs.forEach(o => {
+    const x0 = colX.mid + nodeW;
+    const x1 = colX.out;
+    const outFrac = o.y / (outY - outPad);
+    const y0 = midY + outFrac * midH + o.h / 2;
+    const y1 = o.y + o.h / 2;
+
+    const gradId = `og-${o.id}`;
+    const gr = defs.append('linearGradient').attr('id', gradId)
+      .attr('x1', '0%').attr('x2', '100%').attr('y1', '0%').attr('y2', '0%');
+    gr.append('stop').attr('offset', '0%').attr('stop-color', C.gold).attr('stop-opacity', 0.4);
+    gr.append('stop').attr('offset', '100%').attr('stop-color', o.col).attr('stop-opacity', 0.6);
+
+    const bw = Math.max(o.h * 0.6, 3);
+    const path = g.append('path')
+      .attr('d', `M ${x0} ${y0 - bw/2}
+                  C ${(x0+x1)/2} ${y0 - bw/2}, ${(x0+x1)/2} ${y1 - bw/2}, ${x1} ${y1 - bw/2}
+                  L ${x1} ${y1 + bw/2}
+                  C ${(x0+x1)/2} ${y1 + bw/2}, ${(x0+x1)/2} ${y0 + bw/2}, ${x0} ${y0 + bw/2}
+                  Z`)
+      .attr('fill', `url(#${gradId})`).attr('opacity', 0);
+    path.transition().delay(400 + outputs.indexOf(o) * 100).duration(700).attr('opacity', 0.7);
+    path.on('mouseenter', function(evt) {
+      d3.select(this).attr('opacity', 1);
+      showTip(evt, `<div class="tt-label">Outflow · ${o.label}</div><div class="tt-value" style="color:${o.col}">${o.val} Mm³/yr</div><div class="tt-sub">${((o.val/TOTAL_OUT)*100).toFixed(1)}% of total output</div>`);
+    }).on('mousemove', (evt) => showTip(evt, tooltip.innerHTML))
+      .on('mouseleave', function() { d3.select(this).attr('opacity', 0.7); hideTip(); });
+  });
+
+  // Source node rects
+  sources.forEach(s => {
+    g.append('rect')
+      .attr('x', colX.src).attr('y', s.y)
+      .attr('width', nodeW).attr('height', s.h)
+      .attr('rx', 5).attr('fill', s.col).attr('opacity', 0.22)
+      .attr('stroke', s.col).attr('stroke-width', 1);
+    // Label
+    const ly = s.y + s.h / 2;
+    g.append('text').attr('x', colX.src + nodeW / 2).attr('y', ly - 7)
+      .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle')
+      .attr('fill', C.textBright).attr('font-size', s.h > 28 ? '11px' : '9px')
+      .attr('font-family', "'DM Sans', sans-serif").attr('font-weight', 600)
+      .text(s.label);
+    if (s.h > 22) {
+      g.append('text').attr('x', colX.src + nodeW / 2).attr('y', ly + 8)
+        .attr('text-anchor', 'middle')
+        .attr('fill', s.col).attr('font-size', '10px')
+        .attr('font-family', "'JetBrains Mono', monospace")
+        .text(`${s.val} Mm³/yr`);
+    }
+  });
+
+  // Central baray rect
+  g.append('rect')
+    .attr('x', colX.mid).attr('y', midY)
+    .attr('width', nodeW).attr('height', midH)
+    .attr('rx', 8).attr('fill', C.gold).attr('opacity', 0.12)
+    .attr('stroke', C.gold).attr('stroke-width', 1.5);
+  g.append('text').attr('x', colX.mid + nodeW / 2).attr('y', midH / 2 - 14)
+    .attr('text-anchor', 'middle').attr('fill', C.goldBright)
+    .attr('font-family', "'Cormorant Garamond', serif")
+    .attr('font-size', '16px').attr('font-weight', 700)
+    .text('Baray System');
+  g.append('text').attr('x', colX.mid + nodeW / 2).attr('y', midH / 2 + 6)
+    .attr('text-anchor', 'middle').attr('fill', C.gold)
+    .attr('font-family', "'JetBrains Mono', monospace").attr('font-size', '11px')
+    .text('112 Mm³ storage');
+  g.append('text').attr('x', colX.mid + nodeW / 2).attr('y', midH / 2 + 22)
+    .attr('text-anchor', 'middle').attr('fill', C.textDim)
+    .attr('font-family', "'JetBrains Mono', monospace").attr('font-size', '9px')
+    .text('4 barays · peak ~1200 CE');
+
+  // Output node rects
+  outputs.forEach(o => {
+    g.append('rect')
+      .attr('x', colX.out).attr('y', o.y)
+      .attr('width', nodeW).attr('height', o.h)
+      .attr('rx', 5).attr('fill', o.col).attr('opacity', 0.22)
+      .attr('stroke', o.col).attr('stroke-width', 1);
+    const ly = o.y + o.h / 2;
+    g.append('text').attr('x', colX.out + nodeW / 2).attr('y', ly - 7)
+      .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle')
+      .attr('fill', C.textBright).attr('font-size', o.h > 26 ? '11px' : '9px')
+      .attr('font-family', "'DM Sans', sans-serif").attr('font-weight', 600)
+      .text(o.label);
+    if (o.h > 20) {
+      g.append('text').attr('x', colX.out + nodeW / 2).attr('y', ly + 8)
+        .attr('text-anchor', 'middle')
+        .attr('fill', o.col).attr('font-size', '10px')
+        .attr('font-family', "'JetBrains Mono', monospace")
+        .text(`${o.val} Mm³/yr`);
+    }
+  });
+
+  // Column headers
+  [
+    { label: 'INPUTS', x: colX.src + nodeW / 2, col: C.blue },
+    { label: 'BARAY SYSTEM', x: colX.mid + nodeW / 2, col: C.gold },
+    { label: 'OUTPUTS', x: colX.out + nodeW / 2, col: C.orange },
+  ].forEach(h => {
+    g.append('text').attr('x', h.x).attr('y', -12)
+      .attr('text-anchor', 'middle')
+      .attr('fill', h.col).attr('font-family', "'JetBrains Mono', monospace")
+      .attr('font-size', '10px').attr('letter-spacing', '2px')
+      .text(h.label);
+  });
+};
+
+
+// ═══════════════════════════════════════════════════════════════════
+// 5. INFRASTRUCTURE COMPARISON
+// ═══════════════════════════════════════════════════════════════════
+tabFns['infra'] = function() {
+  // ── Baray grouped bar chart ──
+  const barays = [
+    { name: 'Indratataka', vol: 7.5,  area: 3.3,  fill: 2.5,  labor: 2.5, color: C.blue   },
+    { name: 'East Baray',  vol: 46.0, area: 13.7, fill: 8.0,  labor: 8.0, color: C.green  },
+    { name: 'West Baray',  vol: 50.5, area: 16.4, fill: 11.0, labor: 11.0,color: C.cyan   },
+    { name: 'Jayatataka',  vol: 8.7,  area: 3.2,  fill: 2.8,  labor: 2.8, color: C.orange },
+  ];
+
+  const metrics = [
+    { key: 'vol',   label: 'Storage (Mm³)',   maxScale: 60,  color: C.gold   },
+    { key: 'area',  label: 'Surface (km²)',   maxScale: 20,  color: C.cyan   },
+    { key: 'fill',  label: 'Earthfill (M m³)',maxScale: 14,  color: C.orange },
+  ];
+
+  const margin = { top: 40, right: 50, bottom: 60, left: 130 };
+  const W = 980, H = 340;
+  const iw = W - margin.left - margin.right;
+  const ih = H - margin.top - margin.bottom;
+
+  const svg = d3.select('#infra-chart').append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%');
+  const g = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
+
+  const groupW = iw / barays.length;
+  const barPad = 10;
+  const barW = (groupW - barPad * 2) / metrics.length - 4;
+
+  const yScales = {};
+  metrics.forEach(m => {
+    yScales[m.key] = d3.scaleLinear().domain([0, m.maxScale]).range([ih, 0]);
+  });
+
+  // Use first metric's scale for the axis (storage volume)
+  const yAxis = yScales['vol'];
+
+  // Grid
+  yAxis.ticks(5).forEach(t => {
+    g.append('line').attr('x1', 0).attr('x2', iw).attr('y1', yAxis(t)).attr('y2', yAxis(t))
+      .attr('stroke', C.border).attr('stroke-dasharray', '2,4');
+  });
+
+  // Bars
+  barays.forEach((b, bi) => {
+    const gx = bi * groupW + barPad;
+    metrics.forEach((m, mi) => {
+      const bx = gx + mi * (barW + 4);
+      const ysc = yScales[m.key];
+      const barH = ih - ysc(b[m.key]);
+
+      g.append('rect')
+        .attr('x', bx).attr('y', ih)
+        .attr('width', barW).attr('height', 0)
+        .attr('rx', 3).attr('fill', m.color).attr('opacity', 0.78)
+        .transition().delay(bi * 80 + mi * 40).duration(600).ease(d3.easeCubicOut)
+        .attr('y', ysc(b[m.key])).attr('height', barH);
+
+      // Value label
+      g.append('text')
+        .attr('x', bx + barW / 2).attr('y', ysc(b[m.key]) - 4)
+        .attr('text-anchor', 'middle')
+        .attr('fill', m.color).attr('font-size', '8.5px')
+        .attr('font-family', "'JetBrains Mono', monospace")
+        .attr('opacity', 0)
+        .transition().delay(bi * 80 + mi * 40 + 600).duration(300)
+        .attr('opacity', 0.9)
+        .text(b[m.key]);
+    });
+
+    // Baray name label
+    g.append('text')
+      .attr('x', gx + (metrics.length * (barW + 4)) / 2 - 2).attr('y', ih + 20)
+      .attr('text-anchor', 'middle')
+      .attr('fill', b.color).attr('font-size', '11px')
+      .attr('font-family', "'DM Sans', sans-serif").attr('font-weight', 600)
+      .text(b.name);
+  });
+
+  // Metric legend
+  const leg = g.append('g').attr('transform', `translate(0,-32)`);
+  metrics.forEach((m, i) => {
+    leg.append('rect').attr('x', i * 160).attr('y', 0).attr('width', 10).attr('height', 10)
+      .attr('rx', 2).attr('fill', m.color).attr('opacity', 0.9);
+    leg.append('text').attr('x', i * 160 + 15).attr('y', 9)
+      .attr('fill', C.textDim).attr('font-size', '10px')
+      .attr('font-family', "'JetBrains Mono', monospace")
+      .text(m.label);
+  });
+
+  g.append('g').attr('class', 'axis').attr('transform', `translate(0,${ih})`)
+    .call(d3.axisBottom(d3.scaleLinear().domain([0, barays.length]).range([0, iw])).ticks(0));
+  g.append('g').attr('class', 'axis').call(d3.axisLeft(yAxis).ticks(5));
+  g.append('text').attr('class', 'axis-label')
+    .attr('transform', 'rotate(-90)').attr('x', -ih / 2).attr('y', -50)
+    .attr('text-anchor', 'middle').text('VOLUME / AREA / FILL (SCALED PER METRIC)');
+
+  // ── Moat chart ──
+  const moats = [
+    { name: 'Angkor Thom',        vol: 5.0,  color: C.green  },
+    { name: 'Angkor Wat',         vol: 3.0,  color: C.cyan   },
+    { name: 'Srah Srang',         vol: 0.6,  color: C.blue   },
+    { name: 'Preah Khan',         vol: 0.4,  color: C.gold   },
+    { name: 'Banteay Kdei/Ta Prohm', vol: 0.25, color: C.orange },
+  ];
+
+  const m2 = { top: 20, right: 50, bottom: 40, left: 170 };
+  const W2 = 980, H2 = 200;
+  const iw2 = W2 - m2.left - m2.right;
+  const ih2 = H2 - m2.top - m2.bottom;
+
+  const svg2 = d3.select('#moat-chart').append('svg')
+    .attr('viewBox', `0 0 ${W2} ${H2}`).attr('width', '100%');
+  const g2 = svg2.append('g').attr('transform', `translate(${m2.left},${m2.top})`);
+
+  const xM = d3.scaleLinear().domain([0, 5.5]).range([0, iw2]);
+  const yM = d3.scaleBand().domain(moats.map(d => d.name)).range([0, ih2]).padding(0.35);
+
+  moats.forEach(mo => {
+    g2.append('rect')
+      .attr('x', 0).attr('y', yM(mo.name))
+      .attr('width', 0).attr('height', yM.bandwidth())
+      .attr('rx', 3).attr('fill', mo.color).attr('opacity', 0.7)
+      .transition().delay(moats.indexOf(mo) * 80).duration(600).ease(d3.easeCubicOut)
+      .attr('width', xM(mo.vol));
+    g2.append('text')
+      .attr('x', xM(mo.vol) + 6).attr('y', yM(mo.name) + yM.bandwidth() / 2)
+      .attr('dominant-baseline', 'middle')
+      .attr('fill', mo.color).attr('font-size', '10px')
+      .attr('font-family', "'JetBrains Mono', monospace")
+      .attr('opacity', 0)
+      .transition().delay(moats.indexOf(mo) * 80 + 600).duration(300).attr('opacity', 0.9)
+      .text(`${mo.vol} Mm³`);
+  });
+
+  g2.append('g').attr('class', 'axis')
+    .call(d3.axisLeft(yM).tickSize(0))
+    .call(ax => ax.select('.domain').remove())
+    .call(ax => ax.selectAll('text')
+      .attr('fill', C.textDim).attr('font-size', '10px')
+      .attr('font-family', "'DM Sans', sans-serif"));
+  g2.append('g').attr('class', 'axis').attr('transform', `translate(0,${ih2})`)
+    .call(d3.axisBottom(xM).ticks(5));
+  g2.append('text').attr('class', 'axis-label')
+    .attr('x', iw2 / 2).attr('y', ih2 + 34).attr('text-anchor', 'middle')
+    .text('STORAGE VOLUME (Mm³)');
+};
+
+
+// ═══════════════════════════════════════════════════════════════════
+// 6. CANAL NETWORK — force-directed graph
+// ═══════════════════════════════════════════════════════════════════
+tabFns['network'] = function() {
+  const nodes = [
+    { id: 'kulen',    label: 'Kulen Hills',         type: 'source',  size: 22, color: C.blue   },
+    { id: 'siem',     label: 'Siem Reap River',     type: 'river',   size: 16, color: C.blue   },
+    { id: 'puok',     label: 'Puok River',          type: 'river',   size: 13, color: C.cyanDim},
+    { id: 'roluos',   label: 'Roluos River',        type: 'river',   size: 12, color: C.cyanDim},
+    { id: 'bampenh',  label: 'Bampenh Spillway',    type: 'infra',   size: 14, color: C.gold   },
+    { id: 'east',     label: 'East Baray',          type: 'baray',   size: 20, color: C.gold   },
+    { id: 'west',     label: 'West Baray',          type: 'baray',   size: 21, color: C.gold   },
+    { id: 'jay',      label: 'Jayatataka',          type: 'baray',   size: 13, color: C.gold   },
+    { id: 'indra',    label: 'Indratataka',         type: 'baray',   size: 11, color: C.goldDim},
+    { id: 'athom',    label: 'Angkor Thom Moat',   type: 'moat',    size: 12, color: C.cyan   },
+    { id: 'awat',     label: 'Angkor Wat Moat',    type: 'moat',    size: 11, color: C.cyan   },
+    { id: 'srang',    label: 'Srah Srang',         type: 'moat',    size: 9,  color: C.cyan   },
+    { id: 'pkhan',    label: 'Preah Khan Moat',    type: 'moat',    size: 8,  color: C.cyan   },
+    { id: 'irrig',    label: 'Irrigation Network', type: 'network', size: 16, color: C.green  },
+    { id: 'tonle',    label: 'Tonle Sap Lake',     type: 'sink',    size: 22, color: C.red    },
+  ];
+
+  const links = [
+    { source: 'kulen',   target: 'siem',    val: 1000, label: '1000 Mm³/yr' },
+    { source: 'kulen',   target: 'puok',    val: 550,  label: '550 Mm³/yr'  },
+    { source: 'kulen',   target: 'roluos',  val: 375,  label: '375 Mm³/yr'  },
+    { source: 'roluos',  target: 'indra',   val: 375,  label: '375 Mm³/yr'  },
+    { source: 'siem',    target: 'bampenh', val: 700,  label: '~700 Mm³/yr' },
+    { source: 'bampenh', target: 'east',    val: 300,  label: '~300 Mm³/yr' },
+    { source: 'bampenh', target: 'jay',     val: 75,   label: '~75 Mm³/yr'  },
+    { source: 'bampenh', target: 'west',    val: 150,  label: '~150 Mm³/yr canal'},
+    { source: 'puok',    target: 'west',    val: 550,  label: '550 Mm³/yr'  },
+    { source: 'east',    target: 'athom',   val: 45,   label: '45 Mm³/yr'   },
+    { source: 'east',    target: 'srang',   val: 20,   label: '20 Mm³/yr'   },
+    { source: 'east',    target: 'irrig',   val: 150,  label: '150 Mm³/yr'  },
+    { source: 'west',    target: 'irrig',   val: 225,  label: '225 Mm³/yr'  },
+    { source: 'jay',     target: 'pkhan',   val: 10,   label: '10 Mm³/yr'   },
+    { source: 'athom',   target: 'irrig',   val: 30,   label: 'secondary'   },
+    { source: 'awat',    target: 'irrig',   val: 20,   label: 'secondary'   },
+    { source: 'irrig',   target: 'tonle',   val: 1150, label: '1150 Mm³/yr overflow'},
+    { source: 'siem',    target: 'awat',    val: 60,   label: 'via Siem Reap' },
+  ];
+
+  const W = 1000, H = 580;
+  const svg = d3.select('#network-chart').append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%')
+    .style('cursor', 'grab');
+
+  const defs = svg.append('defs');
+  // Arrow marker
+  defs.append('marker')
+    .attr('id', 'arrow')
+    .attr('viewBox', '0 -5 10 10').attr('refX', 22).attr('refY', 0)
+    .attr('markerWidth', 6).attr('markerHeight', 6).attr('orient', 'auto')
+    .append('path').attr('d', 'M0,-4L10,0L0,4').attr('fill', C.border);
+
+  defs.append('marker')
+    .attr('id', 'arrow-bright')
+    .attr('viewBox', '0 -5 10 10').attr('refX', 22).attr('refY', 0)
+    .attr('markerWidth', 6).attr('markerHeight', 6).attr('orient', 'auto')
+    .append('path').attr('d', 'M0,-4L10,0L0,4').attr('fill', C.gold);
+
+  const g = svg.append('g');
+
+  // Zoom
+  svg.call(d3.zoom().scaleExtent([0.4, 2.5]).on('zoom', evt => {
+    g.attr('transform', evt.transform);
+    svg.style('cursor', 'grabbing');
+  })).on('dblclick.zoom', null);
+
+  // Stroke width scale
+  const strokeScale = d3.scaleSqrt().domain([10, 1150]).range([1, 6]);
+
+  const link = g.append('g').selectAll('line')
+    .data(links).join('line')
+    .attr('stroke', C.border).attr('stroke-width', d => strokeScale(d.val))
+    .attr('marker-end', 'url(#arrow)').attr('opacity', 0.65);
+
+  const node = g.append('g').selectAll('g')
+    .data(nodes).join('g').attr('class', 'force-node');
+
+  node.append('circle')
+    .attr('r', d => d.size)
+    .attr('fill', d => d.color).attr('fill-opacity', 0.2)
+    .attr('stroke', d => d.color).attr('stroke-width', 1.8);
+
+  node.append('text')
+    .attr('text-anchor', 'middle').attr('dy', '0.35em')
+    .attr('fill', d => d.color).attr('font-size', d => Math.max(7, d.size * 0.55) + 'px')
+    .attr('font-family', "'JetBrains Mono', monospace")
+    .attr('pointer-events', 'none')
+    .text(d => d.label.split(' ').slice(0, 2).join('\n'));
+
+  // Label below for larger nodes
+  node.append('text')
+    .attr('text-anchor', 'middle').attr('dy', d => d.size + 13)
+    .attr('fill', C.textDim).attr('font-size', '8px')
+    .attr('font-family', "'DM Sans', sans-serif")
+    .attr('pointer-events', 'none')
+    .text(d => d.label);
+
+  // Tooltip on hover
+  node
+    .on('mouseenter', function(evt, d) {
+      d3.select(this).select('circle').attr('fill-opacity', 0.45);
+      const incoming = links.filter(l => (l.target.id || l.target) === d.id);
+      const outgoing = links.filter(l => (l.source.id || l.source) === d.id);
+      showTip(evt,
+        `<div class="tt-label">${d.type.toUpperCase()} · ${d.label}</div>
+         <div class="tt-sub">${incoming.length > 0 ? 'In: ' + incoming.map(l => l.label).join(', ') : ''}${outgoing.length > 0 ? (incoming.length > 0 ? '<br>' : '') + 'Out: ' + outgoing.map(l => l.label).join(', ') : ''}</div>`);
+    })
+    .on('mousemove', (evt) => showTip(evt, tooltip.innerHTML))
+    .on('mouseleave', function() { d3.select(this).select('circle').attr('fill-opacity', 0.2); hideTip(); });
+
+  // Link hover
+  link
+    .on('mouseenter', function(evt, d) {
+      d3.select(this).attr('stroke', C.gold).attr('marker-end', 'url(#arrow-bright)');
+      showTip(evt,
+        `<div class="tt-label">${(d.source.id||d.source)} → ${(d.target.id||d.target)}</div>
+         <div class="tt-value" style="color:${C.gold}">${d.label}</div>`);
+    })
+    .on('mousemove', (evt) => showTip(evt, tooltip.innerHTML))
+    .on('mouseleave', function() {
+      d3.select(this).attr('stroke', C.border).attr('marker-end', 'url(#arrow)');
+      hideTip();
+    });
+
+  // Drag
+  const drag = d3.drag()
+    .on('start', (evt, d) => {
+      if (!evt.active) sim.alphaTarget(0.3).restart();
+      d.fx = d.x; d.fy = d.y;
+    })
+    .on('drag', (evt, d) => { d.fx = evt.x; d.fy = evt.y; })
+    .on('end', (evt, d) => {
+      if (!evt.active) sim.alphaTarget(0);
+      d.fx = null; d.fy = null;
+    });
+  node.call(drag);
+
+  // Force simulation — structured layout
+  const sim = d3.forceSimulation(nodes)
+    .force('link', d3.forceLink(links).id(d => d.id).distance(d => 80 + 20 * Math.sqrt(d.val / 100)).strength(0.6))
+    .force('charge', d3.forceManyBody().strength(-320))
+    .force('center', d3.forceCenter(W / 2, H / 2))
+    .force('collide', d3.forceCollide(d => d.size + 18))
+    .on('tick', () => {
+      link
+        .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+        .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+      node.attr('transform', d => `translate(${d.x},${d.y})`);
+    });
+
+  // Type legend
+  const types = [
+    { label: 'Source / River', color: C.blue },
+    { label: 'Baray',          color: C.gold },
+    { label: 'Moat',           color: C.cyan },
+    { label: 'Network',        color: C.green },
+    { label: 'Sink',           color: C.red  },
+  ];
+  const legG = svg.append('g').attr('transform', `translate(16, 16)`);
+  types.forEach((t, i) => {
+    legG.append('circle').attr('cx', 6).attr('cy', i * 20 + 6).attr('r', 5)
+      .attr('fill', t.color).attr('fill-opacity', 0.3).attr('stroke', t.color).attr('stroke-width', 1.5);
+    legG.append('text').attr('x', 16).attr('y', i * 20 + 10)
+      .attr('fill', C.textDim).attr('font-size', '9px')
+      .attr('font-family', "'JetBrains Mono', monospace")
+      .text(t.label);
+  });
+
+  legG.append('text').attr('x', 0).attr('y', types.length * 20 + 18)
+    .attr('fill', C.textDim).attr('font-size', '8px')
+    .attr('font-family', "'DM Sans', sans-serif")
+    .text('Drag nodes · scroll to zoom');
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// 7. SYSTEM NETWORK (TSX port — season filter + click isolation)
+// ═══════════════════════════════════════════════════════════════════
+(function injectSnStyles() {
+  const s = document.createElement('style');
+  s.textContent = `
+    .sn-btn {
+      font-family: var(--mono); font-size: 9px; letter-spacing: 1.2px;
+      text-transform: uppercase; padding: 5px 14px;
+      border: 1px solid var(--border); border-radius: 4px;
+      background: var(--bg-panel); color: var(--text-dim);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .sn-btn:hover { border-color: var(--border-glow); color: var(--text); }
+    .sn-btn.active { background: var(--gold-dim); color: var(--bg-deep); border-color: var(--gold); font-weight: 700; }
+  `;
+  document.head.appendChild(s);
+})();
+
+tabFns['sysnet'] = function() {
+  const NODES = [
+    { id: 'kulen',      label: 'Phnom Kulen\nHeadwaters',        tier: 0, col: 2,   type: 'source',  sub: '487m · Springs & rainfall' },
+    { id: 'puok',       label: 'Puok River',                     tier: 1, col: 0.5, type: 'river',   sub: '~500 km² catchment' },
+    { id: 'siem_reap',  label: 'Siem Reap\nRiver',               tier: 1, col: 2,   type: 'river',   sub: '~650 km² catchment' },
+    { id: 'roluos',     label: 'Roluos River',                   tier: 1, col: 3.5, type: 'river',   sub: '~350 km² catchment' },
+    { id: 'bampenh',    label: 'Bampenh Reach\nSpillway',        tier: 2, col: 2,   type: 'control', sub: '9th c. · Automated overflow' },
+    { id: 'west_baray', label: 'West Baray',                     tier: 3, col: 0,   type: 'baray',   sub: '48–53 Mm³ · ~1025 CE' },
+    { id: 'jayatataka', label: 'Jayatataka',                     tier: 3, col: 1.3, type: 'baray',   sub: '8.7 Mm³ · ~1185 CE' },
+    { id: 'east_baray', label: 'East Baray',                     tier: 3, col: 2.7, type: 'baray',   sub: '37–55 Mm³ · ~900 CE' },
+    { id: 'indratataka',label: 'Indratataka',                    tier: 3, col: 4,   type: 'baray',   sub: '7.5 Mm³ · 889 CE' },
+    { id: 'angkor_thom',label: 'Angkor Thom\nMoat',              tier: 4, col: 1.3, type: 'moat',    sub: '4–6 Mm³ · 12 km perimeter' },
+    { id: 'preah_khan', label: 'Preah Khan\nMoat',               tier: 4, col: 0.3, type: 'moat',    sub: '0.3–0.5 Mm³' },
+    { id: 'angkor_wat', label: 'Angkor Wat\nMoat',               tier: 4, col: 2.2, type: 'moat',    sub: '2.5–3.5 Mm³ · 190m wide' },
+    { id: 'srah_srang', label: 'Srah Srang',                     tier: 4, col: 3.2, type: 'moat',    sub: '0.5–0.7 Mm³ · Royal Basin' },
+    { id: 'ta_prohm',   label: 'Ta Prohm &\nBanteay Kdei',       tier: 4, col: 3.9, type: 'moat',    sub: '0.2–0.3 Mm³' },
+    { id: 'irrigation', label: 'Irrigation\nCanal Network',      tier: 5, col: 1.5, type: 'output',  sub: '>200 km canals · 25,000–40,000 ha' },
+    { id: 'groundwater',label: 'Groundwater\nRecharge',          tier: 5, col: 3.2, type: 'output',  sub: 'Continuous infiltration' },
+    { id: 'tonle_sap',  label: 'Tonlé Sap\nLake',                tier: 6, col: 2,   type: 'sink',    sub: 'Ultimate basin sink' },
+  ];
+
+  const LINKS = [
+    { s: 'kulen',       t: 'puok',        flow: '400–700',   type: 'natural',     season: 'annual', vol: 550  },
+    { s: 'kulen',       t: 'siem_reap',   flow: '800–1,200', type: 'natural',     season: 'annual', vol: 1000 },
+    { s: 'kulen',       t: 'roluos',      flow: '250–500',   type: 'natural',     season: 'annual', vol: 375  },
+    { s: 'puok',        t: 'west_baray',  flow: '150–300',   type: 'controlled',  season: 'wet',    vol: 225  },
+    { s: 'siem_reap',   t: 'bampenh',     flow: 'variable',  type: 'channelized', season: 'annual', vol: 700  },
+    { s: 'roluos',      t: 'indratataka', flow: '100–250',   type: 'controlled',  season: 'wet',    vol: 175  },
+    { s: 'bampenh',     t: 'east_baray',  flow: '200–400',   type: 'controlled',  season: 'wet',    vol: 300  },
+    { s: 'bampenh',     t: 'jayatataka',  flow: '50–100',    type: 'controlled',  season: 'wet',    vol: 75   },
+    { s: 'bampenh',     t: 'angkor_thom', flow: '30–60',     type: 'controlled',  season: 'annual', vol: 45   },
+    { s: 'bampenh',     t: 'angkor_wat',  flow: '15–30',     type: 'controlled',  season: 'annual', vol: 22   },
+    { s: 'west_baray',  t: 'irrigation',  flow: '150–300',   type: 'irrigation',  season: 'dry',    vol: 225  },
+    { s: 'west_baray',  t: 'groundwater', flow: 'continuous',type: 'infiltration',season: 'annual', vol: 50   },
+    { s: 'jayatataka',  t: 'preah_khan',  flow: '5–15',      type: 'overflow',    season: 'wet',    vol: 10   },
+    { s: 'jayatataka',  t: 'angkor_thom', flow: '20–40',     type: 'controlled',  season: 'dry',    vol: 30   },
+    { s: 'east_baray',  t: 'srah_srang',  flow: '10–30',     type: 'distribution',season: 'dry',    vol: 20   },
+    { s: 'east_baray',  t: 'ta_prohm',    flow: '5–15',      type: 'distribution',season: 'dry',    vol: 10   },
+    { s: 'east_baray',  t: 'irrigation',  flow: '100–200',   type: 'irrigation',  season: 'dry',    vol: 150  },
+    { s: 'east_baray',  t: 'groundwater', flow: 'continuous',type: 'infiltration',season: 'annual', vol: 40   },
+    { s: 'angkor_thom', t: 'irrigation',  flow: '10–20',     type: 'distribution',season: 'annual', vol: 15   },
+    { s: 'angkor_wat',  t: 'irrigation',  flow: '5–10',      type: 'distribution',season: 'annual', vol: 7    },
+    { s: 'srah_srang',  t: 'irrigation',  flow: '5–10',      type: 'distribution',season: 'dry',    vol: 7    },
+    { s: 'irrigation',  t: 'tonle_sap',   flow: 'excess',    type: 'overflow',    season: 'wet',    vol: 1150 },
+    { s: 'groundwater', t: 'tonle_sap',   flow: 'base flow', type: 'natural',     season: 'annual', vol: 90   },
+    { s: 'indratataka', t: 'irrigation',  flow: '50–100',    type: 'irrigation',  season: 'dry',    vol: 75   },
+  ];
+
+  const TYPE_COLORS = {
+    source:  C.blue,
+    river:   C.blue,
+    control: C.gold,
+    baray:   C.gold,
+    moat:    C.cyan,
+    output:  C.green,
+    sink:    C.red,
+  };
+
+  const LINK_COLORS = {
+    natural:     '#5dade2',
+    channelized: C.blue,
+    controlled:  '#2ecc71',
+    irrigation:  C.orange,
+    distribution:C.cyan,
+    overflow:    C.red,
+    infiltration:'#7f8c8d',
+  };
+
+  const SEASON_DASH = { annual: '0', wet: '8,4', dry: '4,4' };
+
+  const W = 1100, H = 860;
+  const tierY = [44, 140, 244, 370, 510, 650, 790];
+  const colX  = c => 110 + c * 220;
+
+  const nodePos = {};
+  NODES.forEach(n => { nodePos[n.id] = { x: colX(n.col), y: tierY[n.tier] }; });
+
+  let activeSeason = 'all';
+  let selectedId   = null;
+
+  const container = document.getElementById('sysnet-chart');
+
+  function rebuild() {
+    container.innerHTML = '';
+    const filteredLinks = activeSeason === 'all'
+      ? LINKS
+      : LINKS.filter(l => l.season === activeSeason || l.season === 'annual');
+
+    const connectedIds = new Set();
+    if (selectedId) {
+      connectedIds.add(selectedId);
+      filteredLinks.forEach(l => {
+        if (l.s === selectedId) connectedIds.add(l.t);
+        if (l.t === selectedId) connectedIds.add(l.s);
+      });
+    }
+
+    const svgEl = d3.select(container).append('svg')
+      .attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%')
+      .style('background', C.bgDeep).style('border-radius', '8px');
+
+    const defs = svgEl.append('defs');
+    Object.entries(LINK_COLORS).forEach(([k, col]) => {
+      defs.append('marker')
+        .attr('id', `sn-arr-${k}`).attr('viewBox', '0 0 10 6')
+        .attr('refX', 10).attr('refY', 3)
+        .attr('markerWidth', 7).attr('markerHeight', 4).attr('orient', 'auto')
+        .append('path').attr('d', 'M0,0 L10,3 L0,6 Z').attr('fill', col);
+    });
+    defs.append('filter').attr('id', 'sn-glow')
+      .append('feGaussianBlur').attr('stdDeviation', 3).attr('result', 'g')
+      .select(function() { return this.parentNode; })
+      .append('feMerge').call(m => {
+        m.append('feMergeNode').attr('in', 'g');
+        m.append('feMergeNode').attr('in', 'SourceGraphic');
+      });
+
+    // Tier bands
+    const tierLabels = ['SOURCE','RIVERS','CONTROL','BARAYS','MOATS & BASINS','OUTPUTS','SINK'];
+    tierY.forEach((y, i) => {
+      svgEl.append('rect').attr('x', 0).attr('y', y - 22).attr('width', W)
+        .attr('height', i === 3 ? 115 : i === 4 ? 105 : 75)
+        .attr('fill', i % 2 === 0 ? 'rgba(29,48,72,0.15)' : 'transparent');
+      svgEl.append('text').attr('x', 12).attr('y', y - 7)
+        .attr('fill', C.borderGlow).attr('font-size', 9).attr('font-weight', 700)
+        .attr('letter-spacing', 1.5).attr('font-family', "'JetBrains Mono',monospace")
+        .text(tierLabels[i]);
+    });
+
+    // Links
+    filteredLinks.forEach(l => {
+      const sp = nodePos[l.s], tp = nodePos[l.t];
+      if (!sp || !tp) return;
+      const dim = selectedId && (!connectedIds.has(l.s) || !connectedIds.has(l.t));
+      const dy = Math.abs(tp.y - sp.y);
+      const path = `M${sp.x},${sp.y + 20} C${sp.x},${sp.y + dy * 0.4} ${tp.x},${tp.y - dy * 0.4} ${tp.x},${tp.y - 20}`;
+      const col = LINK_COLORS[l.type] || '#445566';
+      const sw = 1 + Math.sqrt(l.vol / 100) * 1.8;
+
+      svgEl.append('path').attr('d', path).attr('fill', 'none')
+        .attr('stroke', col).attr('stroke-width', sw)
+        .attr('stroke-dasharray', SEASON_DASH[l.season] || '0')
+        .attr('marker-end', `url(#sn-arr-${l.type})`)
+        .attr('opacity', dim ? 0.07 : 0.68);
+
+      if (!dim && l.flow) {
+        svgEl.append('text')
+          .attr('x', (sp.x + tp.x) / 2 + (sp.x < tp.x ? 12 : -12))
+          .attr('y', (sp.y + tp.y) / 2 + 4)
+          .attr('text-anchor', 'middle').attr('fill', col)
+          .attr('font-size', 8).attr('font-weight', 600)
+          .attr('font-family', "'JetBrains Mono',monospace").attr('opacity', 0.8)
+          .text(l.flow + ' Mm³');
+      }
+    });
+
+    // Nodes
+    NODES.forEach(n => {
+      const p = nodePos[n.id];
+      const col = TYPE_COLORS[n.type] || '#888';
+      const dim = selectedId && !connectedIds.has(n.id);
+      const isSel = n.id === selectedId;
+      const rw = n.type === 'baray' ? 88 : n.type === 'source' || n.type === 'sink' ? 82 : 78;
+      const rh = n.type === 'baray' ? 40 : 34;
+
+      const grp = svgEl.append('g')
+        .attr('opacity', dim ? 0.12 : 1)
+        .attr('cursor', 'pointer')
+        .on('click', () => {
+          selectedId = selectedId === n.id ? null : n.id;
+          rebuild();
+        });
+
+      grp.append('rect')
+        .attr('x', p.x - rw / 2).attr('y', p.y - rh / 2)
+        .attr('width', rw).attr('height', rh)
+        .attr('rx', n.type === 'source' || n.type === 'sink' ? rh / 2 : 6)
+        .attr('fill', isSel ? C.gold : col).attr('fill-opacity', isSel ? 0.9 : 0.22)
+        .attr('stroke', isSel ? C.goldBright : col).attr('stroke-width', isSel ? 2.5 : 1.2)
+        .attr('filter', isSel ? 'url(#sn-glow)' : 'none');
+
+      n.label.split('\n').forEach((line, li, arr) => {
+        grp.append('text')
+          .attr('x', p.x).attr('y', p.y - (arr.length - 1) * 6 + li * 13)
+          .attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
+          .attr('fill', isSel ? C.bgDeep : C.textBright)
+          .attr('font-size', 10).attr('font-weight', 700)
+          .attr('font-family', "'DM Sans',sans-serif")
+          .attr('pointer-events', 'none').text(line);
+      });
+
+      if (isSel) {
+        grp.append('text')
+          .attr('x', p.x).attr('y', p.y + rh / 2 + 13)
+          .attr('text-anchor', 'middle').attr('fill', C.cyan)
+          .attr('font-size', 9).attr('font-family', "'JetBrains Mono',monospace")
+          .attr('pointer-events', 'none').text(n.sub);
+      }
+    });
+
+    // Legend
+    const legTypes = [
+      { label: 'Source / Headwater', col: C.blue   },
+      { label: 'Baray',              col: C.gold   },
+      { label: 'Moat / Basin',       col: C.cyan   },
+      { label: 'Output / Network',   col: C.green  },
+      { label: 'Sink',               col: C.red    },
+    ];
+    const legG = svgEl.append('g').attr('transform', `translate(14,${H - 90})`);
+    legTypes.forEach((t, i) => {
+      const cx = (i % 3) * 170, cy = Math.floor(i / 3) * 18;
+      legG.append('rect').attr('x', cx).attr('y', cy).attr('width', 9).attr('height', 9)
+        .attr('rx', 2).attr('fill', t.col).attr('fill-opacity', 0.7);
+      legG.append('text').attr('x', cx + 14).attr('y', cy + 8)
+        .attr('fill', C.textDim).attr('font-size', 9)
+        .attr('font-family', "'JetBrains Mono',monospace").text(t.label);
+    });
+    const lc = filteredLinks.length;
+    svgEl.append('text').attr('x', W / 2).attr('y', H - 8)
+      .attr('text-anchor', 'middle').attr('fill', C.borderGlow)
+      .attr('font-size', 9).attr('font-family', "'JetBrains Mono',monospace")
+      .text(`Click node to isolate connections · ${lc} active links · Gravity-fed system, 0.1% N→S gradient`);
+  }
+
+  // Season button wiring
+  document.querySelectorAll('#sysnet-filter .sn-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeSeason = btn.dataset.s;
+      selectedId   = null;
+      document.querySelectorAll('#sysnet-filter .sn-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      rebuild();
+    });
+  });
+
+  rebuild();
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// 8. FLOW SANKEY II (TSX port — 14 nodes / 30 links, 5-column)
+// ═══════════════════════════════════════════════════════════════════
+tabFns['sankey2'] = function() {
+  const NODES = [
+    'Kulen Rainfall','Siem Reap R.','Puok R.','Roluos R.',
+    'East Baray','West Baray','Jayatataka','Indratataka',
+    'Moats & Basins','Irrigation','Groundwater','Evaporation',
+    'Tonlé Sap','Urban Use'
+  ];
+
+  const LINKS = [
+    { s: 0,  t: 1,  v: 1000 }, { s: 0,  t: 2,  v: 550  }, { s: 0,  t: 3,  v: 375  },
+    { s: 1,  t: 4,  v: 350  }, { s: 1,  t: 8,  v: 100  }, { s: 1,  t: 6,  v: 80   },
+    { s: 1,  t: 9,  v: 200  }, { s: 1,  t: 12, v: 270  },
+    { s: 2,  t: 5,  v: 450  }, { s: 2,  t: 12, v: 100  },
+    { s: 3,  t: 7,  v: 200  }, { s: 3,  t: 12, v: 175  },
+    { s: 4,  t: 9,  v: 180  }, { s: 4,  t: 10, v: 80   }, { s: 4,  t: 11, v: 40   }, { s: 4,  t: 8,  v: 50   },
+    { s: 5,  t: 9,  v: 250  }, { s: 5,  t: 10, v: 100  }, { s: 5,  t: 11, v: 50   }, { s: 5,  t: 13, v: 10   },
+    { s: 6,  t: 8,  v: 40   }, { s: 6,  t: 10, v: 20   }, { s: 6,  t: 11, v: 10   },
+    { s: 7,  t: 9,  v: 100  }, { s: 7,  t: 10, v: 50   }, { s: 7,  t: 11, v: 15   },
+    { s: 8,  t: 9,  v: 60   }, { s: 8,  t: 13, v: 12   }, { s: 8,  t: 11, v: 20   },
+    { s: 9,  t: 12, v: 600  }, { s: 10, t: 12, v: 250  },
+  ];
+
+  // Colors tuned to the project palette
+  const NODE_COLORS = [
+    C.blue, C.blue, C.blue, C.blue,
+    C.gold, C.gold, '#d97a40', '#e8665a',
+    C.cyan, C.green, '#7f8c8d', C.red,
+    '#1a2634', C.orange
+  ];
+
+  const cols = [
+    [0],
+    [1, 2, 3],
+    [4, 5, 6, 7],
+    [8, 9, 10, 11, 13],
+    [12]
+  ];
+  const colXs = [40, 220, 440, 690, 970];
+  const nodeW  = 22;
+  const pad    = 14;
+
+  const W = 1060, H = 700;
+  const svg = d3.select('#sankey2-chart').append('svg')
+    .attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%')
+    .style('background', C.bgDeep).style('border-radius', '8px')
+    .style('padding', '16px');
+
+  // Compute node heights
+  const totalIn = {}, totalOut = {};
+  LINKS.forEach(l => {
+    totalOut[l.s] = (totalOut[l.s] || 0) + l.v;
+    totalIn[l.t]  = (totalIn[l.t]  || 0) + l.v;
+  });
+  const nodeSize = i => Math.max(totalIn[i] || 0, totalOut[i] || 0, 30);
+  const maxColH  = cols.map(col => col.reduce((s, i) => s + nodeSize(i), 0) + (col.length - 1) * pad);
+  const scale    = Math.min(1, (H - 60) / Math.max(...maxColH));
+
+  const nH = {}, nY = {}, colOf = {};
+  cols.forEach((col, ci) => {
+    const totalH = col.reduce((s, i) => s + nodeSize(i) * scale, 0) + (col.length - 1) * pad;
+    let y = (H - totalH) / 2;
+    col.forEach(i => {
+      nH[i] = nodeSize(i) * scale;
+      nY[i] = y;
+      colOf[i] = ci;
+      y += nH[i] + pad;
+    });
+  });
+
+  const nX = i => colXs[colOf[i]];
+
+  // Draw ribbons
+  const outUsed = {}, inUsed = {};
+  LINKS.forEach(l => {
+    const sx = nX(l.s) + nodeW;
+    const sy = nY[l.s] + (outUsed[l.s] || 0);
+    const lh = (l.v / nodeSize(l.s)) * nH[l.s];
+    outUsed[l.s] = (outUsed[l.s] || 0) + lh;
+
+    const tx = nX(l.t);
+    const ty = nY[l.t] + (inUsed[l.t] || 0);
+    const lhT = (l.v / nodeSize(l.t)) * nH[l.t];
+    inUsed[l.t] = (inUsed[l.t] || 0) + lhT;
+
+    const mx = (sx + tx) / 2;
+    const path = d3.path();
+    path.moveTo(sx, sy);
+    path.bezierCurveTo(mx, sy, mx, ty, tx, ty);
+    path.lineTo(tx, ty + lhT);
+    path.bezierCurveTo(mx, ty + lhT, mx, sy + lh, sx, sy + lh);
+    path.closePath();
+
+    const ribbon = svg.append('path')
+      .attr('d', path.toString())
+      .attr('fill', NODE_COLORS[l.s])
+      .attr('opacity', 0)
+      .attr('stroke', 'none')
+      .attr('cursor', 'pointer');
+
+    ribbon.transition().delay(l.s * 40).duration(700).attr('opacity', 0.32);
+
+    ribbon.on('mouseenter', function(evt) {
+      d3.select(this).attr('opacity', 0.65);
+      showTip(evt, `<div class="tt-label">${NODES[l.s]} → ${NODES[l.t]}</div><div class="tt-value" style="color:${NODE_COLORS[l.s]}">${l.v} Mm³/yr</div><div class="tt-sub">${((l.v / (totalOut[l.s] || l.v)) * 100).toFixed(0)}% of source output</div>`);
+    })
+    .on('mousemove', evt => showTip(evt, tooltip.innerHTML))
+    .on('mouseleave', function() { d3.select(this).attr('opacity', 0.32); hideTip(); });
+  });
+
+  // Draw node rects + labels
+  cols.forEach((col, ci) => {
+    col.forEach(i => {
+      svg.append('rect')
+        .attr('x', nX(i)).attr('y', nY[i])
+        .attr('width', nodeW).attr('height', nH[i])
+        .attr('rx', 4).attr('fill', NODE_COLORS[i]).attr('fill-opacity', 0.7)
+        .attr('stroke', NODE_COLORS[i]).attr('stroke-width', 0.5).attr('stroke-opacity', 0.4);
+
+      const labelX = ci < 3 ? nX(i) + nodeW + 8 : nX(i) - 8;
+      const anchor  = ci < 3 ? 'start' : 'end';
+      svg.append('text')
+        .attr('x', labelX).attr('y', nY[i] + nH[i] / 2)
+        .attr('dy', '0.35em').attr('text-anchor', anchor)
+        .attr('fill', C.text).attr('font-size', 11)
+        .attr('font-family', "'DM Sans',sans-serif")
+        .text(NODES[i]);
+
+      // Volume label inside tall nodes
+      if (nH[i] > 20) {
+        const vol = Math.max(totalIn[i] || 0, totalOut[i] || 0);
+        svg.append('text')
+          .attr('x', nX(i) + nodeW / 2).attr('y', nY[i] + nH[i] / 2)
+          .attr('dy', '0.35em').attr('text-anchor', 'middle')
+          .attr('fill', C.bgDeep).attr('font-size', 8)
+          .attr('font-family', "'JetBrains Mono',monospace").attr('font-weight', 700)
+          .text(vol);
+      }
+    });
+  });
+
+  svg.append('text').attr('x', W / 2).attr('y', H - 8)
+    .attr('text-anchor', 'middle').attr('fill', C.textDim)
+    .attr('font-size', 9).attr('font-family', "'JetBrains Mono',monospace")
+    .text('Hover ribbons for flow detail · Values in Mm³/yr · ~1,925 Mm³ total annual input');
+};
+
+// Init first tab as rendered (it fired immediately on load)
+rendered['sed'] = true;
+</script>
+</body>
+</html>
