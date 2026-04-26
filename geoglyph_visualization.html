@@ -1,399 +1,227 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geoglyph Visualization - Geoglypha</title>
-    
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
-    
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
-    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
-    
-    <!-- Leaflet Awesome Markers -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
-    
-    <script src="https://cdn.jsdelivr.net/npm/earthengine-api@0.1.232/build/earthengine-api.min.js"></script>
-    <style>
-        :root {
-            --primary-color: #3a6351;
-            --secondary-color: #f2edd7;
-            --accent-color: #a0937d;
-            --text-color: #333;
-            --light-text: #f5f5f5;
-            --header-font: 'Georgia', serif;
-            --body-font: 'Arial', sans-serif;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: var(--body-font);
-            line-height: 1.6;
-            color: var(--text-color);
-            background-color: #f9f9f9;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-        
-        .container {
-            width: 90%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        /* Header Styles */
-        header {
-            background-color: var(--primary-color);
-            color: var(--light-text);
-            padding: 1rem 0;
-            position: relative;
-            z-index: 1000;
-        }
-        
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            font-family: var(--header-font);
-            font-size: 2rem;
-            font-weight: bold;
-        }
-        
-        .logo a {
-            color: var(--light-text);
-            text-decoration: none;
-        }
-        
-        nav ul {
-            display: flex;
-            list-style: none;
-        }
-        
-        nav ul li {
-            margin-left: 1.5rem;
-        }
-        
-        nav ul li a {
-            color: var(--light-text);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-        
-        nav ul li a:hover {
-            color: var(--secondary-color);
-        }
-        
-        .mobile-menu-btn {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--light-text);
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-        
-        /* Page Title Section */
-        .page-title {
-            background-color: var(--secondary-color);
-            padding: 1rem 0;
-            text-align: center;
-        }
-        
-        .page-title h1 {
-            font-family: var(--header-font);
-            font-size: 2.5rem;
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-        }
-        
-        .page-title p {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        /* Map Container */
-        .map-wrapper {
-            flex: 1;
-            position: relative;
-            padding-top: 0; /* Removed space for the header to maximize map area */
-        }
-        
-        #map_11fa091a775d8bad7e200017eb6df400 {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-        
-        /* Footer */
-        footer {
-            background-color: var(--primary-color);
-            color: var(--light-text);
-            padding: 1.5rem 0 0.75rem; /* Reduced padding */
-            margin-top: auto;
-        }
-        
-        .footer-content {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr); /* Reduced to 2 columns */
-            gap: 1rem; /* Reduced gap */
-            margin-bottom: 1rem; /* Reduced margin */
-        }
-        
-        .footer-column h3 {
-            font-family: var(--header-font);
-            margin-bottom: 0.75rem; /* Reduced margin */
-            font-size: 1rem; /* Smaller font size */
-        }
-        
-        .footer-column ul {
-            list-style: none;
-        }
-        
-        .footer-column ul li {
-            margin-bottom: 0.5rem; /* Reduced margin */
-        }
-        
-        .footer-column ul li a {
-            color: var(--light-text);
-            text-decoration: none;
-            transition: color 0.3s;
-            font-size: 0.9rem; /* Smaller font size */
-        }
-        
-        .footer-column ul li a:hover {
-            color: var(--secondary-color);
-        }
-        
-        .copyright {
-            text-align: center;
-            padding-top: 0.75rem; /* Reduced padding */
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.9rem; /* Smaller font size */
-        }
-        
-        /* Responsive Styles */
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                text-align: center;
-            }
-            
-            nav ul {
-                margin-top: 1rem;
-                flex-direction: column;
-                align-items: center;
-            }
-            
-            nav ul li {
-                margin: 0.5rem 0;
-            }
-            
-            .mobile-menu-btn {
-                display: block;
-                position: absolute;
-                top: 1rem;
-                right: 1rem;
-            }
-            
-            nav {
-                display: none;
-            }
-            
-            nav.active {
-                display: block;
-            }
-        }
-    </style>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Geoglyph Visualization &mdash; Geoglypha</title>
+	<meta name="description" content="Interactive visualization of geoglyphs and archaeological features in the Bolivian Amazon.">
+
+	<!-- Leaflet CSS -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+
+	<!-- Bootstrap CSS -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+	<link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+
+	<!-- Font Awesome -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+
+	<!-- Leaflet Awesome Markers -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+
+	<script src="https://cdn.jsdelivr.net/npm/earthengine-api@0.1.232/build/earthengine-api.min.js"></script>
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="assets/css/design-system.css">
+
+	<style>
+		/* Override bootstrap container conflict */
+		.page-header {
+			padding: 60px 8vw 48px;
+			border-bottom: 1px solid var(--rule);
+		}
+		.page-header .section-num { margin-bottom: 10px; }
+		.page-header h2 { margin-bottom: 16px; }
+		.page-header p {
+			font-family: 'Cormorant Garamond', serif;
+			font-style: italic;
+			font-size: clamp(18px, 2vw, 22px);
+			opacity: 0.8;
+			max-width: 60ch;
+		}
+		.map-section {
+			padding: 48px 24px 80px;
+		}
+		.map-wrapper {
+			position: relative;
+			width: 100%;
+			height: 600px;
+			border: 1px solid var(--rule);
+		}
+		#map_11fa091a775d8bad7e200017eb6df400 {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+		}
+		@media (max-width: 700px) {
+			.page-header { padding: 40px 24px 32px; }
+			.map-wrapper { height: 420px; }
+		}
+	</style>
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="container header-content">
-            <div class="logo">
-                <a href="index.html">Geoglypha</a>
-            </div>
-            <button class="mobile-menu-btn">☰</button>
-            <nav>
-                <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="cahokia.html">Cahokia</a></li>
-                    <li><a href="kml_to_geojson.html">Tools</a></li>
-                    <li><a href="index.html#about">About</a></li>
-                    <li><a href="index.html#contact">Contact</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
 
-    <!-- Page Title Section -->
-    <section class="page-title">
-        <div class="container">
-            <h1>Geoglyph Visualization</h1>
-            <p>Interactive mapping of geoglyphs and archaeological features.</p>
-        </div>
-    </section>
+<nav class="site-nav">
+	<div class="nav-inner">
+		<a href="index.html" class="nav-logo">Geoglypha</a>
+		<button class="nav-mobile-btn" aria-label="Toggle navigation">&#9776;</button>
+		<ul class="nav-links">
+			<li><a href="index.html">Home</a></li>
+			<li><a href="geography.html">Geography</a></li>
+			<li><a href="history.html">History</a></li>
+			<li><a href="index.html#projects">Projects</a></li>
+			<li><a href="https://www.geoglypha1.org/weather">Weather</a></li>
+			<li><a href="graphita/">Gallery</a></li>
+			<li><a href="index.html#about">About</a></li>
+			<li><a href="index.html#contact">Contact</a></li>
+		</ul>
+	</div>
+</nav>
 
-    <!-- Map Container - Preserving the original map functionality -->
-    <div class="map-wrapper">
-        <div class="folium-map" id="map_11fa091a775d8bad7e200017eb6df400"></div>
-    </div>
+<section class="page-header">
+	<span class="section-num">&#167; 01 &nbsp;&mdash;&nbsp; Interactive Map</span>
+	<h2>Geoglyph Visualization</h2>
+	<p>Interactive mapping of geoglyphs and geometric earthworks in the Bolivian Amazon, including circular and unknown-type features.</p>
+</section>
 
-    <!-- Footer - Smaller version -->
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-column">
-                    <h3>Quick Links</h3>
-                    <ul>
-                        <li><a href="index.html">Home</a></li>
-                        <li><a href="cahokia.html">Cahokia</a></li>
-                        <li><a href="index.html#tools">Tools</a></li>
-                    </ul>
-                </div>
-                <div class="footer-column">
-                    <h3>Resources</h3>
-                    <ul>
-                        <li><a href="index.html#tools">Geoprocessing Tools</a></li>
-                        <li><a href="#">Research Papers</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="copyright">
-                <p>&copy; <span id="year">2025</span> Geoglypha. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
+<section class="map-section">
+	<div class="container--wide">
+		<div class="map-wrapper">
+			<div id="map_11fa091a775d8bad7e200017eb6df400"></div>
+		</div>
+	</div>
+</section>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
-    
-    <script>
-        // Set current year in footer
-        document.getElementById('year').textContent = new Date().getFullYear();
-        
-        // Mobile menu toggle
-        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-        const nav = document.querySelector('nav');
-        
-        mobileMenuBtn.addEventListener('click', () => {
-            nav.classList.toggle('active');
-        });
-        
-        // Preserve the original map functionality
-        var map_11fa091a775d8bad7e200017eb6df400 = L.map(
-            "map_11fa091a775d8bad7e200017eb6df400",
-            {
-                center: [-11.766552999331651, -66.71029599290235],
-                crs: L.CRS.EPSG3857,
-                zoom: 8,
-                zoomControl: true,
-                preferCanvas: false,
-            }
-        );
+<div class="ornament">
+	<span class="glyph">&#10022;</span>
+	<span>II</span>
+	<span class="glyph">&#10022;</span>
+</div>
 
-        var tile_layer_f0a148ee65362cc9a9ffbf778505676f = L.tileLayer(
-            "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-            {
-                minZoom: 0,
-                maxZoom: 19,
-                maxNativeZoom: 19,
-                noWrap: false,
-                attribution: "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors",
-                subdomains: "abc",
-                detectRetina: false,
-                tms: false,
-                opacity: 1,
-            }
-        );
+<footer class="colophon">
+	<div class="colophon-ornament">&#10022; &nbsp; &#8297; &nbsp; &#10022;</div>
+	<nav class="colophon-nav">
+		<a href="index.html">Home</a>
+		<a href="geography.html">Geography</a>
+		<a href="history.html">History</a>
+		<a href="index.html#projects">Projects</a>
+		<a href="index.html#contact">Contact</a>
+	</nav>
+	<div class="colophon-meta">
+		<div>&copy; <span id="year"></span> Geoglypha &nbsp;&middot;&nbsp; Ryan Lafferty</div>
+	</div>
+</footer>
 
-        tile_layer_f0a148ee65362cc9a9ffbf778505676f.addTo(map_11fa091a775d8bad7e200017eb6df400);
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
 
-        // Load geoglyph points from API
-        var loadingDiv = document.createElement('div');
-        loadingDiv.id = 'map-loading';
-        loadingDiv.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1000;background:rgba(255,255,255,0.9);padding:1rem 2rem;border-radius:8px;font-family:Arial,sans-serif;';
-        loadingDiv.textContent = 'Loading geoglyph data...';
-        document.querySelector('.map-wrapper').appendChild(loadingDiv);
+<script>
+	document.getElementById('year').textContent = new Date().getFullYear();
 
-        fetch('https://tools.geoglypha1.org/api/geoglyphs')
-            .then(function(response) {
-                if (!response.ok) throw new Error('API unavailable');
-                return response.json();
-            })
-            .then(function(geojson) {
-                L.geoJSON(geojson, {
-                    pointToLayer: function(feature, latlng) {
-                        var color = feature.properties.type === 'circle' ? 'red' : 'gray';
-                        return L.circleMarker(latlng, {
-                            radius: 5,
-                            fillColor: color,
-                            color: color,
-                            weight: 3,
-                            opacity: 1.0,
-                            fillOpacity: 0.2
-                        });
-                    },
-                    onEachFeature: function(feature, layer) {
-                        var props = feature.properties;
-                        layer.bindPopup(
-                            '<div>Name: ' + props.name +
-                            '<br>Type: ' + (props.type || 'unknown') + '</div>'
-                        );
-                    }
-                }).addTo(map_11fa091a775d8bad7e200017eb6df400);
-                loadingDiv.remove();
-            })
-            .catch(function(err) {
-                console.warn('API fetch failed, using fallback data:', err);
-                loadingDiv.textContent = 'Loading local data...';
-                // Fallback: load hardcoded points if API is unavailable
-                var fallbackPoints = [
-                    {name: "abuc1", type: "circle", lat: -10.48284000161554, lon: -67.07037799917336},
-                    {name: "abuc2", type: "circle", lat: -10.28729799974037, lon: -67.07577000007602},
-                    {name: "abucc", type: "circle", lat: -10.46657400137342, lon: -67.21192700029695},
-                    {name: "abuge", type: "unknown", lat: -10.46333899988018, lon: -67.2094150007805},
-                    {name: "abung", type: "unknown", lat: -10.41260199819366, lon: -67.29513700037768},
-                    {name: "abucq", type: "unknown", lat: -10.4284909998873, lon: -67.1137099972466},
-                    {name: "abunc", type: "circle", lat: -10.306942, lon: -67.220174},
-                    {name: "abunq", type: "circle", lat: -10.30685900077723, lon: -67.21787199995943},
-                    {name: "abuno", type: "unknown", lat: -9.979387000098159, lon: -66.73494599878383},
-                    {name: "abuov", type: "unknown", lat: -10.07957900087295, lon: -66.86946699952472},
-                    {name: "acdc3", type: "circle", lat: -10.12735399971775, lon: -67.03417500004319},
-                    {name: "acdc4", type: "circle", lat: -10.075528, lon: -67.553878}
-                ];
-                fallbackPoints.forEach(function(pt) {
-                    var color = pt.type === 'circle' ? 'red' : 'gray';
-                    L.circleMarker([pt.lat, pt.lon], {
-                        radius: 5, fillColor: color, color: color,
-                        weight: 3, opacity: 1.0, fillOpacity: 0.2
-                    }).addTo(map_11fa091a775d8bad7e200017eb6df400)
-                      .bindPopup('<div>Name: ' + pt.name + '<br>Type: ' + pt.type + '</div>');
-                });
-                loadingDiv.remove();
-            });
+	const mobileBtn = document.querySelector('.nav-mobile-btn');
+	const navLinks  = document.querySelector('.nav-links');
+	if (mobileBtn && navLinks) {
+		mobileBtn.addEventListener('click', () => navLinks.classList.toggle('open'));
+		document.addEventListener('click', (e) => {
+			if (!mobileBtn.contains(e.target) && !navLinks.contains(e.target)) navLinks.classList.remove('open');
+		});
+	}
 
-    </script>
+	var map_11fa091a775d8bad7e200017eb6df400 = L.map(
+		"map_11fa091a775d8bad7e200017eb6df400",
+		{
+			center: [-11.766552999331651, -66.71029599290235],
+			crs: L.CRS.EPSG3857,
+			zoom: 8,
+			zoomControl: true,
+			preferCanvas: false,
+		}
+	);
+
+	var tile_layer_f0a148ee65362cc9a9ffbf778505676f = L.tileLayer(
+		"https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+		{
+			minZoom: 0,
+			maxZoom: 19,
+			maxNativeZoom: 19,
+			noWrap: false,
+			attribution: "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors",
+			subdomains: "abc",
+			detectRetina: false,
+			tms: false,
+			opacity: 1,
+		}
+	);
+
+	tile_layer_f0a148ee65362cc9a9ffbf778505676f.addTo(map_11fa091a775d8bad7e200017eb6df400);
+
+	var loadingDiv = document.createElement('div');
+	loadingDiv.id = 'map-loading';
+	loadingDiv.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1000;background:rgba(241,234,217,0.95);padding:1rem 2rem;border:1px solid var(--rule);font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;';
+	loadingDiv.textContent = 'Loading geoglyph data...';
+	document.querySelector('.map-wrapper').appendChild(loadingDiv);
+
+	fetch('https://tools.geoglypha1.org/api/geoglyphs')
+		.then(function(response) {
+			if (!response.ok) throw new Error('API unavailable');
+			return response.json();
+		})
+		.then(function(geojson) {
+			L.geoJSON(geojson, {
+				pointToLayer: function(feature, latlng) {
+					var color = feature.properties.type === 'circle' ? '#b8651a' : '#4a5234';
+					return L.circleMarker(latlng, {
+						radius: 5,
+						fillColor: color,
+						color: '#1a1612',
+						weight: 1,
+						opacity: 1.0,
+						fillOpacity: 0.7
+					});
+				},
+				onEachFeature: function(feature, layer) {
+					var props = feature.properties;
+					layer.bindPopup(
+						'<strong>' + props.name + '</strong><br>Type: ' + (props.type || 'unknown')
+					);
+				}
+			}).addTo(map_11fa091a775d8bad7e200017eb6df400);
+			loadingDiv.remove();
+		})
+		.catch(function(err) {
+			console.warn('API fetch failed, using fallback data:', err);
+			loadingDiv.textContent = 'Loading local data...';
+			var fallbackPoints = [
+				{name: "abuc1", type: "circle", lat: -10.48284000161554, lon: -67.07037799917336},
+				{name: "abuc2", type: "circle", lat: -10.28729799974037, lon: -67.07577000007602},
+				{name: "abucc", type: "circle", lat: -10.46657400137342, lon: -67.21192700029695},
+				{name: "abuge", type: "unknown", lat: -10.46333899988018, lon: -67.2094150007805},
+				{name: "abung", type: "unknown", lat: -10.41260199819366, lon: -67.29513700037768},
+				{name: "abucq", type: "unknown", lat: -10.4284909998873, lon: -67.1137099972466},
+				{name: "abunc", type: "circle", lat: -10.306942, lon: -67.220174},
+				{name: "abunq", type: "circle", lat: -10.30685900077723, lon: -67.21787199995943},
+				{name: "abuno", type: "unknown", lat: -9.979387000098159, lon: -66.73494599878383},
+				{name: "abuov", type: "unknown", lat: -10.07957900087295, lon: -66.86946699952472},
+				{name: "acdc3", type: "circle", lat: -10.12735399971775, lon: -67.03417500004319},
+				{name: "acdc4", type: "circle", lat: -10.075528, lon: -67.553878}
+			];
+			fallbackPoints.forEach(function(pt) {
+				var color = pt.type === 'circle' ? '#b8651a' : '#4a5234';
+				L.circleMarker([pt.lat, pt.lon], {
+					radius: 5, fillColor: color, color: '#1a1612',
+					weight: 1, opacity: 1.0, fillOpacity: 0.7
+				}).addTo(map_11fa091a775d8bad7e200017eb6df400)
+				  .bindPopup('<strong>' + pt.name + '</strong><br>Type: ' + pt.type);
+			});
+			loadingDiv.remove();
+		});
+</script>
 </body>
 </html>

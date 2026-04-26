@@ -3,14 +3,38 @@
 <head>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>Graphitia — Ryan Lafferty</title>
+	<title>Graphitia &mdash; Ryan Lafferty</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 	<link rel="stylesheet" href="gallery.css" />
+	<style>
+		/* Override gallery.css nav with Cinzel/JetBrains branding */
+		#site-header nav .nav-brand {
+			font-family: 'Cinzel', serif;
+			font-weight: 500;
+			font-size: 16px;
+			letter-spacing: 0.06em;
+			text-decoration: none;
+			opacity: 0.9;
+		}
+		#site-header nav .filter-btn {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 10px;
+			letter-spacing: 0.12em;
+		}
+		#piece-count {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 10px;
+			letter-spacing: 0.1em;
+		}
+	</style>
 </head>
 <body>
 
 	<header id="site-header">
 		<nav>
-			<a href="/" class="nav-brand">← geoglypha</a>
+			<a href="../index.html" class="nav-brand">&#8592; Geoglypha</a>
 			<div class="nav-filters" id="filter-bar">
 				<button class="filter-btn active" data-filter="all">all</button>
 				<button class="filter-btn" data-filter="painting">painting</button>
