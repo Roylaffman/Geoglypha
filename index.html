@@ -1,1140 +1,447 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geoglypha - History, Archaeology & Geography</title>
-    <style>
-        :root {
-            --primary-color: #3a6351;
-            --secondary-color: #f2edd7;
-            --accent-color: #a0937d;
-            --text-color: #333;
-            --light-text: #f5f5f5;
-            --header-font: 'Georgia', serif;
-            --body-font: 'Arial', sans-serif;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: var(--body-font);
-            line-height: 1.6;
-            color: var(--text-color);
-            background-color: #f9f9f9;
-        }
-        
-        .container {
-            width: 90%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-        
-        /* Header Styles */
-        header {
-            background-color: var(--primary-color);
-            color: var(--light-text);
-            padding: 1rem 0;
-            position: relative;
-        }
-        
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            font-family: var(--header-font);
-            font-size: 2rem;
-            font-weight: bold;
-        }
-        
-        .logo a {
-            color: var(--light-text);
-            text-decoration: none;
-        }
-        
-        nav ul {
-            display: flex;
-            list-style: none;
-        }
-        
-        nav ul li {
-            margin-left: 1.5rem;
-        }
-        
-        nav ul li a {
-            color: var(--light-text);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-        
-        nav ul li a:hover {
-            color: var(--secondary-color);
-        }
-        
-        .mobile-menu-btn {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--light-text);
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-        
-        /* Image Hero Section */
-        .hero {
-            height: 60vh;
-            background-image: url('https://via.placeholder.com/1600x900/3a6351/f5f5f5?text=Ancient+Landscapes');
-            background-size: cover;
-            background-position: center;
-            display: flex;
-            align-items: center;
-            position: relative;
-        }
-        
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        
-        .hero-content {
-            position: relative;
-            z-index: 1;
-            color: var(--light-text);
-            max-width: 800px;
-        }
-        
-        .hero h1 {
-            font-family: var(--header-font);
-            font-size: 3rem;
-            margin-bottom: 1rem;
-        }
-        
-        .hero p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-        }
-        
-        .btn {
-            display: inline-block;
-            background-color: var(--accent-color);
-            color: var(--light-text);
-            padding: 0.8rem 1.5rem;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-        
-        .btn:hover {
-            background-color: #8a7b69;
-        }
-        
-        /* Features Section */
-        .features {
-            padding: 4rem 0;
-            background-color: var(--secondary-color);
-        }
-        
-        .section-title {
-            text-align: center;
-            font-family: var(--header-font);
-            font-size: 2.5rem;
-            margin-bottom: 3rem;
-            color: var(--primary-color);
-        }
-        
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-        
-        .feature-card {
-            background-color: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s;
-        }
-        
-        .feature-card:hover {
-            transform: translateY(-10px);
-        }
-        
-        .feature-img {
-            height: 200px;
-            background-size: cover;
-            background-position: center;
-        }
-        
-        .feature-content {
-            padding: 1.5rem;
-        }
-        
-        .feature-content h3 {
-            font-family: var(--header-font);
-            margin-bottom: 1rem;
-            color: var(--primary-color);
-        }
-        
-        /* Projects Section */
-        .projects {
-            padding: 4rem 0;
-        }
-        
-        .projects-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-        
-        .project-card {
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            position: relative;
-        }
-        
-        .project-img {
-            height: 250px;
-            background-size: cover;
-            background-position: center;
-            position: relative;
-        }
-        
-        .project-img::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%);
-        }
-        
-        .project-content {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            padding: 1.5rem;
-            color: var(--light-text);
-        }
-        
-        .project-content h3 {
-            font-family: var(--header-font);
-            margin-bottom: 0.5rem;
-        }
-        
-        /* Maps Showcase Section */
-        .maps-showcase {
-            padding: 4rem 0;
-            background-color: #111;
-        }
-
-        .maps-showcase .section-title {
-            color: #f2edd7;
-        }
-
-        .maps-intro {
-            text-align: center;
-            color: #aaa;
-            font-size: 1rem;
-            margin-top: -2rem;
-            margin-bottom: 2.5rem;
-            letter-spacing: 0.03em;
-        }
-
-        .maps-hero-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .maps-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-
-        .maps-stack {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .map-card {
-            display: block;
-            position: relative;
-            overflow: hidden;
-            border-radius: 4px;
-            text-decoration: none;
-            background-size: cover;
-            background-position: center;
-        }
-
-        .map-card::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.12) 55%, transparent 100%);
-            transition: background 0.4s;
-        }
-
-        .map-card:hover::after {
-            background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.05) 100%);
-        }
-
-        .map-card--hero { height: 500px; }
-        .maps-stack .map-card { flex: 1; min-height: 245px; }
-        .maps-row .map-card { height: 240px; }
-
-        .map-card:hover img,
-        .map-card:hover { transform: none; }
-
-        .map-card-body {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 1.4rem 1.6rem;
-            z-index: 1;
-            transform: translateY(4px);
-            transition: transform 0.3s;
-        }
-
-        .map-card:hover .map-card-body { transform: translateY(0); }
-
-        .map-tag {
-            display: inline-block;
-            font-size: 0.68rem;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            color: var(--accent-color);
-            margin-bottom: 0.5rem;
-            font-family: var(--body-font);
-        }
-
-        .map-card-body h3 {
-            font-family: var(--header-font);
-            font-size: 1.25rem;
-            color: #f5f5f5;
-            margin-bottom: 0.35rem;
-            line-height: 1.3;
-        }
-
-        .map-card--hero .map-card-body h3 { font-size: 1.7rem; }
-
-        .map-card-body p {
-            font-size: 0.82rem;
-            color: rgba(245,245,245,0.72);
-            line-height: 1.5;
-            max-width: 38ch;
-            opacity: 0;
-            transition: opacity 0.3s 0.05s;
-        }
-
-        .map-card:hover .map-card-body p { opacity: 1; }
-        .map-card--hero .map-card-body p { opacity: 1; }
-
-        .view-more-btn {
-            display: block;
-            margin: 2.5rem auto 0;
-            text-align: center;
-            width: fit-content;
-        }
-
-        @media (max-width: 900px) {
-            .maps-hero-grid { grid-template-columns: 1fr; }
-            .map-card--hero { height: 320px; }
-            .maps-stack { flex-direction: row; }
-            .maps-stack .map-card { min-height: 200px; }
-            .maps-row { grid-template-columns: 1fr 1fr; }
-        }
-
-        @media (max-width: 600px) {
-            .maps-row { grid-template-columns: 1fr; }
-            .maps-stack { flex-direction: column; }
-        }
-        
-        /* Weather Section */
-        .weather {
-            padding: 4rem 0;
-            background-color: #fff;
-        }
-
-        .weather-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .weather-card {
-            background-color: var(--secondary-color);
-            border-radius: 8px;
-            padding: 1.5rem;
-            text-align: center;
-            text-decoration: none;
-            color: var(--text-color);
-            transition: transform 0.3s, box-shadow 0.3s;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-        }
-
-        .weather-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-        }
-
-        .weather-card-icon {
-            font-size: 2rem;
-            margin-bottom: 0.75rem;
-            display: block;
-        }
-
-        .weather-card h3 {
-            font-family: var(--header-font);
-            color: var(--primary-color);
-            margin-bottom: 0.5rem;
-        }
-
-        .weather-card p {
-            font-size: 0.9rem;
-            color: #555;
-        }
-
-        .weather-intro {
-            text-align: center;
-            max-width: 700px;
-            margin: 0 auto 2rem;
-        }
-
-        /* About Section */
-        .about {
-            padding: 4rem 0;
-            background-color: var(--secondary-color);
-        }
-        
-        .about-content {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 3rem;
-            align-items: center;
-        }
-        
-        .about-img {
-            height: 400px;
-            background-image: url('https://via.placeholder.com/800x600/a0937d/ffffff?text=About+Us');
-            background-size: cover;
-            background-position: center;
-            border-radius: 8px;
-        }
-        
-        .about-text h2 {
-            font-family: var(--header-font);
-            font-size: 2.5rem;
-            margin-bottom: 1.5rem;
-            color: var(--primary-color);
-        }
-        
-        /* Tools Section */
-        .tools {
-            padding: 4rem 0;
-        }
-        
-        .tools-content {
-            text-align: center;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .tools-content p {
-            margin-bottom: 2rem;
-        }
-        
-        /* Contact Section */
-        .contact {
-            padding: 4rem 0;
-            background-color: var(--secondary-color);
-        }
-        
-        .contact-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 3rem;
-        }
-        
-        .contact-info {
-            padding: 2rem;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .contact-info h3 {
-            font-family: var(--header-font);
-            margin-bottom: 1.5rem;
-            color: var(--primary-color);
-        }
-        
-        .contact-details {
-            margin-bottom: 2rem;
-        }
-        
-        .contact-item {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 1rem;
-        }
-        
-        .contact-icon {
-            margin-right: 1rem;
-            font-size: 1.2rem;
-            color: var(--primary-color);
-        }
-        
-        .social-links {
-            display: flex;
-            gap: 1rem;
-        }
-        
-        .social-link {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            background-color: var(--primary-color);
-            color: var(--light-text);
-            border-radius: 50%;
-            text-align: center;
-            line-height: 40px;
-            transition: background-color 0.3s;
-        }
-        
-        .social-link:hover {
-            background-color: var(--accent-color);
-        }
-        
-        .contact-form {
-            padding: 2rem;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .contact-form h3 {
-            font-family: var(--header-font);
-            margin-bottom: 1.5rem;
-            color: var(--primary-color);
-        }
-        
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 0.8rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-family: var(--body-font);
-        }
-        
-        textarea.form-control {
-            min-height: 150px;
-            resize: vertical;
-        }
-        
-        .submit-btn {
-            background-color: var(--primary-color);
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-        
-        .submit-btn:hover {
-            background-color: #2d4f40;
-        }
-        
-        /* Footer */
-        footer {
-            background-color: var(--primary-color);
-            color: var(--light-text);
-            padding: 3rem 0 1.5rem;
-        }
-        
-        .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-        
-        .footer-column h3 {
-            font-family: var(--header-font);
-            margin-bottom: 1.5rem;
-            font-size: 1.2rem;
-        }
-        
-        .footer-column ul {
-            list-style: none;
-        }
-        
-        .footer-column ul li {
-            margin-bottom: 0.8rem;
-        }
-        
-        .footer-column ul li a {
-            color: var(--light-text);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .footer-column ul li a:hover {
-            color: var(--secondary-color);
-        }
-        
-        .copyright {
-            text-align: center;
-            padding-top: 1.5rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        /* Responsive Styles */
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-                position: relative;
-            }
-
-            .logo {
-                font-size: 1.4rem;
-            }
-
-            .mobile-menu-btn {
-                display: block;
-                position: static;
-            }
-
-            nav {
-                display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                width: 100%;
-                background-color: var(--primary-color);
-                z-index: 1000;
-                padding: 1rem 0;
-            }
-
-            nav.active {
-                display: block;
-            }
-
-            nav ul {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            nav ul li {
-                margin: 0.5rem 0;
-                margin-left: 0;
-            }
-
-            .hero h1 {
-                font-size: 1.8rem;
-            }
-
-            .hero p {
-                font-size: 1rem;
-            }
-
-            .section-title {
-                font-size: 1.8rem;
-            }
-
-            .features-grid,
-            .projects-grid,
-            .gallery-grid,
-            .weather-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .about-content {
-                grid-template-columns: 1fr;
-            }
-
-            .about-img {
-                height: 300px;
-                order: -1;
-            }
-
-            .contact-container {
-                grid-template-columns: 1fr;
-            }
-
-            .footer-content {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                width: 95%;
-                padding: 0 10px;
-            }
-
-            .hero h1 {
-                font-size: 1.5rem;
-            }
-
-            .hero p {
-                font-size: 0.9rem;
-            }
-
-            .section-title {
-                font-size: 1.5rem;
-            }
-
-            .hero {
-                height: 50vh;
-            }
-        }
-    </style>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Geoglypha — History, Archaeology &amp; Geography</title>
+	<meta name="description" content="Exploring the intersection of history, archaeology, and geography through interactive maps, visualizations, and educational resources.">
+	<meta property="og:title" content="Geoglypha — History, Archaeology &amp; Geography">
+	<meta property="og:description" content="Exploring Earth's historical landscapes through interactive maps and field-report research.">
+	<meta property="og:type" content="website">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="assets/css/design-system.css">
 </head>
 <body>
-    <!-- Header -->
-    <header>
-        <div class="container header-content">
-            <div class="logo">
-                <a href="index.html">Geoglypha</a>
-            </div>
-            <button class="mobile-menu-btn">☰</button>
-            <nav>
-                <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="geography.html">Geography</a></li>
-                    <li><a href="history.html">History</a></li>
-                    <li><a href="#projects">Projects</a></li>
-                    <li><a href="https://www.geoglypha1.org/weather">Weather</a></li>
-                    <li><a href="graphita/">Gallery</a></li>
-                    <li><a href="/gallery/">AIC</a></li>
-                    <li><a href="https://tools.geoglypha1.org">Tools</a></li>
-                    <li><a href="supplies.html" style="color:#D8B4FE;">Supplies</a></li>
-                    <li><a href="stack.html" style="color:#86EFAC;">Stack</a></li>
-                    <li><a href="#about">About</a></li>
-                    <li><a href="#contact">Contact</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="container hero-content">
-            <h1>Exploring Earth's Historical Landscapes</h1>
-            <p>Discover the fascinating intersection of history, archaeology, and geography through interactive maps, visualizations, and educational resources.</p>
-            <a href="#features" class="btn">Explore Topics</a>
-        </div>
-    </section>
+<!-- Navigation -->
+<nav class="site-nav">
+	<div class="nav-inner">
+		<a href="index.html" class="nav-logo">Geoglypha</a>
+		<button class="nav-mobile-btn" aria-label="Toggle navigation">&#9776;</button>
+		<ul class="nav-links">
+			<li><a href="index.html">Home</a></li>
+			<li><a href="geography.html">Geography</a></li>
+			<li><a href="history.html">History</a></li>
+			<li><a href="#projects">Projects</a></li>
+			<li><a href="https://www.geoglypha1.org/weather">Weather</a></li>
+			<li><a href="graphita/">Gallery</a></li>
+			<li><a href="/gallery/">AIC</a></li>
+			<li><a href="https://tools.geoglypha1.org">Tools</a></li>
+			<li><a href="supplies.html" class="nav-special-purple">Supplies</a></li>
+			<li><a href="stack.html" class="nav-special-green">Stack</a></li>
+			<li><a href="#about">About</a></li>
+			<li><a href="#contact">Contact</a></li>
+		</ul>
+	</div>
+</nav>
 
-    <!-- Features Section -->
-    <section class="features" id="features">
-        <div class="container">
-            <h2 class="section-title">Educational Topics</h2>
-            <div class="features-grid">
-                <a href="cahokia.html" class="feature-card" style="text-decoration:none;color:inherit;">
-                    <div class="feature-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/hummingbird-Nasca.jpeg');"></div>
-                    <div class="feature-content">
-                        <h3>Archaeology</h3>
-                        <p>Explore ancient civilizations through archaeological discoveries and cutting-edge research methodologies.</p>
-                    </div>
-                </a>
-                <a href="history.html" class="feature-card" style="text-decoration:none;color:inherit;">
-                    <div class="feature-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/images/cuneiform_math.jpg');"></div>
-                    <div class="feature-content">
-                        <h3>History</h3>
-                        <p>Uncover the stories of past societies and their impact on our modern world through historical analysis.</p>
-                    </div>
-                </a>
-                <a href="geography.html" class="feature-card" style="text-decoration:none;color:inherit;">
-                    <div class="feature-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/greenmap.jpg');"></div>
-                    <div class="feature-content">
-                        <h3>Geography</h3>
-                        <p>Understand how landscapes shape human history and how humans have transformed the Earth over millennia.</p>
-                    </div>
-                </a>
-            </div>
-        </div>
-    </section>
+<!-- Hero -->
+<section class="hero">
+	<div class="hero-masthead">
+		<span>Vol. I &nbsp;/&nbsp; Field Reports</span>
+		<span>History &middot; Archaeology &middot; Geography</span>
+		<span>Est. 2024</span>
+	</div>
 
-    <!-- Projects Section -->
-    <section class="projects" id="projects">
-        <div class="container">
-            <h2 class="section-title">Featured Projects</h2>
-            <div class="projects-grid">
-                <div class="project-card">
-                    <div class="project-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/images/cahokia_woodhenge.jpg');"></div>
-                    <div class="project-content">
-                        <h3>Cahokia Mounds</h3>
-                        <p>Interactive mapping of North America's largest pre-Columbian city.</p>
-                        <a href="cahokia.html" class="btn">Explore</a>
-                    </div>
-                </div>
-                <div class="project-card">
-                    <div class="project-img" style="background-image: url('images/spider-nasca.jpg');"></div>
-                    <div class="project-content">
-                        <h3>Fazenda Colorada Geoglyphs</h3>
-                        <p>Using Machine Learning to Identify Amazonian Geoglyphs.</p>
-                        <a href="geoglyph_visualization.html" class="btn">Explore</a>
-                    </div>
-                </div>
-                <div class="project-card">
-                    <div class="project-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/cuneiform.jpg');"></div>
-                    <div class="project-content">
-                        <h3>Cuneiform Translator</h3>
-                        <p>Online Application for Translating English to Cuneiform Symbols.</p>
-                        <a href="cuneiform.html" class="btn">Explore</a>
-                    </div>
-                </div>
-                <div class="project-card">
-                    <div class="project-img" style="background-image: url('stonehengess.jpg'); background-position: center top;"></div>
-                    <div class="project-content">
-                        <h3>Stonehenge</h3>
-                        <p>A 3D model of the world-famous Stonehenge.</p>
-                        <a href="stonehenge.html" class="btn">Explore</a>
-                    </div>
-                </div>
-                <div class="project-card">
-                    <div class="project-img" style="background-image: url('images/phoenician-writing-9th-century.webp');"></div>
-                    <div class="project-content">
-                        <h3>Alphabet Evolution</h3>
-                        <p>Trace the development of writing systems from Phoenician to Greek alphabets and beyond.</p>
-                        <a href="alphabet_evolution.html" class="btn">Explore</a>
-                    </div>
-                </div>
-                <div class="project-card">
-                    <div class="project-img" style="background-image: url('https://www.geoglypha1.org/Lithium-Traditonal%20Sources.png');"></div>
-                    <div class="project-content">
-                        <h3>The Lithium Standoff</h3>
-                        <p>Geopolitics, ecology, and physics of the global lithium race.</p>
-                        <a href="lithium_analysis.html" class="btn">Explore</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+	<h1 class="hero-title">
+		Geoglypha
+		<span class="hero-subtitle">Exploring Earth's Historical Landscapes</span>
+	</h1>
 
-    <!-- Featured Maps Section -->
-    <section class="maps-showcase" id="maps">
-        <div class="container">
-            <h2 class="section-title">Featured Maps</h2>
-            <p class="maps-intro">Interactive maps, spatial analysis, and geographic storytelling.</p>
+	<p class="hero-deck">
+		Maps, data, and deep research at the intersection of ancient civilizations,
+		physical geography, and the long arc of human settlement.
+	</p>
 
-            <div class="maps-hero-grid">
-                <a href="https://www.geoglypha1.org/chimney-rock.html"
-                   class="map-card map-card--hero"
-                   style="background-image: url('images/chimney-rock/openbeta.jpg');"
-                   target="_blank" rel="noopener">
-                    <div class="map-card-body">
-                        <span class="map-tag">Interactive Map</span>
-                        <h3>Chimney Rock</h3>
-                        <p>535 million years of Blue Ridge geology mapped at the gorge scale. DEM hillshade, climbing areas, waterfalls, and the Helene impact zone.</p>
-                    </div>
-                </a>
+	<div class="hero-meta">
+		<div class="hero-meta-item">
+			<span class="lbl">Subject</span>
+			<span class="val">Archaeology &amp; Geography</span>
+		</div>
+		<div class="hero-meta-item">
+			<span class="lbl">Region</span>
+			<span class="val">Global</span>
+		</div>
+		<div class="hero-meta-item">
+			<span class="lbl">Period</span>
+			<span class="val">Prehistoric &mdash; Modern</span>
+		</div>
+		<div class="hero-meta-item">
+			<span class="lbl">Filed</span>
+			<span class="val">2024</span>
+		</div>
+	</div>
+</section>
 
-                <div class="maps-stack">
-                    <a href="https://www.geoglypha1.org/angkor-barays.html"
-                       class="map-card"
-                       style="background-image: url('images/west-baray.jpg');"
-                       target="_blank" rel="noopener">
-                        <div class="map-card-body">
-                            <span class="map-tag">Story Map</span>
-                            <h3>Angkor Wat Hydraulic System</h3>
-                            <p>How the Khmer Empire engineered water across 1,000 square kilometers.</p>
-                        </div>
-                    </a>
-                    <a href="https://www.geoglypha1.org/forest-carbon.html"
-                       class="map-card"
-                       style="background-image: url('images/helene_analysis.jpg');"
-                       target="_blank" rel="noopener">
-                        <div class="map-card-body">
-                            <span class="map-tag">Remote Sensing</span>
-                            <h3>After the Storm</h3>
-                            <p>Sentinel-1 SAR and Landsat NDVI analysis of Hurricane Helene forest damage.</p>
-                        </div>
-                    </a>
-                </div>
-            </div>
+<!-- Ornament I -->
+<div class="ornament">
+	<span class="glyph">&#10022;</span>
+	<span>I</span>
+	<span class="glyph">&#10022;</span>
+</div>
 
-            <div class="maps-row">
-                <a href="https://www.geoglypha1.org/argonauts_map.html"
-                   class="map-card"
-                   style="background-image: url('Argonaut_route1.jpg');"
-                   target="_blank" rel="noopener">
-                    <div class="map-card-body">
-                        <span class="map-tag">Story Map</span>
-                        <h3>The Argonauts</h3>
-                        <p>Tracing Jason's voyage across the ancient Mediterranean and Black Sea.</p>
-                    </div>
-                </a>
-                <a href="https://www.geoglypha1.org/sino-tibetan-towers.html"
-                   class="map-card"
-                   style="background-image: url('images/sino-tibetan-towers/danba-prettymaps.png'); background-position: top center;"
-                   target="_blank" rel="noopener">
-                    <div class="map-card-body">
-                        <span class="map-tag">Quarto Report</span>
-                        <h3>Stone Sentinels</h3>
-                        <p>The enigmatic watchtowers of the Sino-Tibetan borderlands.</p>
-                    </div>
-                </a>
-                <a href="https://www.geoglypha1.org/everglades-history.html"
-                   class="map-card"
-                   style="background-image: url('images/WatsonsPlace-RabbitKey.jpg');"
-                   target="_blank" rel="noopener">
-                    <div class="map-card-body">
-                        <span class="map-tag">Spatial History</span>
-                        <h3>The Outlaw Coast</h3>
-                        <p>Smuggling routes, lost settlements, and two centuries of contested Florida borderland ecology.</p>
-                    </div>
-                </a>
-            </div>
+<!-- Section 01: Topics -->
+<section class="section" id="features">
+	<div class="section-header">
+		<span class="section-num">&#167; 01 &nbsp;&mdash;&nbsp; Disciplines</span>
+		<h2>Educational Topics</h2>
+	</div>
 
-            <a href="geography.html" class="btn view-more-btn">View All Maps</a>
-        </div>
-    </section>
+	<div class="topic-grid">
+		<a href="cahokia.html" class="topic-card">
+			<div class="topic-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/hummingbird-Nasca.jpeg');"></div>
+			<div class="topic-body">
+				<h3>Archaeology</h3>
+				<p>Explore ancient civilizations through archaeological discoveries and cutting-edge research methodologies.</p>
+			</div>
+		</a>
+		<a href="history.html" class="topic-card">
+			<div class="topic-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/images/cuneiform_math.jpg');"></div>
+			<div class="topic-body">
+				<h3>History</h3>
+				<p>Uncover the stories of past societies and their impact on our modern world through historical analysis.</p>
+			</div>
+		</a>
+		<a href="geography.html" class="topic-card">
+			<div class="topic-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/greenmap.jpg');"></div>
+			<div class="topic-body">
+				<h3>Geography</h3>
+				<p>Understand how landscapes shape human history and how humans have transformed the Earth over millennia.</p>
+			</div>
+		</a>
+	</div>
+</section>
 
-    <!-- Weather Section -->
-    <section class="weather" id="weather">
-        <div class="container">
-            <h2 class="section-title">Weather Analysis</h2>
-            <div class="weather-intro">
-                <p>Explore our detailed analysis of weather patterns in Asheville, NC during the significant storm system of September 25-29, 2024.</p>
-            </div>
-            <div class="weather-grid">
-                <a href="https://www.geoglypha1.org/weather/dashboard.html" class="weather-card">
-                    <span class="weather-card-icon">📍</span>
-                    <h3>Live Dashboard</h3>
-                    <p>Real-time weather map with current conditions and 7-day forecast</p>
-                </a>
-                <a href="https://www.geoglypha1.org/weather/temperature_chart.html" class="weather-card">
-                    <span class="weather-card-icon">🌡</span>
-                    <h3>Temperature</h3>
-                    <p>15.4-23.7°C fluctuations during the storm period</p>
-                </a>
-                <a href="https://www.geoglypha1.org/weather/precipitation_chart.html" class="weather-card">
-                    <span class="weather-card-icon">🌧</span>
-                    <h3>Precipitation</h3>
-                    <p>107.3 mm in 48 hours with 18 mm/hr peak</p>
-                </a>
-                <a href="https://www.geoglypha1.org/weather/wind_speed_chart.html" class="weather-card">
-                    <span class="weather-card-icon">💨</span>
-                    <h3>Wind Speed</h3>
-                    <p>Gusts reaching 50.3 km/h during storm center</p>
-                </a>
-                <a href="https://www.geoglypha1.org/weather/barometric_pressure_chart.html" class="weather-card">
-                    <span class="weather-card-icon">📊</span>
-                    <h3>Pressure</h3>
-                    <p>Dramatic drop to 980.7 hPa on Sept 27</p>
-                </a>
-            </div>
-        </div>
-    </section>
+<!-- Ornament II -->
+<div class="ornament">
+	<span class="glyph">&#8297;</span>
+	<span>II</span>
+	<span class="glyph">&#8297;</span>
+</div>
 
-    <!-- About Section -->
-    <section class="about" id="about">
-        <div class="container">
-            <div class="about-content">
-                <div class="about-text">
-                    <h2>About This Project</h2>
-                    <p>Geoglypha is an educational platform dedicated to exploring the intersection of history, archaeology, and geography. Our mission is to provide accessible, interactive resources that help people understand how past civilizations shaped our world.</p>
-                    <p>Through a combination of interactive maps, data visualizations, and educational content, we aim to bring ancient landscapes to life and make complex historical and geographical concepts more accessible.</p>
-                    <p>This project leverages modern web technologies, Python libraries, and Google Earth Engine to create powerful geoprocessing tools for educational purposes.</p>
-                </div>
-                <div class="about-img"></div>
-            </div>
-        </div>
-    </section>
+<!-- Section 02: Projects -->
+<section class="section" id="projects">
+	<div class="section-header">
+		<span class="section-num">&#167; 02 &nbsp;&mdash;&nbsp; Featured Work</span>
+		<h2>Projects</h2>
+	</div>
 
-    <!-- Tools Section -->
-    <section class="tools" id="tools">
-        <div class="container">
-            <h2 class="section-title">Geoprocessing Tools</h2>
-            <div class="tools-content">
-                <p>We're developing a suite of interactive geoprocessing tools using Python libraries and Google Earth Engine API to help visualize and analyze historical and archaeological data.</p>
-                <p>These tools will allow users to explore historical landscapes, analyze settlement patterns, and understand the geographical context of historical events.</p>
-                <p>Stay tuned as we continue to develop and release these tools!</p>
-                <p> https://storage.googleapis.com/geoglypha1/kml_to_geojson.html</p>
-            </div>
-        </div>
-    </section>
+	<div class="projects-grid">
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/images/cahokia_woodhenge.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Interactive Map</span>
+				<h3>Cahokia Mounds</h3>
+				<p>Interactive mapping of North America's largest pre-Columbian city, reconstructed at the site scale.</p>
+				<a href="cahokia.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
 
-    <!-- Contact Section -->
-    <section class="contact" id="contact">
-        <div class="container">
-            <h2 class="section-title">Contact Us</h2>
-            <div class="contact-container">
-                <div class="contact-info">
-                    <h3>Get In Touch</h3>
-                    <div class="contact-details">
-                        <div class="contact-item">
-                            <div class="contact-icon">📍</div>
-                            <div>
-                                <h4>Location</h4>
-                                <p>Your Organization Address</p>
-                            </div>
-                        </div>
-                        <div class="contact-item">
-                            <div class="contact-icon">📧</div>
-                            <div>
-                                <h4>Email</h4>
-                                <p>contact@yourdomain.com</p>
-                            </div>
-                        </div>
-                        <div class="contact-item">
-                            <div class="contact-icon">📱</div>
-                            <div>
-                                <h4>Phone</h4>
-                                <p>+1 (123) 456-7890</p>
-                            </div>
-                        </div>
-                    </div>
-                    <h3>Follow Us</h3>
-                    <div class="social-links">
-                        <a href="https://www.facebook.com/nrrryan.nafferty1" class="social-link">FB</a>
-                        <a href="https://x.com/LaffRyan" class="social-link">X</a>
-                        <a href="https://www.instagram.com/laffmasterpatta/" class="social-link">IG</a>
-                        <a href="https://www.tiktok.com/@ryan.laff8" class="social-link">TT</a>
-                        <a href="https://ryanplafferty.substack.com/" class="social-link">SS</a>
-                    </div>
-                </div>
-                <div class="contact-form">
-                    <h3>Send Us a Message</h3>
-                    <form id="contactForm">
-                        <div class="form-group">
-                            <label for="name">Your Name</label>
-                            <input type="text" id="name" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="email">Your Email</label>
-                            <input type="email" id="email" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="subject">Subject</label>
-                            <input type="text" id="subject" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="message">Your Message</label>
-                            <textarea id="message" class="form-control" required></textarea>
-                        </div>
-                        <button type="submit" class="btn submit-btn">Send Message</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </section>
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('images/spider-nasca.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">ML Analysis</span>
+				<h3>Fazenda Colorada Geoglyphs</h3>
+				<p>Using machine learning to identify and classify Amazonian geoglyphs from satellite imagery.</p>
+				<a href="geoglyph_visualization.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
 
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-column">
-                    <h3>Geoglypha</h3>
-                    <p>Exploring Earth's Historical Landscapes through the lens of archaeology, history, and geography.</p>
-                </div>
-                <div class="footer-column">
-                    <h3>Quick Links</h3>
-                    <ul>
-                        <li><a href="index.html">Home</a></li>
-                        <li><a href="cahokia.html">Cahokia</a></li>
-                        <li><a href="history.html">History</a></li>
-                        <li><a href="https://www.geoglypha1.org/weather">Weather</a></li>
-                        <li><a href="#projects">Projects</a></li>
-                        <li><a href="graphita/">Gallery</a></li>
-                        <li><a href="/gallery/">AIC</a></li>
-                        <li><a href="https://tools.geoglypha1.org">Tools</a></li>
-                        <li><a href="supplies.html">Supplies</a></li>
-                        <li><a href="#about">About</a></li>
-                    </ul>
-                </div>
-                <div class="footer-column">
-                    <h3>Resources</h3>
-                    <ul>
-                        <li><a href="#tools">Geoprocessing Tools</a></li>
-                        <li><a href="#">Educational Materials</a></li>
-                        <li><a href="#">Research Papers</a></li>
-                    </ul>
-                </div>
-                <div class="footer-column">
-                    <h3>Legal</h3>
-                    <ul>
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Terms of Use</a></li>
-                        <li><a href="#">Copyright Information</a></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="copyright">
-                <p>&copy; <span id="year">2025</span> Geoglypha. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/cuneiform.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Web App</span>
+				<h3>Cuneiform Translator</h3>
+				<p>Online application for translating English text to Cuneiform symbols from ancient Mesopotamia.</p>
+				<a href="cuneiform.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
 
-    <script>
-        // Set current year in footer
-        document.getElementById('year').textContent = new Date().getFullYear();
-        
-        // Mobile menu toggle
-        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-        const nav = document.querySelector('nav');
-        
-        mobileMenuBtn.addEventListener('click', () => {
-            nav.classList.toggle('active');
-        });
-        
-        // Contact form submission
-        const contactForm = document.getElementById('contactForm');
-        if (contactForm) {
-            contactForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                // In a real implementation, you would send the form data to a server
-                alert('Thank you for your message! We will get back to you soon.');
-                contactForm.reset();
-            });
-        }
-        
-        // Gallery image hover effect enhancement
-        const galleryItems = document.querySelectorAll('.gallery-item');
-        galleryItems.forEach(item => {
-            item.addEventListener('mouseenter', function() {
-                this.querySelector('.gallery-caption').style.transform = 'translateY(0)';
-            });
-            
-            item.addEventListener('mouseleave', function() {
-                this.querySelector('.gallery-caption').style.transform = 'translateY(100%)';
-            });
-        });
-    </script>
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('stonehengess.jpg'); background-position: center top;"></div>
+			<div class="book-feature-body">
+				<span class="stamp">3D Model</span>
+				<h3>Stonehenge</h3>
+				<p>A 3D model and spatial analysis of the world-famous Neolithic monument on Salisbury Plain.</p>
+				<a href="stonehenge.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
+
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('images/phoenician-writing-9th-century.webp');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Data Visualization</span>
+				<h3>Alphabet Evolution</h3>
+				<p>Tracing the development of writing systems from Phoenician to Greek alphabets and beyond.</p>
+				<a href="alphabet_evolution.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
+
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://www.geoglypha1.org/Lithium-Traditonal%20Sources.png');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Geopolitics</span>
+				<h3>The Lithium Standoff</h3>
+				<p>Geopolitics, ecology, and physics of the global lithium race across South America and beyond.</p>
+				<a href="lithium_analysis.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- Featured Maps: Inverted Dark Block -->
+<section class="maps-section" id="maps">
+	<div class="container--wide">
+		<div class="section-header">
+			<span class="section-num">&#167; 03 &nbsp;&mdash;&nbsp; Cartography</span>
+			<h2>Featured Maps</h2>
+			<p class="maps-intro">Interactive maps, spatial analysis, and geographic storytelling.</p>
+		</div>
+
+		<div class="maps-hero-grid">
+			<a href="https://www.geoglypha1.org/chimney-rock.html"
+			   class="map-card map-card--hero"
+			   style="background-image: url('images/chimney-rock/openbeta.jpg');"
+			   target="_blank" rel="noopener">
+				<div class="map-card-body">
+					<span class="map-tag">Interactive Map</span>
+					<h3>Chimney Rock</h3>
+					<p>535 million years of Blue Ridge geology mapped at the gorge scale. DEM hillshade, climbing areas, waterfalls, and the Helene impact zone.</p>
+				</div>
+			</a>
+
+			<div class="maps-stack">
+				<a href="https://www.geoglypha1.org/angkor-barays.html"
+				   class="map-card"
+				   style="background-image: url('images/west-baray.jpg');"
+				   target="_blank" rel="noopener">
+					<div class="map-card-body">
+						<span class="map-tag">Story Map</span>
+						<h3>Angkor Hydraulic System</h3>
+						<p>How the Khmer Empire engineered water across 1,000 square kilometers.</p>
+					</div>
+				</a>
+				<a href="https://www.geoglypha1.org/forest-carbon.html"
+				   class="map-card"
+				   style="background-image: url('images/helene_analysis.jpg');"
+				   target="_blank" rel="noopener">
+					<div class="map-card-body">
+						<span class="map-tag">Remote Sensing</span>
+						<h3>After the Storm</h3>
+						<p>Sentinel-1 SAR and Landsat NDVI analysis of Hurricane Helene forest damage.</p>
+					</div>
+				</a>
+			</div>
+		</div>
+
+		<div class="maps-row">
+			<a href="https://www.geoglypha1.org/argonauts_map.html"
+			   class="map-card"
+			   style="background-image: url('Argonaut_route1.jpg');"
+			   target="_blank" rel="noopener">
+				<div class="map-card-body">
+					<span class="map-tag">Story Map</span>
+					<h3>The Argonauts</h3>
+					<p>Tracing Jason's voyage across the ancient Mediterranean and Black Sea.</p>
+				</div>
+			</a>
+			<a href="https://www.geoglypha1.org/sino-tibetan-towers.html"
+			   class="map-card"
+			   style="background-image: url('images/sino-tibetan-towers/danba-prettymaps.png'); background-position: top center;"
+			   target="_blank" rel="noopener">
+				<div class="map-card-body">
+					<span class="map-tag">Quarto Report</span>
+					<h3>Stone Sentinels</h3>
+					<p>The enigmatic watchtowers of the Sino-Tibetan borderlands.</p>
+				</div>
+			</a>
+			<a href="https://www.geoglypha1.org/everglades-history.html"
+			   class="map-card"
+			   style="background-image: url('images/WatsonsPlace-RabbitKey.jpg');"
+			   target="_blank" rel="noopener">
+				<div class="map-card-body">
+					<span class="map-tag">Spatial History</span>
+					<h3>The Outlaw Coast</h3>
+					<p>Smuggling routes, lost settlements, and two centuries of contested Florida borderland ecology.</p>
+				</div>
+			</a>
+		</div>
+
+		<div class="view-more-wrap">
+			<a href="geography.html" class="btn-editorial btn-editorial--inverted">View All Maps</a>
+		</div>
+	</div>
+</section>
+
+<!-- Ornament III -->
+<div class="ornament">
+	<span class="glyph">&#10022;</span>
+	<span>IV</span>
+	<span class="glyph">&#10022;</span>
+</div>
+
+<!-- Section 04: Weather Analysis -->
+<section class="weather-section" id="weather">
+	<div class="section-header container--wide">
+		<span class="section-num">&#167; 04 &nbsp;&mdash;&nbsp; Field Data</span>
+		<h2>Weather Analysis</h2>
+	</div>
+
+	<div class="reading-list">
+		<a href="https://www.geoglypha1.org/weather/dashboard.html" class="reading-item">
+			<span class="reading-num">I</span>
+			<div class="reading-body">
+				<span class="reading-meta">Live Dashboard</span>
+				<h3>Current Conditions</h3>
+				<p>Real-time weather map with current conditions and 7-day forecast for Asheville, NC.</p>
+			</div>
+		</a>
+		<a href="https://www.geoglypha1.org/weather/temperature_chart.html" class="reading-item">
+			<span class="reading-num">II</span>
+			<div class="reading-body">
+				<span class="reading-meta">Temperature Analysis</span>
+				<h3>Thermal Record</h3>
+				<p>15.4&ndash;23.7&deg;C fluctuations during the Hurricane Helene storm period, September 2024.</p>
+			</div>
+		</a>
+		<a href="https://www.geoglypha1.org/weather/precipitation_chart.html" class="reading-item">
+			<span class="reading-num">III</span>
+			<div class="reading-body">
+				<span class="reading-meta">Precipitation Analysis</span>
+				<h3>107.3 mm in 48 Hours</h3>
+				<p>Rainfall intensity reaching 18 mm/hr at peak inflow, mapped against the storm track.</p>
+			</div>
+		</a>
+		<a href="https://www.geoglypha1.org/weather/wind_speed_chart.html" class="reading-item">
+			<span class="reading-num">IV</span>
+			<div class="reading-body">
+				<span class="reading-meta">Wind Analysis</span>
+				<h3>Gusts to 50.3 km/h</h3>
+				<p>Wind velocity and direction recorded at the storm center passage on September 27.</p>
+			</div>
+		</a>
+		<a href="https://www.geoglypha1.org/weather/barometric_pressure_chart.html" class="reading-item">
+			<span class="reading-num">V</span>
+			<div class="reading-body">
+				<span class="reading-meta">Pressure Analysis</span>
+				<h3>980.7 hPa Low</h3>
+				<p>Dramatic barometric drop marking the passage of the low-pressure center.</p>
+			</div>
+		</a>
+	</div>
+</section>
+
+<!-- Ornament IV -->
+<div class="ornament">
+	<span class="glyph">&#8297;</span>
+	<span>V</span>
+	<span class="glyph">&#8297;</span>
+</div>
+
+<!-- Section 05: About -->
+<section class="about-section" id="about">
+	<span class="section-num">&#167; 05 &nbsp;&mdash;&nbsp; The Project</span>
+	<h2>About Geoglypha</h2>
+	<br>
+	<div class="prose">
+		<p class="lead">Geoglypha is an educational platform dedicated to exploring the intersection of history, archaeology, and geography. The mission is to provide accessible, interactive resources that help people understand how past civilizations shaped our world.</p>
+		<p>Through a combination of interactive maps, data visualizations, and field-report writing, the work aims to bring ancient landscapes to life and make complex historical and geographical concepts approachable to anyone with curiosity about the deep past.</p>
+		<p>The platform uses modern web technologies, Python geospatial libraries, and Google Earth Engine to create geoprocessing tools built for educational purposes. Research is primary; spectacle is secondary.</p>
+	</div>
+</section>
+
+<!-- Section 06: Contact -->
+<section class="contact-section" id="contact">
+	<div class="contact-inner">
+		<span class="section-num">&#167; 06 &nbsp;&mdash;&nbsp; Correspondence</span>
+		<h2>Contact</h2>
+
+		<div class="contact-grid">
+			<div>
+				<span class="contact-info-head">Follow the Work</span>
+				<div class="social-links">
+					<a href="https://www.facebook.com/nrrryan.nafferty1" class="social-link">Facebook</a>
+					<a href="https://x.com/LaffRyan" class="social-link">X / Twitter</a>
+					<a href="https://www.instagram.com/laffmasterpatta/" class="social-link">Instagram</a>
+					<a href="https://www.tiktok.com/@ryan.laff8" class="social-link">TikTok</a>
+					<a href="https://ryanplafferty.substack.com/" class="social-link">Substack</a>
+				</div>
+			</div>
+
+			<div>
+				<form id="contactForm">
+					<div class="form-group">
+						<label for="name">Name</label>
+						<input type="text" id="name" class="form-control" required>
+					</div>
+					<div class="form-group">
+						<label for="email">Email</label>
+						<input type="email" id="email" class="form-control" required>
+					</div>
+					<div class="form-group">
+						<label for="subject">Subject</label>
+						<input type="text" id="subject" class="form-control" required>
+					</div>
+					<div class="form-group">
+						<label for="message">Message</label>
+						<textarea id="message" class="form-control" required></textarea>
+					</div>
+					<button type="submit" class="btn-editorial">Send Message</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- Colophon -->
+<footer class="colophon">
+	<div class="colophon-ornament">&#10022; &nbsp; &#8297; &nbsp; &#10022;</div>
+
+	<nav class="colophon-nav">
+		<a href="index.html">Home</a>
+		<a href="geography.html">Geography</a>
+		<a href="history.html">History</a>
+		<a href="cahokia.html">Cahokia</a>
+		<a href="https://www.geoglypha1.org/weather">Weather</a>
+		<a href="graphita/">Gallery</a>
+		<a href="https://tools.geoglypha1.org">Tools</a>
+		<a href="supplies.html">Supplies</a>
+		<a href="#about">About</a>
+	</nav>
+
+	<div class="colophon-meta">
+		<div>&copy; <span id="year"></span> Geoglypha &nbsp;&middot;&nbsp; Ryan Lafferty</div>
+		<div>History &middot; Archaeology &middot; Geography</div>
+	</div>
+</footer>
+
+<script>
+	document.getElementById('year').textContent = new Date().getFullYear();
+
+	// Mobile nav toggle
+	const mobileBtn = document.querySelector('.nav-mobile-btn');
+	const navLinks  = document.querySelector('.nav-links');
+	if (mobileBtn && navLinks) {
+		mobileBtn.addEventListener('click', () => {
+			navLinks.classList.toggle('open');
+		});
+		document.addEventListener('click', (e) => {
+			if (!mobileBtn.contains(e.target) && !navLinks.contains(e.target)) {
+				navLinks.classList.remove('open');
+			}
+		});
+	}
+
+	// Contact form
+	const contactForm = document.getElementById('contactForm');
+	if (contactForm) {
+		contactForm.addEventListener('submit', function(e) {
+			e.preventDefault();
+			alert('Thank you for your message. We will be in touch shortly.');
+			contactForm.reset();
+		});
+	}
+</script>
 </body>
 </html>

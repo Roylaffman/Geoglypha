@@ -1,471 +1,289 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geography - Geoglypha</title>
-    <style>
-        :root {
-            --primary-color: #3a6351;
-            --secondary-color: #f2edd7;
-            --accent-color: #a0937d;
-            --text-color: #333;
-            --light-text: #f5f5f5;
-            --header-font: 'Georgia', serif;
-            --body-font: 'Arial', sans-serif;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: var(--body-font);
-            line-height: 1.6;
-            color: var(--text-color);
-            background-color: #f9f9f9;
-        }
-
-        .container {
-            width: 90%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        header {
-            background-color: var(--primary-color);
-            color: var(--light-text);
-            padding: 1rem 0;
-            position: relative;
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-family: var(--header-font);
-            font-size: 2rem;
-            font-weight: bold;
-        }
-
-        .logo a {
-            color: var(--light-text);
-            text-decoration: none;
-        }
-
-        nav ul {
-            display: flex;
-            list-style: none;
-        }
-
-        nav ul li {
-            margin-left: 1.5rem;
-        }
-
-        nav ul li a {
-            color: var(--light-text);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-
-        nav ul li a:hover {
-            color: var(--secondary-color);
-        }
-
-        .mobile-menu-btn {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--light-text);
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        .page-hero {
-            background-color: var(--primary-color);
-            color: var(--light-text);
-            padding: 3rem 0;
-            text-align: center;
-        }
-
-        .page-hero h1 {
-            font-family: var(--header-font);
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .page-hero p {
-            font-size: 1.1rem;
-            max-width: 700px;
-            margin: 0 auto;
-            opacity: 0.9;
-        }
-
-        .content-section {
-            padding: 4rem 0;
-        }
-
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-
-        .geo-card {
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-
-        .geo-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-        }
-
-        .card-img {
-            height: 200px;
-            background-size: cover;
-            background-position: center;
-            background-color: var(--accent-color);
-        }
-
-        .card-body {
-            padding: 1.5rem;
-        }
-
-        .card-body h3 {
-            font-family: var(--header-font);
-            font-size: 1.4rem;
-            color: var(--primary-color);
-            margin-bottom: 0.75rem;
-        }
-
-        .card-body p {
-            margin-bottom: 1.5rem;
-            color: #555;
-        }
-
-        .card-badge {
-            display: inline-block;
-            background-color: var(--secondary-color);
-            color: var(--primary-color);
-            padding: 0.25rem 0.75rem;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            margin-bottom: 0.75rem;
-        }
-
-        .btn {
-            display: inline-block;
-            background-color: var(--accent-color);
-            color: var(--light-text);
-            padding: 0.6rem 1.2rem;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            transition: background-color 0.3s;
-        }
-
-        .btn:hover {
-            background-color: #8a7b69;
-        }
-
-        .btn-disabled {
-            background-color: #ccc;
-            cursor: default;
-        }
-
-        .btn-disabled:hover {
-            background-color: #ccc;
-        }
-
-        footer {
-            background-color: var(--primary-color);
-            color: var(--light-text);
-            padding: 2rem 0;
-            text-align: center;
-        }
-
-        footer p {
-            opacity: 0.8;
-        }
-
-        footer a {
-            color: var(--secondary-color);
-            text-decoration: none;
-        }
-
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-                position: relative;
-            }
-
-            .logo {
-                font-size: 1.4rem;
-            }
-
-            .mobile-menu-btn {
-                display: block;
-                position: static;
-            }
-
-            nav {
-                display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                width: 100%;
-                background-color: var(--primary-color);
-                z-index: 1000;
-                padding: 1rem 0;
-            }
-
-            nav.active {
-                display: block;
-            }
-
-            nav ul {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            nav ul li {
-                margin: 0.5rem 0;
-                margin-left: 0;
-            }
-
-            .page-hero h1 {
-                font-size: 1.8rem;
-            }
-
-            .cards-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Geography &amp; Maps &mdash; Geoglypha</title>
+	<meta name="description" content="Interactive maps and spatial analysis exploring landscapes, environments, and the geographic forces that shape our world.">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="assets/css/design-system.css">
 </head>
 <body>
-    <header>
-        <div class="container header-content">
-            <div class="logo">
-                <a href="index.html">Geoglypha</a>
-            </div>
-            <button class="mobile-menu-btn">&#9776;</button>
-            <nav>
-                <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="cahokia.html">Cahokia</a></li>
-                    <li><a href="history.html">History</a></li>
-                    <li><a href="geography.html">Geography</a></li>
-                    <li><a href="https://www.geoglypha1.org/weather">Weather</a></li>
-                    <li><a href="https://tools.geoglypha1.org">Tools</a></li>
-                    <li><a href="index.html#about">About</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
 
-    <section class="page-hero">
-        <div class="container">
-            <h1>Geography & Maps</h1>
-            <p>Interactive maps and spatial analysis exploring landscapes, environments, and the geographic forces that shape our world.</p>
-        </div>
-    </section>
+<!-- Navigation -->
+<nav class="site-nav">
+	<div class="nav-inner">
+		<a href="index.html" class="nav-logo">Geoglypha</a>
+		<button class="nav-mobile-btn" aria-label="Toggle navigation">&#9776;</button>
+		<ul class="nav-links">
+			<li><a href="index.html">Home</a></li>
+			<li><a href="geography.html">Geography</a></li>
+			<li><a href="history.html">History</a></li>
+			<li><a href="index.html#projects">Projects</a></li>
+			<li><a href="https://www.geoglypha1.org/weather">Weather</a></li>
+			<li><a href="graphita/">Gallery</a></li>
+			<li><a href="https://tools.geoglypha1.org">Tools</a></li>
+			<li><a href="supplies.html" class="nav-special-purple">Supplies</a></li>
+			<li><a href="stack.html" class="nav-special-green">Stack</a></li>
+			<li><a href="index.html#about">About</a></li>
+			<li><a href="index.html#contact">Contact</a></li>
+		</ul>
+	</div>
+</nav>
 
-    <section class="content-section">
-        <div class="container">
-            <div class="cards-grid">
-                <div class="geo-card">
-                    <div class="card-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/greenmap.jpg');"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Interactive Map</span>
-                        <h3>Cahokia Mounds</h3>
-                        <p>Interactive Leaflet.js map of North America's largest pre-Columbian settlement, featuring mound locations and boundary overlays.</p>
-                        <a href="cahokia.html" class="btn">Explore Map</a>
-                    </div>
-                </div>
+<!-- Hero -->
+<section class="hero">
+	<div class="hero-masthead">
+		<span>Geoglypha &nbsp;/&nbsp; Field Reports</span>
+		<span>Geography &middot; Cartography &middot; Remote Sensing</span>
+		<span>Vol. II</span>
+	</div>
 
-                <div class="geo-card">
-                    <div class="card-img" style="background-image: url('https://www.geoglypha1.org/Lithium-Traditonal%20Sources.png');"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Geopolitics</span>
-                        <h3>The Lithium Standoff</h3>
-                        <p>Mapping the geopolitics, ecology, and physics of the global lithium race across continents.</p>
-                        <a href="lithium_analysis.html" class="btn">Explore</a>
-                    </div>
-                </div>
+	<h1 class="hero-title">
+		Geography
+		<span class="hero-subtitle">&amp; Maps</span>
+	</h1>
 
-                <div class="geo-card">
-                    <div class="card-img" style="background-image: url('https://www.geoglypha1.org/Evergladesphoto.jpg');"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Quarto Report</span>
-                        <h3>Florida Everglades</h3>
-                        <p>Spatial analysis and mapping of the Florida Everglades ecosystem using Quarto and interactive visualizations.</p>
-                        <a href="everglades-historical.html" class="btn">Explore</a>
-                    </div>
-                </div>
+	<p class="hero-deck">
+		Interactive maps and spatial analysis exploring landscapes, environments,
+		and the geographic forces that shape the long arc of human history.
+	</p>
 
-                <div class="geo-card">
-                    <div class="card-img" style="background-image: url('https://www.geoglypha1.org/RomanMap-Study.jpg');"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Quarto Report</span>
-                        <h3>Map of Rome</h3>
-                        <p>An interactive map of ancient and modern Rome, built with Quarto for spatial storytelling.</p>
-                        <a href="roman-roads.html" class="btn">Speculor </a>
-                    </div>
-                </div>
+	<div class="hero-meta">
+		<div class="hero-meta-item">
+			<span class="lbl">Discipline</span>
+			<span class="val">Physical &amp; Human Geography</span>
+		</div>
+		<div class="hero-meta-item">
+			<span class="lbl">Methods</span>
+			<span class="val">GIS &middot; Remote Sensing &middot; Spatial Analysis</span>
+		</div>
+		<div class="hero-meta-item">
+			<span class="lbl">Region</span>
+			<span class="val">Global</span>
+		</div>
+	</div>
+</section>
 
-                <div class="geo-card">
-                    <div class="card-img" style="background-image: url('https://www.geoglypha1.org/critical-minerals-map.jpg');"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Geopolitics</span>
-                        <h3>Critical Minerals</h3>
-                        <p>Mapping the global distribution, supply chains, and strategic importance of critical minerals driving the modern economy.</p>
-                        <a href="critical-minerals.html" class="btn">Explore</a>
-                    </div>
-                </div>
+<!-- Ornament I -->
+<div class="ornament">
+	<span class="glyph">&#10022;</span>
+	<span>I</span>
+	<span class="glyph">&#10022;</span>
+</div>
 
-                <div class="geo-card">
-                    <div class="card-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/spider-nasca.jpg');"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Machine Learning</span>
-                        <h3>Fazenda Colorada Geoglyphs</h3>
-                        <p>Using machine learning to identify and map Amazonian geoglyphs from satellite imagery.</p>
-                        <a href="geoglyph_visualization.html" class="btn">Explore</a>
-                    </div>
-                </div>
+<!-- Section 01: Featured Maps -->
+<section class="section" id="maps">
+	<div class="section-header">
+		<span class="section-num">&#167; 01 &nbsp;&mdash;&nbsp; Cartography</span>
+		<h2>Maps &amp; Spatial Reports</h2>
+	</div>
 
-                <div class="geo-card">
-                    <div class="card-img" style="background-image: url('https://www.geoglypha1.org/danba-prettymaps.png'); background-position: center;"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Quarto Report</span>
-                        <h3>Stone Sentinels</h3>
-                        <p>The enigmatic watchtowers of the Sino-Tibetan borderlands, built in seismic terrain without mortar across a thousand years of fractured highland history.</p>
-                        <a href="https://www.geoglypha1.org/sino-tibetan-towers.html" class="btn">Explore</a>
-                    </div>
-                </div>
+	<div class="projects-grid">
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://www.geoglypha1.org/ChimneyRock.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Interactive Map</span>
+				<h3>Chimney Rock</h3>
+				<p>535 million years of Blue Ridge geology mapped at the gorge scale. DEM hillshade, climbing areas, waterfalls, trails, and the Helene impact zone in Hickory Nut Gorge.</p>
+				<a href="https://www.geoglypha1.org/chimney-rock.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
 
-                <div class="geo-card">
-                    <div class="card-img" style="background-image: url('https://www.geoglypha1.org/west-baray.jpg'); background-position: center;"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Story Map</span>
-                        <h3>Angkor Wat Hydraulic System</h3>
-                        <p>How the Khmer Empire engineered water across 1,000 square kilometers to sustain a city of one million, and why that same system eventually brought it down.</p>
-                        <a href="https://www.geoglypha1.org/angkor-barays.html" class="btn">Explore</a>
-                    </div>
-                </div>
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://www.geoglypha1.org/west-baray.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Story Map</span>
+				<h3>Angkor Hydraulic System</h3>
+				<p>How the Khmer Empire engineered water across 1,000 square kilometers to sustain a city of one million, and why that same system eventually brought it down.</p>
+				<a href="https://www.geoglypha1.org/angkor-barays.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
 
-                <div class="geo-card">
-                    <div class="card-img" style="background-image: url('images/angkor-barays/west-baray.jpg'); background-position: center; filter: hue-rotate(180deg) saturate(0.7);"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Analysis Dashboard</span>
-                        <h3>Angkor Sedimentation &amp; Collapse</h3>
-                        <p>D3 timeline analysis of the Angkor hydraulic system's decline: sedimentation rates, canal capacity loss, drought cycles, and the cascading infrastructure failures that ended the Khmer Empire.</p>
-                        <a href="https://www.geoglypha1.org/angkor-sedimentation-timeline-charts.html" class="btn">Explore</a>
-                    </div>
-                </div>
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://www.geoglypha1.org/WatsonsPlace-RabbitKey.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Quarto Report</span>
+				<h3>The Outlaw Coast</h3>
+				<p>Spatial history of the Florida Everglades: smuggling routes, lost settlements, and two centuries of contested borderland ecology.</p>
+				<a href="https://www.geoglypha1.org/everglades-history.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
 
-                <div class="geo-card">
-                    <div class="card-img" style="background-image: url('https://www.geoglypha1.org/critical-minerals-map.jpg'); background-position: center;"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Geopolitics</span>
-                        <h3>The White Gold Rush</h3>
-                        <p>Mapping the Americas minerals race: lithium, cobalt, and rare earths at the center of the energy transition and a new era of resource geopolitics.</p>
-                        <a href="https://www.geoglypha1.org/americas-minerals.html" class="btn">Explore</a>
-                    </div>
-                </div>
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://www.geoglypha1.org/HeleneGEE.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Remote Sensing</span>
+				<h3>After the Storm</h3>
+				<p>Carbon, timber, and the science of what happens when 822,000 acres fall. Sentinel-1 SAR and Landsat NDVI analysis of Hurricane Helene forest damage across western North Carolina.</p>
+				<a href="https://www.geoglypha1.org/forest-carbon.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
 
-                <div class="geo-card">
-                    <div class="card-img" style="background-image: url('https://www.geoglypha1.org/WatsonsPlace-RabbitKey.jpg'); background-position: center;"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Quarto Report</span>
-                        <h3>The Outlaw Coast</h3>
-                        <p>Spatial history of the Florida Everglades: smuggling routes, lost settlements, and two centuries of contested borderland ecology.</p>
-                        <a href="https://www.geoglypha1.org/everglades-history.html" class="btn">Explore</a>
-                    </div>
-                </div>
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://www.geoglypha1.org/danba-prettymaps.png');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Quarto Report</span>
+				<h3>Stone Sentinels</h3>
+				<p>The enigmatic watchtowers of the Sino-Tibetan borderlands, built in seismic terrain without mortar across a thousand years of fractured highland history.</p>
+				<a href="https://www.geoglypha1.org/sino-tibetan-towers.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
 
-                <div class="geo-card">
-                    <div class="card-img" style="background-image: url('https://www.geoglypha1.org/HeleneGEE.jpg'); background-position: center;"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Remote Sensing</span>
-                        <h3>After the Storm</h3>
-                        <p>Carbon, timber, and the science of what happens when 822,000 acres fall. Sentinel-1 SAR and Landsat NDVI analysis of Hurricane Helene forest damage across western North Carolina.</p>
-                        <a href="https://www.geoglypha1.org/forest-carbon.html" class="btn">Explore</a>
-                    </div>
-                </div>
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://www.geoglypha1.org/Argonaut_route1.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Story Map</span>
+				<h3>The Argonauts</h3>
+				<p>Tracing Jason's voyage from Iolcos to Colchis and back across the ancient Mediterranean and Black Sea, layered over the real geography of the Greek world.</p>
+				<a href="https://www.geoglypha1.org/argonauts_map.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
 
-                <div class="geo-card">
-                    <div class="card-img" style="background-image: url('https://www.geoglypha1.org/ChimneyRock.jpg'); background-position: center;"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Interactive Map</span>
-                        <h3>Chimney Rock</h3>
-                        <p>535 million years of Blue Ridge geology mapped at the gorge scale. DEM hillshade, climbing areas, waterfalls, trails, and the Helene impact zone in Hickory Nut Gorge.</p>
-                        <a href="https://www.geoglypha1.org/chimney-rock.html" class="btn">Explore</a>
-                    </div>
-                </div>
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://www.geoglypha1.org/Lithium-Traditonal%20Sources.png');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Geopolitics</span>
+				<h3>The Lithium Standoff</h3>
+				<p>Mapping the geopolitics, ecology, and physics of the global lithium race across continents.</p>
+				<a href="lithium_analysis.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
 
-                <div class="geo-card">
-                    <div class="card-img" style="background-image: url('https://www.geoglypha1.org/Argonaut_route1.jpg'); background-position: center;"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Story Map</span>
-                        <h3>The Argonauts</h3>
-                        <p>Tracing Jason's voyage across the ancient Mediterranean and Black Sea. An interactive map of the mythological route from Iolcos to Colchis and back, layered over the real geography of the Greek world.</p>
-                        <a href="https://www.geoglypha1.org/argonauts_map.html" class="btn">Explore</a>
-                    </div>
-                </div>
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://www.geoglypha1.org/critical-minerals-map.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Geopolitics</span>
+				<h3>The White Gold Rush</h3>
+				<p>Mapping the Americas minerals race: lithium, cobalt, and rare earths at the center of the energy transition and a new era of resource geopolitics.</p>
+				<a href="https://www.geoglypha1.org/americas-minerals.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
 
-                <div class="geo-card">
-                    <div class="card-img" style="background-image: url('images/rana-boylii/rana-boylii-artistic.png'); background-position: center;"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Quarto Report</span>
-                        <h3>Sentinel of the Streams</h3>
-                        <p>Rana boylii, the foothill yellow-legged frog of California. Species distribution, DPS range loss, and GBIF occurrence data across a century of habitat decline.</p>
-                        <a href="https://www.geoglypha1.org/rana-boylii.html" class="btn">Explore</a>
-                    </div>
-                </div>
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://www.geoglypha1.org/critical-minerals-map.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Geopolitics</span>
+				<h3>Critical Minerals</h3>
+				<p>Mapping the global distribution, supply chains, and strategic importance of critical minerals driving the modern economy.</p>
+				<a href="critical-minerals.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
 
-                <div class="geo-card">
-                    <div class="card-img" style="background-image: url('images/rana-boylii/Rana Clade.jpg'); background-position: center;"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Interactive Map</span>
-                        <h3>Rana Boylii Range Map</h3>
-                        <p>Interactive webmap of Rana boylii occurrence records, DPS boundaries, and watershed-scale habitat data across California and Oregon.</p>
-                        <a href="https://www.geoglypha1.org/rana-boylii-map.html" class="btn">Explore Map</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://www.geoglypha1.org/Evergladesphoto.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Quarto Report</span>
+				<h3>Florida Everglades</h3>
+				<p>Spatial analysis and mapping of the Florida Everglades ecosystem using Quarto and interactive visualizations.</p>
+				<a href="everglades-historical.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
 
-    <footer>
-        <div class="container">
-            <p>&copy; <span id="year">2025</span> Geoglypha. <a href="index.html">Return to homepage</a></p>
-        </div>
-    </footer>
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://www.geoglypha1.org/RomanMap-Study.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Quarto Report</span>
+				<h3>Map of Rome</h3>
+				<p>An interactive map of ancient and modern Rome, built with Quarto for spatial storytelling of the city's two-thousand-year footprint.</p>
+				<a href="roman-roads.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
 
-    <script>
-        document.getElementById('year').textContent = new Date().getFullYear();
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/greenmap.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Interactive Map</span>
+				<h3>Cahokia Mounds</h3>
+				<p>Interactive Leaflet.js map of North America's largest pre-Columbian settlement, featuring mound locations and boundary overlays.</p>
+				<a href="cahokia.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
 
-        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-        const nav = document.querySelector('nav');
-        mobileMenuBtn.addEventListener('click', () => {
-            nav.classList.toggle('active');
-        });
-    </script>
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/spider-nasca.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Machine Learning</span>
+				<h3>Fazenda Colorada Geoglyphs</h3>
+				<p>Using machine learning to identify and map Amazonian geoglyphs from satellite imagery in the Brazilian Amazon.</p>
+				<a href="geoglyph_visualization.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
+
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('images/angkor-barays/west-baray.jpg'); filter: hue-rotate(180deg) saturate(0.7);"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Analysis Dashboard</span>
+				<h3>Angkor Sedimentation &amp; Collapse</h3>
+				<p>D3 timeline analysis of the Angkor hydraulic system's decline: sedimentation rates, canal capacity loss, drought cycles, and the cascading infrastructure failures that ended the Khmer Empire.</p>
+				<a href="https://www.geoglypha1.org/angkor-sedimentation-timeline-charts.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
+
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('images/rana-boylii/rana-boylii-artistic.png');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Quarto Report</span>
+				<h3>Sentinel of the Streams</h3>
+				<p>Rana boylii, the foothill yellow-legged frog of California. Species distribution, DPS range loss, and GBIF occurrence data across a century of habitat decline.</p>
+				<a href="https://www.geoglypha1.org/rana-boylii.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
+
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('images/rana-boylii/Rana Clade.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Interactive Map</span>
+				<h3>Rana Boylii Range Map</h3>
+				<p>Interactive webmap of Rana boylii occurrence records, DPS boundaries, and watershed-scale habitat data across California and Oregon.</p>
+				<a href="https://www.geoglypha1.org/rana-boylii-map.html" class="explore-link">Explore Map &rarr;</a>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- Ornament II -->
+<div class="ornament">
+	<span class="glyph">&#8297;</span>
+	<span>II</span>
+	<span class="glyph">&#8297;</span>
+</div>
+
+<!-- Colophon -->
+<footer class="colophon">
+	<div class="colophon-ornament">&#10022; &nbsp; &#8297; &nbsp; &#10022;</div>
+
+	<nav class="colophon-nav">
+		<a href="index.html">Home</a>
+		<a href="geography.html">Geography</a>
+		<a href="history.html">History</a>
+		<a href="index.html#projects">Projects</a>
+		<a href="https://www.geoglypha1.org/weather">Weather</a>
+		<a href="graphita/">Gallery</a>
+		<a href="index.html#contact">Contact</a>
+	</nav>
+
+	<div class="colophon-meta">
+		<div>&copy; <span id="year"></span> Geoglypha &nbsp;&middot;&nbsp; Ryan Lafferty</div>
+	</div>
+</footer>
+
+<script>
+	document.getElementById('year').textContent = new Date().getFullYear();
+
+	const mobileBtn = document.querySelector('.nav-mobile-btn');
+	const navLinks  = document.querySelector('.nav-links');
+	if (mobileBtn && navLinks) {
+		mobileBtn.addEventListener('click', () => {
+			navLinks.classList.toggle('open');
+		});
+		document.addEventListener('click', (e) => {
+			if (!mobileBtn.contains(e.target) && !navLinks.contains(e.target)) {
+				navLinks.classList.remove('open');
+			}
+		});
+	}
+</script>
 </body>
 </html>

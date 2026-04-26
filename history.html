@@ -1,375 +1,189 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>History - Geoglypha</title>
-    <style>
-        :root {
-            --primary-color: #3a6351;
-            --secondary-color: #f2edd7;
-            --accent-color: #a0937d;
-            --text-color: #333;
-            --light-text: #f5f5f5;
-            --header-font: 'Georgia', serif;
-            --body-font: 'Arial', sans-serif;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: var(--body-font);
-            line-height: 1.6;
-            color: var(--text-color);
-            background-color: #f9f9f9;
-        }
-
-        .container {
-            width: 90%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        header {
-            background-color: var(--primary-color);
-            color: var(--light-text);
-            padding: 1rem 0;
-            position: relative;
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-family: var(--header-font);
-            font-size: 2rem;
-            font-weight: bold;
-        }
-
-        .logo a {
-            color: var(--light-text);
-            text-decoration: none;
-        }
-
-        nav ul {
-            display: flex;
-            list-style: none;
-        }
-
-        nav ul li {
-            margin-left: 1.5rem;
-        }
-
-        nav ul li a {
-            color: var(--light-text);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-
-        nav ul li a:hover {
-            color: var(--secondary-color);
-        }
-
-        .mobile-menu-btn {
-            display: none;
-            background: none;
-            border: none;
-            color: var(--light-text);
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        .page-hero {
-            background-color: var(--primary-color);
-            color: var(--light-text);
-            padding: 3rem 0;
-            text-align: center;
-        }
-
-        .page-hero h1 {
-            font-family: var(--header-font);
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .page-hero p {
-            font-size: 1.1rem;
-            max-width: 700px;
-            margin: 0 auto;
-            opacity: 0.9;
-        }
-
-        .content-section {
-            padding: 4rem 0;
-        }
-
-        .cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-
-        .history-card {
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
-        }
-
-        .history-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-        }
-
-        .card-img {
-            height: 200px;
-            background-size: cover;
-            background-position: center;
-            background-color: var(--accent-color);
-        }
-
-        .card-body {
-            padding: 1.5rem;
-        }
-
-        .card-body h3 {
-            font-family: var(--header-font);
-            font-size: 1.4rem;
-            color: var(--primary-color);
-            margin-bottom: 0.75rem;
-        }
-
-        .card-body p {
-            margin-bottom: 1.5rem;
-            color: #555;
-        }
-
-        .card-badge {
-            display: inline-block;
-            background-color: var(--secondary-color);
-            color: var(--primary-color);
-            padding: 0.25rem 0.75rem;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            margin-bottom: 0.75rem;
-        }
-
-        .btn {
-            display: inline-block;
-            background-color: var(--accent-color);
-            color: var(--light-text);
-            padding: 0.6rem 1.2rem;
-            text-decoration: none;
-            border-radius: 4px;
-            font-weight: bold;
-            font-size: 0.9rem;
-            transition: background-color 0.3s;
-        }
-
-        .btn:hover {
-            background-color: #8a7b69;
-        }
-
-        .btn-disabled {
-            background-color: #ccc;
-            cursor: default;
-        }
-
-        .btn-disabled:hover {
-            background-color: #ccc;
-        }
-
-        footer {
-            background-color: var(--primary-color);
-            color: var(--light-text);
-            padding: 2rem 0;
-            text-align: center;
-        }
-
-        footer p {
-            opacity: 0.8;
-        }
-
-        footer a {
-            color: var(--secondary-color);
-            text-decoration: none;
-        }
-
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-                position: relative;
-            }
-
-            .logo {
-                font-size: 1.4rem;
-            }
-
-            .mobile-menu-btn {
-                display: block;
-                position: static;
-            }
-
-            nav {
-                display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                width: 100%;
-                background-color: var(--primary-color);
-                z-index: 1000;
-                padding: 1rem 0;
-            }
-
-            nav.active {
-                display: block;
-            }
-
-            nav ul {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            nav ul li {
-                margin: 0.5rem 0;
-                margin-left: 0;
-            }
-
-            .page-hero h1 {
-                font-size: 1.8rem;
-            }
-
-            .cards-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>History &amp; Archaeology &mdash; Geoglypha</title>
+	<meta name="description" content="Explore the development of human civilization through writing systems, ancient practices, and monumental architecture.">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="assets/css/design-system.css">
 </head>
 <body>
-    <header>
-        <div class="container header-content">
-            <div class="logo">
-                <a href="index.html">Geoglypha</a>
-            </div>
-            <button class="mobile-menu-btn">☰</button>
-            <nav>
-                <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="geography.html">Geography</a></li>
-                    <li><a href="history.html">History</a></li>
-                    <li><a href="index.html#projects">Projects</a></li>
-                    <li><a href="https://www.geoglypha1.org/weather">Weather</a></li>
-                    <li><a href="graphita/graphitia.html">Gallery</a></li>
-                    <li><a href="https://tools.geoglypha1.org">Tools</a></li>
-                    <li><a href="supplies.html" style="color:#D8B4FE;">Supplies</a></li>
-                    <li><a href="stack.html" style="color:#86EFAC;">Stack</a></li>
-                    <li><a href="index.html#about">About</a></li>
-                    <li><a href="index.html#contact">Contact</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
 
-    <section class="page-hero">
-        <div class="container">
-            <h1>History & Archaeology</h1>
-            <p>Explore the development of human civilization through writing systems, ancient practices, and monumental architecture.</p>
-        </div>
-    </section>
+<!-- Navigation -->
+<nav class="site-nav">
+	<div class="nav-inner">
+		<a href="index.html" class="nav-logo">Geoglypha</a>
+		<button class="nav-mobile-btn" aria-label="Toggle navigation">&#9776;</button>
+		<ul class="nav-links">
+			<li><a href="index.html">Home</a></li>
+			<li><a href="geography.html">Geography</a></li>
+			<li><a href="history.html">History</a></li>
+			<li><a href="index.html#projects">Projects</a></li>
+			<li><a href="https://www.geoglypha1.org/weather">Weather</a></li>
+			<li><a href="graphita/graphitia.html">Gallery</a></li>
+			<li><a href="https://tools.geoglypha1.org">Tools</a></li>
+			<li><a href="supplies.html" class="nav-special-purple">Supplies</a></li>
+			<li><a href="stack.html" class="nav-special-green">Stack</a></li>
+			<li><a href="index.html#about">About</a></li>
+			<li><a href="index.html#contact">Contact</a></li>
+		</ul>
+	</div>
+</nav>
 
-    <section class="content-section">
-        <div class="container">
-            <div class="cards-grid">
-                <div class="history-card">
-                    <div class="card-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/images/cahokia_woodhenge.jpg');"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Interactive Map</span>
-                        <h3>Cahokia Mounds</h3>
-                        <p>Interactive mapping of North America's largest pre-Columbian city — a complex urban center at its peak larger than contemporary London.</p>
-                        <a href="cahokia.html" class="btn">Explore</a>
-                    </div>
-                </div>
+<!-- Hero -->
+<section class="hero">
+	<div class="hero-masthead">
+		<span>Geoglypha &nbsp;/&nbsp; Field Reports</span>
+		<span>History &middot; Archaeology</span>
+		<span>Vol. I</span>
+	</div>
 
-                <div class="history-card">
-                    <div class="card-img" style="background-image: url('images/phoenician-writing-9th-century.webp');"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Writing Systems</span>
-                        <h3>Alphabet Evolution</h3>
-                        <p>Trace the development of writing systems from Phoenician to Greek alphabets and beyond. An interactive visualization of how letterforms evolved across cultures and centuries.</p>
-                        <a href="alphabet_evolution.html" class="btn">Explore</a>
-                    </div>
-                </div>
+	<h1 class="hero-title">
+		History
+		<span class="hero-subtitle">&amp; Archaeology</span>
+	</h1>
 
-                <div class="history-card">
-                    <div class="card-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/cuneiform.jpg');"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Ancient Practices</span>
-                        <h3>Ceremonial Magic</h3>
-                        <p>An exploration of ceremonial practices across ancient civilizations, examining the intersection of ritual, astronomy, and early science.</p>
-                        <a href="ceremonial_magic.html" class="btn">Explore</a>
-                    </div>
-                </div>
+	<p class="hero-deck">
+		The development of human civilization through writing systems,
+		ritual practice, hydraulic engineering, and monumental architecture.
+	</p>
 
-                <div class="history-card">
-                    <div class="card-img" style="background-image: url('https://www.geoglypha1.org/Atreus.jpg');"></div>
-                    <div class="card-body">
-                        <span class="card-badge">3D Model</span>
-                        <h3>Treasury of Atreus</h3>
-                        <p>A 3D reconstruction of the Treasury of Atreus (Tomb of Agamemnon), one of the most impressive tholos tombs of the Mycenaean world.</p>
-                        <a href="treasury-atreus-3d.html" class="btn">Explore</a>
-                    </div>
-                </div>
+	<div class="hero-meta">
+		<div class="hero-meta-item">
+			<span class="lbl">Discipline</span>
+			<span class="val">Historical Archaeology</span>
+		</div>
+		<div class="hero-meta-item">
+			<span class="lbl">Period</span>
+			<span class="val">3500 BCE &mdash; 1500 CE</span>
+		</div>
+		<div class="hero-meta-item">
+			<span class="lbl">Region</span>
+			<span class="val">Global</span>
+		</div>
+	</div>
+</section>
 
-                <div class="history-card">
-                    <div class="card-img" style="background-image: url('images/greco-roman/ArgonautsRoute.jpg');"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Story Map</span>
-                        <h3>The Argonauts</h3>
-                        <p>c. 1300 BCE. Tracing Jason's voyage from Iolcos to Colchis and back across the ancient Mediterranean and Black Sea, layered over the real geography of the Greek world.</p>
-                        <a href="https://www.geoglypha1.org/argonauts_map.html" class="btn">Explore Map</a>
-                    </div>
-                </div>
+<!-- Ornament I -->
+<div class="ornament">
+	<span class="glyph">&#10022;</span>
+	<span>I</span>
+	<span class="glyph">&#10022;</span>
+</div>
 
-                <div class="history-card">
-                    <div class="card-img" style="background-image: url('images/angkor-barays/west-baray.jpg');"></div>
-                    <div class="card-body">
-                        <span class="card-badge">Interactive Map</span>
-                        <h3>Angkor Hydraulic Network</h3>
-                        <p>802–1431 CE. The Khmer Empire engineered four great barays and ~600 km of canals to sustain a city of one million people. An interactive map of the water infrastructure that built and ultimately could not save the medieval world's largest urban complex.</p>
-                        <a href="https://www.geoglypha1.org/angkor-hydraulic-map.html" class="btn">Explore Map</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+<!-- Section 01: Projects -->
+<section class="section" id="projects">
+	<div class="section-header">
+		<span class="section-num">&#167; 01 &nbsp;&mdash;&nbsp; Fieldwork</span>
+		<h2>Projects &amp; Reports</h2>
+	</div>
 
-    <footer>
-        <div class="container">
-            <p>&copy; <span id="year">2025</span> Geoglypha. <a href="index.html">Return to homepage</a></p>
-        </div>
-    </footer>
+	<div class="projects-grid">
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/images/cahokia_woodhenge.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Interactive Map</span>
+				<h3>Cahokia Mounds</h3>
+				<p>Interactive mapping of North America's largest pre-Columbian city, a complex urban center at its peak larger than contemporary London.</p>
+				<a href="cahokia.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
 
-    <script>
-        document.getElementById('year').textContent = new Date().getFullYear();
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('images/phoenician-writing-9th-century.webp');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Writing Systems</span>
+				<h3>Alphabet Evolution</h3>
+				<p>Trace the development of writing from Phoenician to Greek alphabets and beyond. An interactive visualization of how letterforms evolved across cultures and centuries.</p>
+				<a href="alphabet_evolution.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
 
-        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-        const nav = document.querySelector('nav');
-        mobileMenuBtn.addEventListener('click', () => {
-            nav.classList.toggle('active');
-        });
-    </script>
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://storage.googleapis.com/geoglypha1/cuneiform.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Ancient Practices</span>
+				<h3>Ceremonial Magic</h3>
+				<p>An exploration of ceremonial practices across ancient civilizations, examining the intersection of ritual, astronomy, and early science.</p>
+				<a href="ceremonial_magic.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
+
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://www.geoglypha1.org/Atreus.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">3D Model</span>
+				<h3>Treasury of Atreus</h3>
+				<p>A 3D reconstruction of the Treasury of Atreus (Tomb of Agamemnon), one of the most impressive tholos tombs of the Mycenaean world.</p>
+				<a href="treasury-atreus-3d.html" class="explore-link">Explore &rarr;</a>
+			</div>
+		</div>
+
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('images/greco-roman/ArgonautsRoute.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Story Map</span>
+				<h3>The Argonauts</h3>
+				<p>c. 1300 BCE. Tracing Jason's voyage from Iolcos to Colchis and back across the ancient Mediterranean and Black Sea, layered over the real geography of the Greek world.</p>
+				<a href="https://www.geoglypha1.org/argonauts_map.html" class="explore-link">Explore Map &rarr;</a>
+			</div>
+		</div>
+
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('images/angkor-barays/west-baray.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Interactive Map</span>
+				<h3>Angkor Hydraulic Network</h3>
+				<p>802&ndash;1431 CE. The Khmer Empire engineered four great barays and ~600 km of canals to sustain a city of one million people. The water infrastructure that built, and ultimately could not save, the medieval world's largest urban complex.</p>
+				<a href="https://www.geoglypha1.org/angkor-hydraulic-map.html" class="explore-link">Explore Map &rarr;</a>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- Ornament II -->
+<div class="ornament">
+	<span class="glyph">&#8297;</span>
+	<span>II</span>
+	<span class="glyph">&#8297;</span>
+</div>
+
+<!-- Colophon -->
+<footer class="colophon">
+	<div class="colophon-ornament">&#10022; &nbsp; &#8297; &nbsp; &#10022;</div>
+
+	<nav class="colophon-nav">
+		<a href="index.html">Home</a>
+		<a href="geography.html">Geography</a>
+		<a href="history.html">History</a>
+		<a href="index.html#projects">Projects</a>
+		<a href="https://www.geoglypha1.org/weather">Weather</a>
+		<a href="graphita/">Gallery</a>
+		<a href="index.html#contact">Contact</a>
+	</nav>
+
+	<div class="colophon-meta">
+		<div>&copy; <span id="year"></span> Geoglypha &nbsp;&middot;&nbsp; Ryan Lafferty</div>
+	</div>
+</footer>
+
+<script>
+	document.getElementById('year').textContent = new Date().getFullYear();
+
+	const mobileBtn = document.querySelector('.nav-mobile-btn');
+	const navLinks  = document.querySelector('.nav-links');
+	if (mobileBtn && navLinks) {
+		mobileBtn.addEventListener('click', () => {
+			navLinks.classList.toggle('open');
+		});
+		document.addEventListener('click', (e) => {
+			if (!mobileBtn.contains(e.target) && !navLinks.contains(e.target)) {
+				navLinks.classList.remove('open');
+			}
+		});
+	}
+</script>
 </body>
 </html>
