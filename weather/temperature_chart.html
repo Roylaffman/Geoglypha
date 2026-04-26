@@ -121,15 +121,39 @@
         color: #FF9A73;
       }
     </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    .site-nav { background: #f1ead9; border-bottom: 1px solid rgba(26,22,18,0.2); padding: 14px 0; position: sticky; top: 0; z-index: 200; }
+    .site-nav .nav-inner { display: flex; justify-content: space-between; align-items: center; max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; }
+    .nav-logo { font-family: 'Cinzel', serif; font-weight: 500; font-size: 18px; color: #1a1612; text-decoration: none; letter-spacing: 0.06em; flex-shrink: 0; }
+    .nav-links-list { display: flex; list-style: none; gap: 20px; flex-wrap: wrap; justify-content: flex-end; }
+    .nav-links-list a { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: #1a1612; text-decoration: none; opacity: 0.6; transition: opacity 0.2s; }
+    .nav-links-list a:hover { opacity: 1; }
+    .nav-mobile-btn { display: none; background: none; border: none; cursor: pointer; font-size: 20px; color: #1a1612; padding: 4px; }
+    @media (max-width: 700px) {
+      .nav-links-list { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #f1ead9; border-bottom: 1px solid rgba(26,22,18,0.2); padding: 20px 24px; flex-direction: column; gap: 18px; z-index: 199; }
+      .nav-links-list.open { display: flex; }
+      .nav-mobile-btn { display: block; }
+    }
+  </style>
   </head>
   <body>
-    <nav class="weather-nav">
-      <a href="https://www.geoglypha1.org" class="nav-brand">Geoglypha</a>
-      <a href="index.html">Overview</a>
-      <a href="temperature_chart.html">Temperature</a>
-      <a href="precipitation_chart.html">Precipitation</a>
-      <a href="wind_speed_chart.html">Wind</a>
-      <a href="barometric_pressure_chart.html">Pressure</a>
+    <nav class="site-nav">
+      <div class="nav-inner">
+        <a href="../index.html" class="nav-logo">Geoglypha</a>
+        <button class="nav-mobile-btn" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Toggle navigation">&#9776;</button>
+        <ul class="nav-links-list">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="index.html">Overview</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="temperature_chart.html">Temperature</a></li>
+          <li><a href="precipitation_chart.html">Precipitation</a></li>
+          <li><a href="wind_speed_chart.html">Wind</a></li>
+          <li><a href="barometric_pressure_chart.html">Pressure</a></li>
+        </ul>
+      </div>
     </nav>
     <div class="slide-container">
       <h1 class="title">Temperature Variations</h1>

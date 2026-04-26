@@ -3,605 +3,256 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>My Stack | Geoglypha</title>
+	<title>My Stack &mdash; Geoglypha</title>
+	<meta name="description" content="Supplements, foods, and wellness products I actually use daily. No filler, no fluff.">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="assets/css/design-system.css">
 	<style>
-		:root {
-			--primary-color:     #3a6351;
-			--secondary-color:   #f2edd7;
-			--accent-color:      #a0937d;
-			--accent-gold:       #F59E0B;
-			--accent-gold-hover: #D97706;
-			--text-color:        #333;
-			--text-muted:        #6B7280;
-			--light-text:        #f5f5f5;
-			--header-font:       'Georgia', serif;
-			--body-font:         'Arial', sans-serif;
-		}
-
-		* { margin: 0; padding: 0; box-sizing: border-box; }
-
-		body {
-			font-family: var(--body-font);
-			line-height: 1.6;
-			color: var(--text-color);
-			background-color: #f9f9f9;
-		}
-
-		.container {
-			width: 90%;
-			max-width: 1200px;
-			margin: 0 auto;
-			padding: 0 20px;
-		}
-
-		/* ── Header / Nav ── */
-		header {
-			background-color: var(--primary-color);
-			color: var(--light-text);
-			padding: 1rem 0;
-			position: relative;
-		}
-
-		.header-content {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-		}
-
-		.logo {
-			font-family: var(--header-font);
-			font-size: 2rem;
-			font-weight: bold;
-		}
-
-		.logo a {
-			color: var(--light-text);
-			text-decoration: none;
-		}
-
-		nav ul {
-			display: flex;
-			list-style: none;
-		}
-
-		nav ul li { margin-left: 1.5rem; }
-
-		nav ul li a {
-			color: var(--light-text);
-			text-decoration: none;
-			font-weight: 500;
-			transition: color 0.3s;
-		}
-
-		nav ul li a:hover { color: var(--secondary-color); }
-
-		.mobile-menu-btn {
-			display: none;
-			background: none;
-			border: none;
-			color: var(--light-text);
-			font-size: 1.5rem;
-			cursor: pointer;
-		}
-
-		/* ── Hero ── */
-		.hero {
-			background: linear-gradient(135deg, #2d4f40 0%, var(--primary-color) 55%, #4e7a64 100%);
-			color: var(--light-text);
-			padding: 3.5rem 0;
-			text-align: center;
-		}
-
-		.hero h1 {
-			font-family: var(--header-font);
-			font-size: 2.6rem;
-			margin-bottom: 0.5rem;
-		}
-
-		.hero h2 {
-			font-family: var(--header-font);
-			font-size: 1.2rem;
-			font-weight: normal;
-			opacity: 0.85;
-			margin-bottom: 1rem;
-			letter-spacing: 0.04em;
-		}
-
-		.hero p {
-			font-size: 1.1rem;
-			opacity: 0.9;
-			max-width: 600px;
-			margin: 0 auto;
-		}
-
-		/* ── Products Section ── */
-		.products { padding: 3rem 0; }
-
-		.products-grid {
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-			gap: 1.5rem;
-		}
-
-		.product-card {
-			background-color: #fff;
-			border-radius: 8px;
-			overflow: hidden;
-			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-			transition: transform 0.3s, box-shadow 0.3s;
-			display: flex;
-			flex-direction: column;
-		}
-
-		.product-card:hover {
-			transform: translateY(-6px);
-			box-shadow: 0 8px 20px rgba(58, 99, 81, 0.18);
-		}
-
-		.product-img {
-			width: 100%;
-			height: 220px;
-			background-color: var(--secondary-color);
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-size: 3rem;
-			overflow: hidden;
-		}
-
-		.product-img img {
-			width: 100%;
-			height: 100%;
-			object-fit: cover;
-		}
-
-		.product-body {
-			padding: 1.25rem;
-			flex: 1;
-			display: flex;
-			flex-direction: column;
-		}
-
-		.product-category {
-			font-size: 0.72rem;
+		.btn-shop {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 10px;
+			letter-spacing: 0.18em;
 			text-transform: uppercase;
-			letter-spacing: 0.1em;
-			color: var(--primary-color);
-			font-weight: bold;
-			margin-bottom: 0.4rem;
-		}
-
-		.product-body h3 {
-			font-family: var(--header-font);
-			font-size: 1.15rem;
-			color: var(--text-color);
-			margin-bottom: 0.5rem;
-		}
-
-		.product-body p {
-			font-size: 0.9rem;
-			color: var(--text-muted);
-			margin-bottom: 1.25rem;
-			flex: 1;
-		}
-
-		.shop-btn {
-			display: inline-block;
-			background-color: var(--accent-gold);
-			color: #1a1a1a;
-			padding: 0.7rem 1.25rem;
+			color: var(--ochre-deep);
+			border: 1px solid var(--ochre-deep);
+			padding: 8px 16px;
 			text-decoration: none;
-			border-radius: 4px;
-			font-weight: bold;
-			font-size: 0.9rem;
-			text-align: center;
-			transition: background-color 0.3s;
-		}
-
-		.shop-btn:hover { background-color: var(--accent-gold-hover); }
-
-		/* ── Back Section ── */
-		.back-section {
-			padding: 3rem 0;
-			text-align: center;
-			background-color: var(--secondary-color);
-		}
-
-		.back-section p {
-			color: var(--text-muted);
-			margin-bottom: 1rem;
-		}
-
-		.home-btn {
 			display: inline-block;
-			background-color: var(--primary-color);
-			color: var(--light-text);
-			padding: 0.8rem 2rem;
-			text-decoration: none;
-			border-radius: 4px;
-			font-weight: bold;
-			font-size: 1rem;
-			transition: background-color 0.3s;
+			margin-top: 14px;
+			transition: background 0.2s, color 0.2s;
 		}
-
-		.home-btn:hover { background-color: #2d4f40; }
-
-		/* ── Disclosure ── */
-		.disclosure {
-			background-color: #fff;
-			border-top: 2px solid var(--primary-color);
-			padding: 2rem 0;
+		.btn-shop:hover {
+			background: var(--ochre-deep);
+			color: var(--paper);
 		}
-
-		.disclosure-content {
-			max-width: 800px;
+		.disclosure-block {
+			max-width: 720px;
 			margin: 0 auto;
-			text-align: center;
+			padding: 48px 24px;
+			border-top: 1px solid var(--rule);
 		}
-
-		.disclosure-content h4 {
-			font-family: var(--header-font);
-			color: var(--primary-color);
-			margin-bottom: 0.75rem;
-			font-size: 1rem;
+		.disclosure-block p {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 10px;
+			letter-spacing: 0.08em;
+			line-height: 1.9;
+			color: var(--ink);
+			opacity: 0.45;
+			text-align: justify;
+			margin: 0;
 		}
-
-		.disclosure-content p {
-			font-size: 0.8rem;
-			color: var(--text-muted);
-			line-height: 1.7;
-		}
-
-		/* ── Footer ── */
-		footer {
-			background-color: var(--primary-color);
-			color: var(--light-text);
-			padding: 3rem 0 1.5rem;
-		}
-
-		.footer-content {
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-			gap: 2rem;
-			margin-bottom: 2rem;
-		}
-
-		.footer-column h3 {
-			font-family: var(--header-font);
-			margin-bottom: 1.5rem;
-			font-size: 1.2rem;
-		}
-
-		.footer-column ul { list-style: none; }
-		.footer-column ul li { margin-bottom: 0.8rem; }
-
-		.footer-column ul li a {
-			color: var(--light-text);
-			text-decoration: none;
-			transition: color 0.3s;
-		}
-
-		.footer-column ul li a:hover { color: var(--secondary-color); }
-
-		.copyright {
-			text-align: center;
-			padding-top: 1.5rem;
-			border-top: 1px solid rgba(255, 255, 255, 0.1);
-			font-size: 0.85rem;
-			opacity: 0.8;
-		}
-
-		/* ── Responsive ── */
-		@media (max-width: 768px) {
-			.header-content {
-				flex-direction: row;
-				justify-content: space-between;
-				align-items: center;
-				position: relative;
-			}
-
-			.logo { font-size: 1.4rem; }
-
-			.mobile-menu-btn {
-				display: block;
-				position: static;
-			}
-
-			nav {
-				display: none;
-				position: absolute;
-				top: 100%;
-				left: 0;
-				width: 100%;
-				background-color: var(--primary-color);
-				z-index: 1000;
-				padding: 1rem 0;
-			}
-
-			nav.active { display: block; }
-
-			nav ul {
-				flex-direction: column;
-				align-items: center;
-			}
-
-			nav ul li {
-				margin: 0.5rem 0;
-				margin-left: 0;
-			}
-
-			.hero h1 { font-size: 1.8rem; }
-			.hero p  { font-size: 1rem; }
-
-			.products-grid {
-				grid-template-columns: 1fr 1fr;
-				gap: 1rem;
-			}
-
-			.product-img { height: 160px; }
-
-			.footer-content { grid-template-columns: 1fr; }
-		}
-
-		@media (max-width: 480px) {
-			.container { width: 95%; padding: 0 10px; }
-			.hero { padding: 2.5rem 0; }
-			.hero h1 { font-size: 1.5rem; }
-			.products-grid { grid-template-columns: 1fr; }
-			.product-img { height: 200px; }
+		.disclosure-block .lbl {
+			display: block;
+			font-size: 10px;
+			letter-spacing: 0.18em;
+			text-transform: uppercase;
+			color: var(--ochre-deep);
+			opacity: 0.7;
+			margin-bottom: 10px;
 		}
 	</style>
 </head>
 <body>
 
-	<!-- Header -->
-	<header>
-		<div class="container header-content">
-			<div class="logo">
-				<a href="index.html">Geoglypha</a>
+<nav class="site-nav">
+	<div class="nav-inner">
+		<a href="index.html" class="nav-logo">Geoglypha</a>
+		<button class="nav-mobile-btn" aria-label="Toggle navigation">&#9776;</button>
+		<ul class="nav-links">
+			<li><a href="index.html">Home</a></li>
+			<li><a href="geography.html">Geography</a></li>
+			<li><a href="history.html">History</a></li>
+			<li><a href="index.html#projects">Projects</a></li>
+			<li><a href="https://www.geoglypha1.org/weather">Weather</a></li>
+			<li><a href="graphita/">Gallery</a></li>
+			<li><a href="https://tools.geoglypha1.org">Tools</a></li>
+			<li><a href="supplies.html" class="nav-special-purple">Supplies</a></li>
+			<li><a href="stack.html" class="nav-special-green">Stack</a></li>
+			<li><a href="index.html#about">About</a></li>
+			<li><a href="index.html#contact">Contact</a></li>
+		</ul>
+	</div>
+</nav>
+
+<section class="hero">
+	<div class="hero-masthead">
+		<span>Geoglypha &nbsp;/&nbsp; Personal</span>
+		<span>Health &middot; Performance &middot; Recovery</span>
+		<span>Vol. I</span>
+	</div>
+
+	<h1 class="hero-title">
+		My Stack
+		<span class="hero-subtitle">Personal Recommendations</span>
+	</h1>
+
+	<p class="hero-deck">
+		Supplements, foods, and wellness products I actually use daily.
+		No filler, no fluff. Links go straight to where I buy them.
+	</p>
+
+	<div class="hero-meta">
+		<div class="hero-meta-item">
+			<span class="lbl">Category</span>
+			<span class="val">Health &amp; Performance</span>
+		</div>
+		<div class="hero-meta-item">
+			<span class="lbl">Items</span>
+			<span class="val">10 Products</span>
+		</div>
+		<div class="hero-meta-item">
+			<span class="lbl">Via</span>
+			<span class="val">Amazon Associates</span>
+		</div>
+	</div>
+</section>
+
+<div class="ornament">
+	<span class="glyph">&#10022;</span>
+	<span>I</span>
+	<span class="glyph">&#10022;</span>
+</div>
+
+<section class="section" id="supplements">
+	<div class="section-header">
+		<span class="section-num">&#167; 01 &nbsp;&mdash;&nbsp; The Protocol</span>
+		<h2>Daily Stack</h2>
+	</div>
+
+	<div class="reading-list">
+		<a href="#" class="reading-item">
+			<span class="reading-num">I</span>
+			<div class="reading-body">
+				<span class="reading-meta">Strength</span>
+				<h3>Creatine Monohydrate</h3>
+				<p>5g daily, every day without fail. The most researched supplement on the market. Visible difference in strength output and muscle fullness within two weeks.</p>
+				<span class="btn-shop">Shop on Amazon &rarr;</span>
 			</div>
-			<button class="mobile-menu-btn">&#9776;</button>
-			<nav>
-				<ul>
-					<li><a href="index.html">Home</a></li>
-					<li><a href="geography.html">Geography</a></li>
-					<li><a href="history.html">History</a></li>
-					<li><a href="index.html#projects">Projects</a></li>
-					<li><a href="https://www.geoglypha1.org/weather">Weather</a></li>
-					<li><a href="graphita/graphitia.html">Gallery</a></li>
-					<li><a href="https://tools.geoglypha1.org">Tools</a></li>
-					<li><a href="supplies.html" style="color:#D8B4FE;">Supplies</a></li>
-					<li><a href="stack.html" style="color:#86EFAC;">Stack</a></li>
-					<li><a href="index.html#about">About</a></li>
-					<li><a href="index.html#contact">Contact</a></li>
-				</ul>
-			</nav>
-		</div>
-	</header>
+		</a>
 
-	<!-- Hero -->
-	<section class="hero">
-		<div class="container">
-			<h1>My Stack</h1>
-			<h2>Personal Recommendations</h2>
-			<p>Supplements, foods, and wellness products I actually use daily. No filler, no fluff. Links go straight to where I buy them.</p>
-		</div>
-	</section>
-
-	<!-- Products -->
-	<section class="products">
-		<div class="container">
-			<div class="products-grid">
-
-				<!-- Creatine Monohydrate -->
-				<div class="product-card">
-					<div class="product-img">
-						<!-- <img src="https://www.geoglypha1.org/stack/creatine.jpg" alt="Creatine Monohydrate"> -->
-						💪
-					</div>
-					<div class="product-body">
-						<span class="product-category">Strength</span>
-						<h3>Creatine Monohydrate</h3>
-						<p>5g daily, every day without fail. The most researched supplement on the market. Visible difference in strength output and muscle fullness within two weeks.</p>
-						<a href="#" class="shop-btn">Shop on Amazon</a>
-					</div>
-				</div>
-
-				<!-- Whey Protein Isolate -->
-				<div class="product-card">
-					<div class="product-img">
-						<!-- <img src="https://www.geoglypha1.org/stack/protein.jpg" alt="Whey Protein Isolate"> -->
-						🥛
-					</div>
-					<div class="product-body">
-						<span class="product-category">Foundational</span>
-						<h3>Whey Protein Isolate</h3>
-						<p>Fast-absorbing, low-lactose protein that fits easily into any meal plan. I use this post-workout and on days when whole-food protein sources fall short.</p>
-						<a href="#" class="shop-btn">Shop on Amazon</a>
-					</div>
-				</div>
-
-				<!-- Omega-3 Fish Oil -->
-				<div class="product-card">
-					<div class="product-img">
-						<!-- <img src="https://www.geoglypha1.org/stack/omega3.jpg" alt="Omega-3 Fish Oil"> -->
-						🐟
-					</div>
-					<div class="product-body">
-						<span class="product-category">Recovery</span>
-						<h3>Omega-3 Fish Oil</h3>
-						<p>High-EPA/DHA formula for inflammation support and cardiovascular health. Joint soreness dropped noticeably after making this a consistent daily habit.</p>
-						<a href="#" class="shop-btn">Shop on Amazon</a>
-					</div>
-				</div>
-
-				<!-- Vitamin D3 + K2 -->
-				<div class="product-card">
-					<div class="product-img">
-						<!-- <img src="https://www.geoglypha1.org/stack/vitamin-d3.jpg" alt="Vitamin D3 + K2"> -->
-						☀️
-					</div>
-					<div class="product-body">
-						<span class="product-category">Foundational</span>
-						<h3>Vitamin D3 + K2</h3>
-						<p>Most people are deficient and don't know it. D3 paired with K2 ensures calcium goes to your bones, not your arteries. Big mood and energy difference in winter months.</p>
-						<a href="#" class="shop-btn">Shop on Amazon</a>
-					</div>
-				</div>
-
-				<!-- Magnesium Glycinate -->
-				<div class="product-card">
-					<div class="product-img">
-						<!-- <img src="https://www.geoglypha1.org/stack/magnesium.jpg" alt="Magnesium Glycinate"> -->
-						🌙
-					</div>
-					<div class="product-body">
-						<span class="product-category">Sleep &amp; Recovery</span>
-						<h3>Magnesium Glycinate</h3>
-						<p>Taken before bed. The glycinate form is gentle on the gut and absorbs well. Noticeably better sleep quality and less muscle cramping after hard training days.</p>
-						<a href="#" class="shop-btn">Shop on Amazon</a>
-					</div>
-				</div>
-
-				<!-- Electrolytes -->
-				<div class="product-card">
-					<div class="product-img">
-						<!-- <img src="https://www.geoglypha1.org/stack/electrolytes.jpg" alt="Electrolytes"> -->
-						⚡
-					</div>
-					<div class="product-body">
-						<span class="product-category">Hydration</span>
-						<h3>Electrolytes</h3>
-						<p>Sodium, potassium, and magnesium in the right ratios. I mix a packet into my first glass of water every morning. Energy and focus before any caffeine.</p>
-						<a href="#" class="shop-btn">Shop on Amazon</a>
-					</div>
-				</div>
-
-				<!-- Ashwagandha -->
-				<div class="product-card">
-					<div class="product-img">
-						<!-- <img src="https://www.geoglypha1.org/stack/ashwagandha.jpg" alt="Ashwagandha KSM-66"> -->
-						🌿
-					</div>
-					<div class="product-body">
-						<span class="product-category">Stress &amp; Cognitive</span>
-						<h3>Ashwagandha (KSM-66)</h3>
-						<p>KSM-66 is the clinically studied extract. Took about three weeks to feel the cortisol-blunting effect. Clearer headed during high-stress stretches of work or travel.</p>
-						<a href="#" class="shop-btn">Shop on Amazon</a>
-					</div>
-				</div>
-
-				<!-- Collagen Peptides -->
-				<div class="product-card">
-					<div class="product-img">
-						<!-- <img src="https://www.geoglypha1.org/stack/collagen.jpg" alt="Collagen Peptides"> -->
-						🦴
-					</div>
-					<div class="product-body">
-						<span class="product-category">Joints &amp; Skin</span>
-						<h3>Collagen Peptides</h3>
-						<p>Unflavored powder that dissolves in hot or cold liquids. Supports joint health, skin elasticity, and connective tissue. Goes straight into morning coffee undetected.</p>
-						<a href="#" class="shop-btn">Shop on Amazon</a>
-					</div>
-				</div>
-
-				<!-- Greens Powder -->
-				<div class="product-card">
-					<div class="product-img">
-						<!-- <img src="https://www.geoglypha1.org/stack/greens.jpg" alt="Greens Powder"> -->
-						🥬
-					</div>
-					<div class="product-body">
-						<span class="product-category">Daily Nutrition</span>
-						<h3>Greens Powder</h3>
-						<p>Insurance for the days when vegetables take a back seat. Not a replacement for real food but a solid baseline for micronutrients, probiotics, and adaptogens.</p>
-						<a href="#" class="shop-btn">Shop on Amazon</a>
-					</div>
-				</div>
-
-				<!-- Zinc + Copper -->
-				<div class="product-card">
-					<div class="product-img">
-						<!-- <img src="https://www.geoglypha1.org/stack/zinc.jpg" alt="Zinc + Copper"> -->
-						🔬
-					</div>
-					<div class="product-body">
-						<span class="product-category">Minerals</span>
-						<h3>Zinc + Copper</h3>
-						<p>Zinc supports immune function and testosterone production. Paired with copper to keep the ratio balanced. Take with food at night, not alongside other supplements.</p>
-						<a href="#" class="shop-btn">Shop on Amazon</a>
-					</div>
-				</div>
-
+		<a href="#" class="reading-item">
+			<span class="reading-num">II</span>
+			<div class="reading-body">
+				<span class="reading-meta">Foundational</span>
+				<h3>Whey Protein Isolate</h3>
+				<p>Fast-absorbing, low-lactose protein that fits easily into any meal plan. I use this post-workout and on days when whole-food protein sources fall short.</p>
+				<span class="btn-shop">Shop on Amazon &rarr;</span>
 			</div>
-		</div>
-	</section>
+		</a>
 
-	<!-- Back to Main Site -->
-	<section class="back-section">
-		<div class="container">
-			<p>Explore history, archaeology, and interactive maps on the main site.</p>
-			<a href="index.html" class="home-btn">Visit Geoglypha</a>
-		</div>
-	</section>
-
-	<!-- Affiliate Disclosure -->
-	<section class="disclosure">
-		<div class="container disclosure-content">
-			<h4>Affiliate &amp; Medical Disclosure</h4>
-			<p>Geoglypha is a participant in the Amazon Services LLC Associates Program, an affiliate advertising program designed to provide a means for sites to earn advertising fees by advertising and linking to Amazon.com. As an Amazon Associate, I earn from qualifying purchases at no additional cost to you. I only recommend products I personally use. These statements have not been evaluated by the Food and Drug Administration. Products are not intended to diagnose, treat, cure, or prevent any disease. Always consult a qualified healthcare provider before starting any supplement regimen.</p>
-		</div>
-	</section>
-
-	<!-- Footer -->
-	<footer>
-		<div class="container">
-			<div class="footer-content">
-				<div class="footer-column">
-					<h3>Geoglypha</h3>
-					<p>Exploring Earth's Historical Landscapes through the lens of archaeology, history, and geography.</p>
-				</div>
-				<div class="footer-column">
-					<h3>Quick Links</h3>
-					<ul>
-						<li><a href="index.html">Home</a></li>
-						<li><a href="geography.html">Geography</a></li>
-						<li><a href="history.html">History</a></li>
-						<li><a href="https://www.geoglypha1.org/weather">Weather</a></li>
-						<li><a href="index.html#projects">Projects</a></li>
-						<li><a href="graphita/graphitia.html">Gallery</a></li>
-						<li><a href="https://tools.geoglypha1.org">Tools</a></li>
-					</ul>
-				</div>
-				<div class="footer-column">
-					<h3>Shop</h3>
-					<ul>
-						<li><a href="supplies.html">Art &amp; Field Supplies</a></li>
-						<li><a href="stack.html">Health Stack</a></li>
-					</ul>
-				</div>
-				<div class="footer-column">
-					<h3>Legal</h3>
-					<ul>
-						<li><a href="#">Privacy Policy</a></li>
-						<li><a href="#">Terms of Use</a></li>
-						<li><a href="#">Copyright Information</a></li>
-					</ul>
-				</div>
+		<a href="#" class="reading-item">
+			<span class="reading-num">III</span>
+			<div class="reading-body">
+				<span class="reading-meta">Recovery</span>
+				<h3>Omega-3 Fish Oil</h3>
+				<p>High-EPA/DHA formula for inflammation support and cardiovascular health. Joint soreness dropped noticeably after making this a consistent daily habit.</p>
+				<span class="btn-shop">Shop on Amazon &rarr;</span>
 			</div>
-			<div class="copyright">
-				<p>&copy; <span id="year"></span> Ryan Lafferty / Geoglypha. All rights reserved.</p>
+		</a>
+
+		<a href="#" class="reading-item">
+			<span class="reading-num">IV</span>
+			<div class="reading-body">
+				<span class="reading-meta">Foundational</span>
+				<h3>Vitamin D3 + K2</h3>
+				<p>Most people are deficient and don't know it. D3 paired with K2 ensures calcium goes to your bones, not your arteries. Big mood and energy difference in winter months.</p>
+				<span class="btn-shop">Shop on Amazon &rarr;</span>
 			</div>
-		</div>
-	</footer>
+		</a>
 
-	<script>
-		document.getElementById('year').textContent = new Date().getFullYear();
+		<a href="#" class="reading-item">
+			<span class="reading-num">V</span>
+			<div class="reading-body">
+				<span class="reading-meta">Sleep &amp; Recovery</span>
+				<h3>Magnesium Glycinate</h3>
+				<p>Taken before bed. The glycinate form is gentle on the gut and absorbs well. Noticeably better sleep quality and less muscle cramping after hard training days.</p>
+				<span class="btn-shop">Shop on Amazon &rarr;</span>
+			</div>
+		</a>
 
-		const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-		const nav = document.querySelector('nav');
-		mobileMenuBtn.addEventListener('click', () => nav.classList.toggle('active'));
-	</script>
+		<a href="#" class="reading-item">
+			<span class="reading-num">VI</span>
+			<div class="reading-body">
+				<span class="reading-meta">Hydration</span>
+				<h3>Electrolytes</h3>
+				<p>Sodium, potassium, and magnesium in the right ratios. I mix a packet into my first glass of water every morning. Energy and focus before any caffeine.</p>
+				<span class="btn-shop">Shop on Amazon &rarr;</span>
+			</div>
+		</a>
 
+		<a href="#" class="reading-item">
+			<span class="reading-num">VII</span>
+			<div class="reading-body">
+				<span class="reading-meta">Stress &amp; Cognitive</span>
+				<h3>Ashwagandha (KSM-66)</h3>
+				<p>KSM-66 is the clinically studied extract. Took about three weeks to feel the cortisol-blunting effect. Clearer headed during high-stress stretches of work or travel.</p>
+				<span class="btn-shop">Shop on Amazon &rarr;</span>
+			</div>
+		</a>
+
+		<a href="#" class="reading-item">
+			<span class="reading-num">VIII</span>
+			<div class="reading-body">
+				<span class="reading-meta">Joints &amp; Skin</span>
+				<h3>Collagen Peptides</h3>
+				<p>Unflavored powder that dissolves in hot or cold liquids. Supports joint health, skin elasticity, and connective tissue. Goes straight into morning coffee undetected.</p>
+				<span class="btn-shop">Shop on Amazon &rarr;</span>
+			</div>
+		</a>
+
+		<a href="#" class="reading-item">
+			<span class="reading-num">IX</span>
+			<div class="reading-body">
+				<span class="reading-meta">Daily Nutrition</span>
+				<h3>Greens Powder</h3>
+				<p>Insurance for the days when vegetables take a back seat. Not a replacement for real food but a solid baseline for micronutrients, probiotics, and adaptogens.</p>
+				<span class="btn-shop">Shop on Amazon &rarr;</span>
+			</div>
+		</a>
+
+		<a href="#" class="reading-item">
+			<span class="reading-num">X</span>
+			<div class="reading-body">
+				<span class="reading-meta">Minerals</span>
+				<h3>Zinc + Copper</h3>
+				<p>Zinc supports immune function and testosterone production. Paired with copper to keep the ratio balanced. Take with food at night, not alongside other supplements.</p>
+				<span class="btn-shop">Shop on Amazon &rarr;</span>
+			</div>
+		</a>
+	</div>
+</section>
+
+<div class="disclosure-block">
+	<span class="lbl">Affiliate &amp; Medical Disclosure</span>
+	<p>Geoglypha is a participant in the Amazon Services LLC Associates Program, an affiliate advertising program designed to provide a means for sites to earn advertising fees by advertising and linking to Amazon.com. As an Amazon Associate, I earn from qualifying purchases at no additional cost to you. I only recommend products I personally use. These statements have not been evaluated by the Food and Drug Administration. Products are not intended to diagnose, treat, cure, or prevent any disease. Always consult a qualified healthcare provider before starting any supplement regimen.</p>
+</div>
+
+<footer class="colophon">
+	<div class="colophon-ornament">&#10022; &nbsp; &#8297; &nbsp; &#10022;</div>
+	<nav class="colophon-nav">
+		<a href="index.html">Home</a>
+		<a href="geography.html">Geography</a>
+		<a href="history.html">History</a>
+		<a href="supplies.html">Supplies</a>
+		<a href="graphita/">Gallery</a>
+		<a href="index.html#contact">Contact</a>
+	</nav>
+	<div class="colophon-meta">
+		<div>&copy; <span id="year"></span> Geoglypha &nbsp;&middot;&nbsp; Ryan Lafferty</div>
+	</div>
+</footer>
+
+<script>
+	document.getElementById('year').textContent = new Date().getFullYear();
+	const mobileBtn = document.querySelector('.nav-mobile-btn');
+	const navLinks  = document.querySelector('.nav-links');
+	if (mobileBtn && navLinks) {
+		mobileBtn.addEventListener('click', () => navLinks.classList.toggle('open'));
+		document.addEventListener('click', (e) => {
+			if (!mobileBtn.contains(e.target) && !navLinks.contains(e.target)) navLinks.classList.remove('open');
+		});
+	}
+</script>
 </body>
 </html>

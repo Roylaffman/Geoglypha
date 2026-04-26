@@ -3,557 +3,225 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Productivity &amp; Art Supplies | Geoglypha</title>
+	<title>Supplies &mdash; Geoglypha</title>
+	<meta name="description" content="Curated tools for sketching, fieldwork, journaling, and creative projects. Gear I actually travel with and recommend.">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="assets/css/design-system.css">
 	<style>
-		:root {
-			--primary-color:   #3a6351;
-			--secondary-color: #f2edd7;
-			--accent-color:    #a0937d;
-			--accent-gold:     #F59E0B;
-			--accent-gold-hover: #D97706;
-			--text-color:      #333;
-			--text-muted:      #6B7280;
-			--light-text:      #f5f5f5;
-			--header-font:     'Georgia', serif;
-			--body-font:       'Arial', sans-serif;
-		}
-
-		* { margin: 0; padding: 0; box-sizing: border-box; }
-
-		body {
-			font-family: var(--body-font);
-			line-height: 1.6;
-			color: var(--text-color);
-			background-color: #f9f9f9;
-		}
-
-		.container {
-			width: 90%;
-			max-width: 1200px;
-			margin: 0 auto;
-			padding: 0 20px;
-		}
-
-		/* ── Header / Nav ── */
-		header {
-			background-color: var(--primary-color);
-			color: var(--light-text);
-			padding: 1rem 0;
-			position: relative;
-		}
-
-		.header-content {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-		}
-
-		.logo {
-			font-family: var(--header-font);
-			font-size: 2rem;
-			font-weight: bold;
-		}
-
-		.logo a {
-			color: var(--light-text);
-			text-decoration: none;
-		}
-
-		nav ul {
-			display: flex;
-			list-style: none;
-		}
-
-		nav ul li { margin-left: 1.5rem; }
-
-		nav ul li a {
-			color: var(--light-text);
-			text-decoration: none;
-			font-weight: 500;
-			transition: color 0.3s;
-		}
-
-		nav ul li a:hover { color: var(--secondary-color); }
-
-		.mobile-menu-btn {
-			display: none;
-			background: none;
-			border: none;
-			color: var(--light-text);
-			font-size: 1.5rem;
-			cursor: pointer;
-		}
-
-		/* ── Hero ── */
-		.hero {
-			background: linear-gradient(135deg, #2d4f40 0%, var(--primary-color) 55%, #4e7a64 100%);
-			color: var(--light-text);
-			padding: 3.5rem 0;
-			text-align: center;
-		}
-
-		.hero h1 {
-			font-family: var(--header-font);
-			font-size: 2.6rem;
-			margin-bottom: 0.5rem;
-		}
-
-		.hero h2 {
-			font-family: var(--header-font);
-			font-size: 1.2rem;
-			font-weight: normal;
-			opacity: 0.85;
-			margin-bottom: 1rem;
-			letter-spacing: 0.04em;
-		}
-
-		.hero p {
-			font-size: 1.1rem;
-			opacity: 0.9;
-			max-width: 600px;
-			margin: 0 auto;
-		}
-
-		/* ── Products Section ── */
-		.products { padding: 3rem 0; }
-
-		.products-grid {
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-			gap: 1.5rem;
-		}
-
-		.product-card {
-			background-color: #fff;
-			border-radius: 8px;
-			overflow: hidden;
-			box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-			transition: transform 0.3s, box-shadow 0.3s;
-			display: flex;
-			flex-direction: column;
-		}
-
-		.product-card:hover {
-			transform: translateY(-6px);
-			box-shadow: 0 8px 20px rgba(58, 99, 81, 0.18);
-		}
-
-		.product-img {
-			width: 100%;
-			height: 220px;
-			background-color: var(--secondary-color);
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			font-size: 3rem;
-			overflow: hidden;
-		}
-
-		.product-img img {
-			width: 100%;
-			height: 100%;
-			object-fit: cover;
-		}
-
-		.product-body {
-			padding: 1.25rem;
-			flex: 1;
-			display: flex;
-			flex-direction: column;
-		}
-
-		.product-category {
-			font-size: 0.72rem;
+		.btn-shop {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 10px;
+			letter-spacing: 0.18em;
 			text-transform: uppercase;
-			letter-spacing: 0.1em;
-			color: var(--primary-color);
-			font-weight: bold;
-			margin-bottom: 0.4rem;
-		}
-
-		.product-body h3 {
-			font-family: var(--header-font);
-			font-size: 1.15rem;
-			color: var(--text-color);
-			margin-bottom: 0.5rem;
-		}
-
-		.product-body p {
-			font-size: 0.9rem;
-			color: var(--text-muted);
-			margin-bottom: 1.25rem;
-			flex: 1;
-		}
-
-		.shop-btn {
-			display: inline-block;
-			background-color: var(--accent-gold);
-			color: #1a1a1a;
-			padding: 0.7rem 1.25rem;
+			color: var(--ochre-deep);
+			border: 1px solid var(--ochre-deep);
+			padding: 8px 16px;
 			text-decoration: none;
-			border-radius: 4px;
-			font-weight: bold;
-			font-size: 0.9rem;
-			text-align: center;
-			transition: background-color 0.3s;
-		}
-
-		.shop-btn:hover { background-color: var(--accent-gold-hover); }
-
-		/* ── Back Section ── */
-		.back-section {
-			padding: 3rem 0;
-			text-align: center;
-			background-color: var(--secondary-color);
-		}
-
-		.back-section p {
-			color: var(--text-muted);
-			margin-bottom: 1rem;
-		}
-
-		.home-btn {
 			display: inline-block;
-			background-color: var(--primary-color);
-			color: var(--light-text);
-			padding: 0.8rem 2rem;
-			text-decoration: none;
-			border-radius: 4px;
-			font-weight: bold;
-			font-size: 1rem;
-			transition: background-color 0.3s;
+			transition: background 0.2s, color 0.2s;
 		}
-
-		.home-btn:hover { background-color: #2d4f40; }
-
-		/* ── Affiliate Disclosure ── */
-		.disclosure {
-			background-color: #fff;
-			border-top: 2px solid var(--primary-color);
-			padding: 2rem 0;
+		.btn-shop:hover {
+			background: var(--ochre-deep);
+			color: var(--paper);
 		}
-
-		.disclosure-content {
-			max-width: 800px;
+		.disclosure-block {
+			max-width: 720px;
 			margin: 0 auto;
-			text-align: center;
+			padding: 48px 24px;
+			border-top: 1px solid var(--rule);
 		}
-
-		.disclosure-content h4 {
-			font-family: var(--header-font);
-			color: var(--primary-color);
-			margin-bottom: 0.75rem;
-			font-size: 1rem;
+		.disclosure-block p {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 10px;
+			letter-spacing: 0.08em;
+			line-height: 1.9;
+			color: var(--ink);
+			opacity: 0.45;
+			text-align: justify;
+			margin: 0;
 		}
-
-		.disclosure-content p {
-			font-size: 0.8rem;
-			color: var(--text-muted);
-			line-height: 1.7;
-		}
-
-		/* ── Footer ── */
-		footer {
-			background-color: var(--primary-color);
-			color: var(--light-text);
-			padding: 3rem 0 1.5rem;
-		}
-
-		.footer-content {
-			display: grid;
-			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-			gap: 2rem;
-			margin-bottom: 2rem;
-		}
-
-		.footer-column h3 {
-			font-family: var(--header-font);
-			margin-bottom: 1.5rem;
-			font-size: 1.2rem;
-		}
-
-		.footer-column ul { list-style: none; }
-
-		.footer-column ul li { margin-bottom: 0.8rem; }
-
-		.footer-column ul li a {
-			color: var(--light-text);
-			text-decoration: none;
-			transition: color 0.3s;
-		}
-
-		.footer-column ul li a:hover { color: var(--secondary-color); }
-
-		.copyright {
-			text-align: center;
-			padding-top: 1.5rem;
-			border-top: 1px solid rgba(255, 255, 255, 0.1);
-			font-size: 0.85rem;
-			opacity: 0.8;
-		}
-
-		/* ── Responsive ── */
-		@media (max-width: 768px) {
-			.header-content {
-				flex-direction: row;
-				justify-content: space-between;
-				align-items: center;
-				position: relative;
-			}
-
-			.logo { font-size: 1.4rem; }
-
-			.mobile-menu-btn {
-				display: block;
-				position: static;
-			}
-
-			nav {
-				display: none;
-				position: absolute;
-				top: 100%;
-				left: 0;
-				width: 100%;
-				background-color: var(--primary-color);
-				z-index: 1000;
-				padding: 1rem 0;
-			}
-
-			nav.active { display: block; }
-
-			nav ul {
-				flex-direction: column;
-				align-items: center;
-			}
-
-			nav ul li {
-				margin: 0.5rem 0;
-				margin-left: 0;
-			}
-
-			.hero h1 { font-size: 1.8rem; }
-			.hero p  { font-size: 1rem; }
-
-			.products-grid {
-				grid-template-columns: 1fr 1fr;
-				gap: 1rem;
-			}
-
-			.product-img { height: 160px; }
-
-			.footer-content { grid-template-columns: 1fr; }
-		}
-
-		@media (max-width: 480px) {
-			.container { width: 95%; padding: 0 10px; }
-			.hero { padding: 2.5rem 0; }
-			.hero h1 { font-size: 1.5rem; }
-			.products-grid { grid-template-columns: 1fr; }
-			.product-img { height: 200px; }
+		.disclosure-block .lbl {
+			display: block;
+			font-size: 10px;
+			letter-spacing: 0.18em;
+			text-transform: uppercase;
+			color: var(--ochre-deep);
+			opacity: 0.7;
+			margin-bottom: 10px;
 		}
 	</style>
 </head>
 <body>
 
-	<!-- Header -->
-	<header>
-		<div class="container header-content">
-			<div class="logo">
-				<a href="index.html">Geoglypha</a>
-			</div>
-			<button class="mobile-menu-btn">&#9776;</button>
-			<nav>
-				<ul>
-					<li><a href="index.html">Home</a></li>
-					<li><a href="geography.html">Geography</a></li>
-					<li><a href="history.html">History</a></li>
-					<li><a href="index.html#projects">Projects</a></li>
-					<li><a href="https://www.geoglypha1.org/weather">Weather</a></li>
-					<li><a href="graphita/graphitia.html">Gallery</a></li>
-					<li><a href="https://tools.geoglypha1.org">Tools</a></li>
-					<li><a href="supplies.html" style="color:#D8B4FE;">Supplies</a></li>
-					<li><a href="stack.html" style="color:#86EFAC;">Stack</a></li>
-					<li><a href="index.html#about">About</a></li>
-					<li><a href="index.html#contact">Contact</a></li>
-				</ul>
-			</nav>
+<nav class="site-nav">
+	<div class="nav-inner">
+		<a href="index.html" class="nav-logo">Geoglypha</a>
+		<button class="nav-mobile-btn" aria-label="Toggle navigation">&#9776;</button>
+		<ul class="nav-links">
+			<li><a href="index.html">Home</a></li>
+			<li><a href="geography.html">Geography</a></li>
+			<li><a href="history.html">History</a></li>
+			<li><a href="index.html#projects">Projects</a></li>
+			<li><a href="https://www.geoglypha1.org/weather">Weather</a></li>
+			<li><a href="graphita/">Gallery</a></li>
+			<li><a href="https://tools.geoglypha1.org">Tools</a></li>
+			<li><a href="supplies.html" class="nav-special-purple">Supplies</a></li>
+			<li><a href="stack.html" class="nav-special-green">Stack</a></li>
+			<li><a href="index.html#about">About</a></li>
+			<li><a href="index.html#contact">Contact</a></li>
+		</ul>
+	</div>
+</nav>
+
+<section class="hero">
+	<div class="hero-masthead">
+		<span>Geoglypha &nbsp;/&nbsp; Field Kit</span>
+		<span>Drawing &middot; Fieldwork &middot; Journaling</span>
+		<span>Vol. II</span>
+	</div>
+
+	<h1 class="hero-title">
+		Supplies
+		<span class="hero-subtitle">Productivity &amp; Art</span>
+	</h1>
+
+	<p class="hero-deck">
+		Curated tools for sketching, fieldwork, journaling, and creative projects.
+		Gear I actually travel with and recommend.
+	</p>
+
+	<div class="hero-meta">
+		<div class="hero-meta-item">
+			<span class="lbl">Category</span>
+			<span class="val">Art &amp; Field Gear</span>
 		</div>
-	</header>
-
-	<!-- Hero -->
-	<section class="hero">
-		<div class="container">
-			<h1>Productivity &amp; Art Supplies</h1>
-			<h2>Travel Friendly</h2>
-			<p>Curated tools for sketching, fieldwork, journaling, and creative projects. Gear I actually travel with and recommend.</p>
+		<div class="hero-meta-item">
+			<span class="lbl">Items</span>
+			<span class="val">7 Products</span>
 		</div>
-	</section>
+		<div class="hero-meta-item">
+			<span class="lbl">Via</span>
+			<span class="val">Amazon Associates</span>
+		</div>
+	</div>
+</section>
 
-	<!-- Products -->
-	<section class="products">
-		<div class="container">
-			<div class="products-grid">
+<div class="ornament">
+	<span class="glyph">&#10022;</span>
+	<span>I</span>
+	<span class="glyph">&#10022;</span>
+</div>
 
-				<!-- Foldable Scissors -->
-				<div class="product-card">
-					<div class="product-img">
-						<img src="https://www.geoglypha1.org/Scissors.jpg" alt="Foldable Scissors">
-					</div>
-					<div class="product-body">
-						<span class="product-category">Field Gear</span>
-						<h3>Foldable Scissors</h3>
-						<p>Compact, travel-friendly scissors that fold flat. Perfect for fieldwork, journaling, and keeping in your everyday carry.</p>
-						<a href="https://amzn.to/4kF78js" class="shop-btn">Shop on Amazon</a>
-					</div>
-				</div>
+<section class="section" id="gear">
+	<div class="section-header">
+		<span class="section-num">&#167; 01 &nbsp;&mdash;&nbsp; The Kit</span>
+		<h2>Field &amp; Studio Supplies</h2>
+	</div>
 
-				<!-- Orgbro Mini Thermal Printer -->
-				<div class="product-card">
-					<div class="product-img">
-						<img src="https://www.geoglypha1.org/Orgbro.jpg" alt="Orgbro Mini Thermal Printer">
-					</div>
-					<div class="product-body">
-						<span class="product-category">Tech</span>
-						<h3>Orgbro Mini Thermal Printer</h3>
-						<p>Portable Bluetooth thermal printer for quick prints on the go. Great for labels, notes, and lo-fi art projects.</p>
-						<a href="https://amzn.to/4rjlpoq" class="shop-btn">Shop on Amazon</a>
-					</div>
-				</div>
-
-				<!-- Field Notes Notebooks -->
-				<div class="product-card">
-					<div class="product-img">
-						<img src="https://www.geoglypha1.org/field_notes.jpg" alt="Field Notes Notebooks">
-					</div>
-					<div class="product-body">
-						<span class="product-category">Notebooks</span>
-						<h3>Field Notes Notebooks</h3>
-						<p>Rugged, pocket-sized memo books built for documenting observations in the field. The original everyday carry notebook.</p>
-						<a href="https://amzn.to/4aOxFas" class="shop-btn">Shop on Amazon</a>
-					</div>
-				</div>
-
-				<!-- Micron Pens -->
-				<div class="product-card">
-					<div class="product-img">
-						<img src="https://www.geoglypha1.org/Micron.jpg" alt="Micron Pens">
-					</div>
-					<div class="product-body">
-						<span class="product-category">Pens &amp; Ink</span>
-						<h3>Micron Pens</h3>
-						<p>Archival-quality, fade-resistant pigment ink pens. Industry standard for technical drawing, illustration, and detailed linework.</p>
-						<a href="https://amzn.to/4kzbSHb" class="shop-btn">Shop on Amazon</a>
-					</div>
-				</div>
-
-				<!-- Le Pen Colored Pens -->
-				<div class="product-card">
-					<div class="product-img">
-						<img src="https://www.geoglypha1.org/LePen_color.jpg" alt="Le Pen Colored Pens">
-					</div>
-					<div class="product-body">
-						<span class="product-category">Pens &amp; Ink</span>
-						<h3>Le Pen Colored Pens</h3>
-						<p>Smooth, fine-point markers in vibrant colors. Ideal for color-coding notes, adding detail to sketches, and journaling.</p>
-						<a href="https://amzn.to/4aOvROE" class="shop-btn">Shop on Amazon</a>
-					</div>
-				</div>
-
-				<!-- Tamaki Circle Templates -->
-				<div class="product-card">
-					<div class="product-img">
-						<img src="https://www.geoglypha1.org/Template_ruler.jpg" alt="Tamaki Circle Templates">
-					</div>
-					<div class="product-body">
-						<span class="product-category">Drafting Tools</span>
-						<h3>Tamaki Circle Templates</h3>
-						<p>Precision drafting templates for smooth curves and technical shapes. Essential for cartography, design, and architectural sketches.</p>
-						<a href="https://amzn.to/4tAMkNX" class="shop-btn">Shop on Amazon</a>
-					</div>
-				</div>
-
-				<!-- Inkless Pencil -->
-				<div class="product-card">
-					<div class="product-img">
-						<img src="https://www.geoglypha1.org/everlasting_pencil.jpg" alt="Inkless Everlasting Pencil">
-					</div>
-					<div class="product-body">
-						<span class="product-category">Pens &amp; Ink</span>
-						<h3>Inkless Everlasting Pencil</h3>
-						<p>A metal-tip pen that never runs out. Writes with a fine silver line by depositing a small amount of metal alloy on paper.</p>
-						<a href="https://amzn.to/3MHX8Js" class="shop-btn">Shop on Amazon</a>
-					</div>
-				</div>
-
+	<div class="projects-grid">
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://www.geoglypha1.org/Scissors.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Field Gear</span>
+				<h3>Foldable Scissors</h3>
+				<p>Compact, travel-friendly scissors that fold flat. Perfect for fieldwork, journaling, and keeping in your everyday carry.</p>
+				<a href="https://amzn.to/4kF78js" class="btn-shop" target="_blank" rel="noopener">Shop on Amazon &rarr;</a>
 			</div>
 		</div>
-	</section>
 
-	<!-- Back to Main Site -->
-	<section class="back-section">
-		<div class="container">
-			<p>Explore history, archaeology, and interactive maps on the main site.</p>
-			<a href="index.html" class="home-btn">Visit Geoglypha</a>
-		</div>
-	</section>
-
-	<!-- Affiliate Disclosure -->
-	<section class="disclosure">
-		<div class="container disclosure-content">
-			<h4>Affiliate Disclosure</h4>
-			<p>Geoglypha is a participant in the Amazon Services LLC Associates Program, an affiliate advertising program designed to provide a means for sites to earn advertising fees by advertising and linking to Amazon.com. As an Amazon Associate, I earn from qualifying purchases. This comes at no additional cost to you. I only recommend products I genuinely use and believe in. Thank you for supporting Geoglypha!</p>
-		</div>
-	</section>
-
-	<!-- Footer -->
-	<footer>
-		<div class="container">
-			<div class="footer-content">
-				<div class="footer-column">
-					<h3>Geoglypha</h3>
-					<p>Exploring Earth's Historical Landscapes through the lens of archaeology, history, and geography.</p>
-				</div>
-				<div class="footer-column">
-					<h3>Quick Links</h3>
-					<ul>
-						<li><a href="index.html">Home</a></li>
-						<li><a href="geography.html">Geography</a></li>
-						<li><a href="history.html">History</a></li>
-						<li><a href="https://www.geoglypha1.org/weather">Weather</a></li>
-						<li><a href="index.html#projects">Projects</a></li>
-						<li><a href="graphita/graphitia.html">Gallery</a></li>
-						<li><a href="https://tools.geoglypha1.org">Tools</a></li>
-					</ul>
-				</div>
-				<div class="footer-column">
-					<h3>Shop</h3>
-					<ul>
-						<li><a href="supplies.html">Art &amp; Field Supplies</a></li>
-						<li><a href="stack.html">Health Stack</a></li>
-					</ul>
-				</div>
-				<div class="footer-column">
-					<h3>Legal</h3>
-					<ul>
-						<li><a href="#">Privacy Policy</a></li>
-						<li><a href="#">Terms of Use</a></li>
-						<li><a href="#">Copyright Information</a></li>
-					</ul>
-				</div>
-			</div>
-			<div class="copyright">
-				<p>&copy; <span id="year"></span> Ryan Lafferty / Geoglypha. All rights reserved.</p>
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://www.geoglypha1.org/Orgbro.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Tech</span>
+				<h3>Orgbro Mini Thermal Printer</h3>
+				<p>Portable Bluetooth thermal printer for quick prints on the go. Great for labels, notes, and lo-fi art projects.</p>
+				<a href="https://amzn.to/4rjlpoq" class="btn-shop" target="_blank" rel="noopener">Shop on Amazon &rarr;</a>
 			</div>
 		</div>
-	</footer>
 
-	<script>
-		document.getElementById('year').textContent = new Date().getFullYear();
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://www.geoglypha1.org/field_notes.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Notebooks</span>
+				<h3>Field Notes Notebooks</h3>
+				<p>Rugged, pocket-sized memo books built for documenting observations in the field. The original everyday carry notebook.</p>
+				<a href="https://amzn.to/4aOxFas" class="btn-shop" target="_blank" rel="noopener">Shop on Amazon &rarr;</a>
+			</div>
+		</div>
 
-		const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-		const nav = document.querySelector('nav');
-		mobileMenuBtn.addEventListener('click', () => nav.classList.toggle('active'));
-	</script>
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://www.geoglypha1.org/Micron.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Pens &amp; Ink</span>
+				<h3>Micron Pens</h3>
+				<p>Archival-quality, fade-resistant pigment ink pens. Industry standard for technical drawing, illustration, and detailed linework.</p>
+				<a href="https://amzn.to/4kzbSHb" class="btn-shop" target="_blank" rel="noopener">Shop on Amazon &rarr;</a>
+			</div>
+		</div>
 
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://www.geoglypha1.org/LePen_color.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Pens &amp; Ink</span>
+				<h3>Le Pen Colored Pens</h3>
+				<p>Smooth, fine-point markers in vibrant colors. Ideal for color-coding notes, adding detail to sketches, and journaling.</p>
+				<a href="https://amzn.to/4aOvROE" class="btn-shop" target="_blank" rel="noopener">Shop on Amazon &rarr;</a>
+			</div>
+		</div>
+
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://www.geoglypha1.org/Template_ruler.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Drafting Tools</span>
+				<h3>Tamaki Circle Templates</h3>
+				<p>Precision drafting templates for smooth curves and technical shapes. Essential for cartography, design, and architectural sketches.</p>
+				<a href="https://amzn.to/4tAMkNX" class="btn-shop" target="_blank" rel="noopener">Shop on Amazon &rarr;</a>
+			</div>
+		</div>
+
+		<div class="book-feature">
+			<div class="book-feature-img" style="background-image: url('https://www.geoglypha1.org/everlasting_pencil.jpg');"></div>
+			<div class="book-feature-body">
+				<span class="stamp">Pens &amp; Ink</span>
+				<h3>Inkless Everlasting Pencil</h3>
+				<p>A metal-tip pen that never runs out. Writes with a fine silver line by depositing a small amount of metal alloy on paper.</p>
+				<a href="https://amzn.to/3MHX8Js" class="btn-shop" target="_blank" rel="noopener">Shop on Amazon &rarr;</a>
+			</div>
+		</div>
+	</div>
+</section>
+
+<div class="disclosure-block">
+	<span class="lbl">Affiliate Disclosure</span>
+	<p>Geoglypha is a participant in the Amazon Services LLC Associates Program, an affiliate advertising program designed to provide a means for sites to earn advertising fees by advertising and linking to Amazon.com. As an Amazon Associate, I earn from qualifying purchases. This comes at no additional cost to you. I only recommend products I genuinely use and believe in.</p>
+</div>
+
+<footer class="colophon">
+	<div class="colophon-ornament">&#10022; &nbsp; &#8297; &nbsp; &#10022;</div>
+	<nav class="colophon-nav">
+		<a href="index.html">Home</a>
+		<a href="geography.html">Geography</a>
+		<a href="history.html">History</a>
+		<a href="stack.html">Health Stack</a>
+		<a href="graphita/">Gallery</a>
+		<a href="index.html#contact">Contact</a>
+	</nav>
+	<div class="colophon-meta">
+		<div>&copy; <span id="year"></span> Geoglypha &nbsp;&middot;&nbsp; Ryan Lafferty</div>
+	</div>
+</footer>
+
+<script>
+	document.getElementById('year').textContent = new Date().getFullYear();
+	const mobileBtn = document.querySelector('.nav-mobile-btn');
+	const navLinks  = document.querySelector('.nav-links');
+	if (mobileBtn && navLinks) {
+		mobileBtn.addEventListener('click', () => navLinks.classList.toggle('open'));
+		document.addEventListener('click', (e) => {
+			if (!mobileBtn.contains(e.target) && !navLinks.contains(e.target)) navLinks.classList.remove('open');
+		});
+	}
+</script>
 </body>
 </html>
