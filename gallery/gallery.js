@@ -135,7 +135,7 @@ async function fetchAIC() {
 		if (AIC_QUERY) url += `&q=${encodeURIComponent(AIC_QUERY)}`;
 
 		const res  = await fetch(url, {
-			headers: { 'AIC-User-Agent': 'personal-gallery (ryan@example.com)' },
+			headers: { 'AIC-User-Agent': 'geoglypha-gallery/1.0 (https://www.geoglypha1.org)' },
 		});
 		const json = await res.json();
 		const artworks = (json.data || []).filter(a => a.image_id);
