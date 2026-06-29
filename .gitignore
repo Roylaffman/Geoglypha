@@ -20,6 +20,7 @@ node_modules/
 *.json
 !aws-config.template.json
 !bucket-policy.json
+!maps.json
 service-account*.json
 
 # OS

@@ -1,0 +1,83 @@
+{
+	"version": "1.0",
+	"updated": "2026-06-29",
+	"maps": [
+		{
+			"slug": "watershed-scout",
+			"title": "Watershed Scout — Floodplain, Watershed & Landslide Analysis Tool",
+			"description": "Search any address to map waterways, FEMA flood zones, USGS watershed boundaries, real-time USGS streamgages, landslide hazard terrain, and OSM points of interest within a 2-mile radius. 3D terrain, Esri Wayback historical imagery (2019—2025), and tabbed data tables.",
+			"url": "https://www.geoglypha1.org/watershed-scout.html",
+			"thumb": "https://www.geoglypha1.org/images/watershed-scout.webp",
+			"page": "geography",
+			"section": "tools",
+			"tags": ["watershed", "floodplain", "landslide", "fema", "hydrology", "waterways", "osm", "wayback", "3d", "streamgages", "usgs"],
+			"badge": "Interactive Tool",
+			"status": "live",
+			"source": "Reports/watershed-scout.html",
+			"source_project": "Pi Map"
+		},
+		{
+			"slug": "koh-ker",
+			"title": "Koh Ker / Lingapura — GIS Data Sheet & Digital Terrain Report",
+			"description": "Geospatial data inventory, elevation analysis from Copernicus COP-30 DEM, monument gazetteer with 14 sites, and LiDAR source catalog for Koh Ker, Preah Vihear Province, Cambodia.",
+			"url": "https://www.geoglypha1.org/koh-ker.html",
+			"thumb": "https://www.geoglypha1.org/images/koh-ker.webp",
+			"page": "geography",
+			"section": "southeast-asia",
+			"date_range": "928–944 CE",
+			"tags": ["khmer", "cambodia", "archaeology", "lidar", "dem", "gis", "copernicus"],
+			"badge": "GIS Data Sheet",
+			"status": "draft",
+			"source": "Reports/koh-ker.html",
+			"source_project": "Pi Map",
+			"last_change": "Initial data pipeline build. Copernicus COP-30 DEM fetched via OpenTopography API."
+		},
+		{
+			"slug": "roman-dalmatia-2026",
+			"title": "Roman Villa at Mostine, Split & Roman Dalmatia",
+			"description": "A newly discovered 2,000 m² agricultural estate (1st c. CE) near Split, with 22 mapped Roman settlements across Adriatic Dalmatia, 2025-2026 discoveries, and provincial context.",
+			"url": "https://www.geoglypha1.org/roman-dalmatia-2026.html",
+			"page": "geography",
+			"section": "mediterranean",
+			"tags": ["roman", "dalmatia", "croatia", "archaeology", "adriatic"],
+			"badge": "Story Map",
+			"status": "draft",
+			"source": "Reports/roman-dalmatia-2026.html",
+			"source_project": "Pi Map"
+		},
+		{
+			"slug": "asheville-weather-live",
+			"title": "Asheville Weather & FEMA Flood Dashboard",
+			"description": "Self-contained live dashboard: 7-day Open-Meteo weather charts (temperature, precipitation, barometric pressure, wind) combined with USGS river gauge data and all 69 FEMA flood zone features for the Asheville area. Weather data, river data, and GIS layers are baked inline — zero external data fetches. Rebuilt automatically at 7am, 1pm, and 7pm EDT via cron on Hermes (mini PC), then uploaded to GCS.",
+			"url": "https://www.geoglypha1.org/asheville_weather_live.html",
+			"page": "weather",
+			"section": "north-carolina",
+			"tags": ["weather", "asheville", "fema", "flood", "usgs", "river", "open-meteo", "leaflet", "chart.js", "cron", "live"],
+			"badge": "Live Dashboard",
+			"status": "live",
+			"source_project": "Pi Map",
+			"deploy_host": "Hermes (mini PC)",
+			"pipeline": {
+				"fetch": "~/pi-map/Scripts/fetch_asheville_data.py",
+				"build": "~/pi-map/Scripts/build_asheville_dashboard.py",
+				"cron": "~/pi-map/Scripts/update_asheville_weather.sh",
+				"dev_server": "~/pi-map/Scripts/serve_asheville_dashboard.py"
+			},
+			"cron_schedule": "7am, 1pm, 7pm EDT",
+			"last_change": "Consolidated from three files (asheville_weather_live.html 15KB + asheville-weather-data.json 41KB + asheville-fema-flood.geojson 2.6MB) into one self-contained 2.7MB HTML with all weather, USGS river, and 69 FEMA flood zone features embedded as JS variables. Uploaded from Hermes."
+		},
+		{
+			"slug": "mosquito-range-occurrence-2026",
+			"title": "Aedes aegypti & Aedes albopictus — Range & Occurrence Map",
+			"description": "Established range polygons and GBIF occurrence heatmaps for yellow fever mosquito and Asian tiger mosquito across North America and Europe, with 35,875 county-level records.",
+			"url": "https://www.geoglypha1.org/mosquito-range-occurrence-2026.html",
+			"page": "science",
+			"section": "vector-ecology",
+			"tags": ["mosquito", "aedes", "aegypti", "albopictus", "dengue", "chikungunya", "zika", "vector", "gbif", "heatmap"],
+			"badge": "Story Map",
+			"status": "draft",
+			"source": "Reports/Mosquito_Range_Occurrence_2026-05-13.html",
+			"source_project": "Pi Map"
+		}
+	]
+}

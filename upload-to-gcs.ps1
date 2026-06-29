@@ -1,1 +1,1 @@
-gsutil -m rsync -r . gs://geoglypha1/
+gsutil -m rsync -r -x "\.git/|node_modules/|\.claude/|\.idea/|\.kiro/|\.vscode/|\.dockerignore|scratchpad/" . gs://www.geoglypha1.org/
