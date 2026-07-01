@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Roman Villa at Mostine, Split & Roman Dalmatia — GIS Data Sheet &amp; Digital Terrain Report</title>
+<meta name="author" content="Ryan Lafferty" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+<style>
+	:root {
+		--ink:        #1c1812;
+		--ink-soft:   #3d342a;
+		--paper:      #f4ecdc;
+		--paper-deep: #ebe0c8;
+		--rust:       #a14223;
+		--moss:       #4a5d3a;
+		--gold:       #b88842;
+		--rule:       #c9b994;
+	}
+
+	* { box-sizing: border-box; }
+
+	body {
+		margin: 0;
+		padding: 0;
+		background: var(--paper);
+		color: var(--ink);
+		font-family: 'Work Sans', sans-serif;
+		font-weight: 400;
+		font-size: 16px;
+		line-height: 1.65;
+		background-image:
+			radial-gradient(circle at 20% 10%, rgba(184,136,66,0.05) 0%, transparent 40%),
+			radial-gradient(circle at 80% 60%, rgba(161,66,35,0.04) 0%, transparent 50%);
+	}
+
+	.container {
+		max-width: 980px;
+		margin: 0 auto;
+		padding: 56px 28px 80px;
+	}
+
+	/* ---- Masthead header ---- */
+	.masthead {
+		border-top: 4px double var(--ink);
+		border-bottom: 1px solid var(--ink);
+		padding: 28px 0 22px;
+		margin-bottom: 40px;
+	}
+
+	.kicker {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 11px;
+		letter-spacing: 0.22em;
+		text-transform: uppercase;
+		color: var(--rust);
+		margin: 0 0 14px;
+	}
+
+	h1 {
+		font-family: 'Cormorant Garamond', serif;
+		font-weight: 600;
+		font-size: clamp(36px, 5.5vw, 58px);
+		line-height: 1.05;
+		margin: 0 0 12px;
+		letter-spacing: -0.01em;
+		color: var(--ink);
+	}
+
+	h2 {
+		font-family: 'Cormorant Garamond', serif;
+		font-weight: 600;
+		font-size: 32px;
+		margin: 56px 0 6px;
+		line-height: 1.1;
+		color: var(--ink);
+	}
+
+	h2::after {
+		content: '';
+		display: block;
+		width: 60px;
+		height: 1px;
+		background: var(--ink);
+		margin: 14px 0 24px;
+	}
+
+	h3 {
+		font-family: 'Work Sans', sans-serif;
+		font-weight: 600;
+		font-size: 17px;
+		letter-spacing: 0.02em;
+		margin: 28px 0 8px;
+		color: var(--ink);
+	}
+
+	h4 { font-size: 1rem; margin: 20px 0 6px; font-weight: 500; }
+
+	p { margin: 0 0 14px; }
+	a { color: var(--rust); }
+
+	ul { margin: 0 0 14px; padding-left: 20px; line-height: 1.65; }
+	li { margin-bottom: 4px; }
+
+	.subtitle {
+		font-family: 'Cormorant Garamond', serif;
+		font-style: italic;
+		font-size: 19px;
+		color: var(--ink-soft);
+		margin: 0;
+		max-width: 70ch;
+	}
+
+	.meta-bar {
+		display: flex;
+		gap: 28px;
+		flex-wrap: wrap;
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 11px;
+		color: var(--ink-soft);
+		margin-top: 22px;
+		letter-spacing: 0.05em;
+	}
+	.meta-bar span strong { color: var(--ink); font-weight: 500; }
+
+	/* ---- Pipeline / data provenance box ---- */
+	.pipeline-box {
+		background: var(--paper-deep);
+		border-left: 3px solid var(--rust);
+		padding: 12px 18px;
+		margin: 18px 0;
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 0.78rem;
+		line-height: 1.6;
+		color: var(--ink-soft);
+	}
+	.pipeline-box strong { color: var(--ink); }
+
+	/* ---- Map ---- */
+	#map {
+		height: 520px;
+		width: 100%;
+		border: 1px solid var(--ink);
+		margin-top: 8px;
+		box-shadow: 6px 6px 0 var(--paper-deep);
+	}
+
+	@media (max-width: 640px) {
+		#map { height: 380px; }
+	}
+
+	/* ---- Leaflet overrides ---- */
+	.leaflet-popup-content-wrapper {
+		border-radius: 0;
+		background: var(--paper);
+		border: 1px solid var(--ink);
+		box-shadow: 4px 4px 0 var(--paper-deep);
+	}
+	.leaflet-popup-content {
+		margin: 12px 14px;
+		font-family: 'Work Sans', sans-serif;
+		font-size: 13px;
+		line-height: 1.5;
+	}
+	.leaflet-popup-content h5 {
+		font-family: 'Cormorant Garamond', serif;
+		font-weight: 600;
+		font-size: 18px;
+		margin: 0 0 4px;
+		color: var(--ink);
+	}
+	.leaflet-popup-content .pop-meta {
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 10px;
+		color: var(--rust);
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		margin-bottom: 6px;
+	}
+	.leaflet-popup-content p { margin: 0 0 4px; color: var(--ink-soft); }
+	.leaflet-popup-tip { background: var(--paper); }
+
+	.leaflet-control-layers {
+		background: var(--paper) !important;
+		border: 1px solid var(--rule) !important;
+		border-radius: 0 !important;
+		box-shadow: 2px 2px 0 var(--paper-deep) !important;
+		font-family: 'Work Sans', sans-serif !important;
+		font-size: 12px !important;
+	}
+	.leaflet-control-layers label { font-family: 'Work Sans', sans-serif !important; font-size: 12px !important; }
+
+	/* ---- Fullscreen button ---- */
+	.leaflet-control-fullscreen {
+		background: var(--paper);
+		border: 1px solid var(--ink) !important;
+		border-radius: 0 !important;
+		box-shadow: 2px 2px 0 var(--paper-deep);
+	}
+	.leaflet-control-fullscreen a {
+		background: var(--paper) !important;
+		color: var(--ink) !important;
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 16px;
+		line-height: 30px;
+		text-align: center;
+		width: 30px;
+		height: 30px;
+		display: block;
+		border: none !important;
+	}
+	.leaflet-control-fullscreen a:hover { background: var(--paper-deep) !important; }
+	#map:-webkit-full-screen,
+	#map:fullscreen {
+		width: 100vw !important;
+		height: 100vh !important;
+		max-width: none !important;
+		position: fixed !important;
+		top: 0; left: 0;
+		z-index: 99999;
+		margin: 0; padding: 0;
+		border: none;
+		box-shadow: none;
+	}
+
+	/* ---- Legend ---- */
+	.legend {
+		background: var(--paper);
+		border: 1px solid var(--ink);
+		padding: 8px 12px;
+		line-height: 1.6;
+		font-family: 'Work Sans', sans-serif;
+		font-size: 12px;
+		box-shadow: 4px 4px 0 var(--paper-deep);
+	}
+	.legend h6 {
+		font-family: 'JetBrains Mono', monospace;
+		margin: 0 0 4px;
+		color: var(--rust);
+		font-size: 10px;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+	}
+	.legend-item { display: flex; align-items: center; gap: 6px; }
+	.legend-swatch { display: inline-block; width: 10px; height: 10px; flex-shrink: 0; }
+
+	/* ---- Tables ---- */
+	table {
+		width: 100%;
+		border-collapse: collapse;
+		margin: 16px 0;
+		font-size: 14px;
+	}
+	th {
+		text-align: left;
+		font-family: 'JetBrains Mono', monospace;
+		font-weight: 400;
+		font-size: 10px;
+		letter-spacing: 0.15em;
+		text-transform: uppercase;
+		color: var(--rust);
+		padding: 9px 12px;
+		border-bottom: 1px solid var(--ink);
+	}
+	td {
+		padding: 9px 12px;
+		border-bottom: 1px solid var(--rule);
+		vertical-align: top;
+	}
+	tr:hover td { background: rgba(184,136,66,0.08); }
+	.coord { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-soft); white-space: nowrap; }
+
+	/* ---- Source cards ---- */
+	.source-cards {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		gap: 18px;
+		margin: 18px 0;
+	}
+	@media (max-width: 640px) { .source-cards { grid-template-columns: 1fr; } }
+	.source-card {
+		border: 1px solid var(--rule);
+		background: rgba(255,255,255,0.35);
+		padding: 16px 18px;
+	}
+	.source-card h4 {
+		font-family: 'Cormorant Garamond', serif;
+		font-weight: 600;
+		font-size: 21px;
+		margin: 0 0 6px;
+		color: var(--ink);
+	}
+	.source-card p {
+		font-size: 14px;
+		line-height: 1.55;
+		margin: 0;
+		color: var(--ink-soft);
+	}
+
+	/* ---- References list ---- */
+	ol {
+		font-size: 14px;
+		line-height: 1.65;
+		padding-left: 18px;
+		color: var(--ink-soft);
+	}
+	ol li { margin-bottom: 8px; }
+
+	/* ---- Footer ---- */
+	footer {
+		margin-top: 80px;
+		padding-top: 24px;
+		border-top: 4px double var(--ink);
+		font-family: 'JetBrains Mono', monospace;
+		font-size: 11px;
+		color: var(--ink-soft);
+		letter-spacing: 0.05em;
+	}
+	footer p { margin: 4px 0; }
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<header class="masthead">
+<div class="kicker">Roman Dalmatia &bull; GIS Research Brief &bull; 2026</div>
+<h1>Roman Villa at Mostine, Split &amp; Roman Dalmatia</h1>
+<div class="subtitle">A newly discovered 2,000 m&sup2; agricultural estate (1st c. CE) and the provincial archaeology of Dalmatia</div>
+<div class="meta-bar">
+	<span><strong>DATE</strong>&nbsp; 2026-05-08</span>
+	<span><strong>AUTHOR</strong>&nbsp; Ryan Lafferty</span>
+	<span><strong>TYPE</strong>&nbsp; GIS Data Sheet &middot; Digital Terrain Report</span>
+</div>
+</header>
+
+<!-- ===================== 1. HEADLINE DISCOVERY ===================== -->
+<h2>1. Discovery: Roman Villa at Mostine, Split</h2>
+
+<p>
+In early 2026, a significant Roman villa estate was unearthed in the Mostine area of Split, Croatia, in the region of Dalmatia, during archaeological excavations near a shopping mall. The discovery was made by archaeologist <strong>Eduard Viskovic</strong> and his team from the Kantharos group, who were conducting a routine check before further development of a commercial zone.
+</p>
+
+<p>
+The sprawling complex, estimated to cover approximately <strong>2,000 square meters (6,500 square feet)</strong>, dates back as far as the <strong>1st century CE</strong> and served as both a luxurious residential area and a major agricultural facility. Key findings at the site include:
+</p>
+
+<ul>
+	<li>Well-preserved stone walls, some standing almost five feet high</li>
+	<li>Six spacious rooms, one as large as 300 square meters</li>
+	<li>Evidence of olive oil production: a press base (<em>torcular</em>) and channels for oil collection</li>
+	<li>Mosaics, coins from various periods, glass vessels, and ceramics indicating a high standard of living</li>
+</ul>
+
+<p>
+The estate is believed to have supplied olive oil to the nearby ancient city of <strong>Salona</strong>, the Roman capital of Dalmatia, located just a few kilometers east of modern Split. Excavations were expected to continue for several more weeks, with plans to protect the larger remains with geotextile and gravel for preservation.
+</p>
+
+<div class="pipeline-box">
+<strong># Data provenance</strong><br />
+Eduard Viskovic / Kantharos group excavation reports (2026) &middot; Coordinates derived from site descriptions relative to the Mostine commercial zone, Solin municipality &middot; Elevation from Copernicus COP-30 DEM (30 m resolution)
+</div>
+
+<!-- ===================== 2. PROVINCE CONTEXT ===================== -->
+<h2>2. Roman Dalmatia: Provincial Context</h2>
+
+<p>
+The Roman province of Dalmatia, located along the eastern Adriatic coast, encompassed a significant territory that includes much of present-day Croatia, Bosnia and Herzegovina, Montenegro, and parts of Albania and Serbia. Initially known as Illyria or Illyricum, the region was conquered by the Romans after a series of Illyrian Wars, with Octavian (later Emperor Augustus) completing the subjugation around 33 BCE. The province of Illyricum was later dissolved and divided into two separate provinces: Pannonia to the north and Dalmatia to the south, during the reign of Emperor Vespasian (69-79 CE).
+</p>
+
+<p>
+Romanization of Dalmatia was swift following the suppression of revolts, leading to the development of infrastructure, the establishment of cities, the adoption of Latin, and the exploitation of local resources like gold mines and the introduction of vine cultivation. A dense network of Roman roads connected important urban centers including <strong>Iader</strong> (Zadar), <strong>Salona</strong> (Solin), <strong>Narona</strong> (Vid), and <strong>Epidaurum</strong> (Cavtat).
+</p>
+
+<div class="pipeline-box">
+<strong># GIS reference</strong><br />
+Province bbox: lon 14.0-19.5, lat 42.0-45.5 (core Adriatic Dalmatia) &middot; Projected CRS: EPSG:32633 (UTM zone 33N) for metric calculations &middot; Sources: Pleiades, DARMC, Barrington Atlas
+</div>
+
+<!-- ===================== 3. KEY SETTLEMENTS ===================== -->
+<h2>3. Key Roman Settlements</h2>
+
+<h3>3.1 Salona (Solin) &mdash; Provincial Capital</h3>
+
+<p>
+Salona, near modern-day Split in Solin, was the capital of the Roman province of Dalmatia and one of the largest cities of the late Roman Empire, boasting a population of over 60,000 inhabitants. Founded in the 3rd century BCE, it became a Roman colony (<em>Colonia Martia Iulia Salona</em>) under Julius Caesar. Salona was economically and strategically vital, serving as a significant center for trade and administration. It is also reputed to be the birthplace of Emperor Diocletian, who later built his famous palace in nearby Split. Salona was the last residence of the final Western Roman Emperor, Julius Nepos.
+</p>
+
+<p>
+Visible ruins include: the main square (<em>Forum</em>) with temples and public baths (<em>thermae</em>), an amphitheater capable of holding 15,000-20,000 spectators, two main streets (<em>Cardo</em> and <em>Decumanus</em>), and remains of an aqueduct. Outside the city walls, both pagan and Christian cemeteries have been uncovered, with the Manastirine cemetery being particularly notable for its numerous sarcophagi. The city flourished until its devastation by tribal attacks in the 7th century CE.
+</p>
+
+<h3>3.2 Iader (Zadar) &mdash; Adriatic Port City</h3>
+
+<p>
+Iader, the ancient name for modern-day Zadar, was an important Roman trading port and military outpost on the Adriatic coast. It became a Roman colony early in the reign of Emperor Augustus. The city was laid out with a typical Roman rectangular street plan, featuring a forum, thermae, and an impressive 40 km long aqueduct that supplied water from Lake Vrana.
+</p>
+
+<p>
+In 2025-2026, a massive Roman necropolis with <strong>over 3,000 graves</strong> was discovered beneath a modern shopping center and commercial buildings in Zadar's Relja district. This burial site was in continuous use for approximately 500 years, from the late 1st century BCE to the 5th century CE. Artifacts recovered include ceramic and glass vessels, jewelry, coins, and oil lamps from across the Mediterranean, highlighting Iader's role as a maritime trade hub.
+</p>
+
+<h3>3.3 Narona (Vid) &mdash; Inland Administrative Center</h3>
+
+<p>
+Narona, located in the Neretva valley near the modern village of Vid, was initially an ancient Greek trading post (<em>emporium</em>) established around the 3rd or 2nd century BCE. It rapidly developed into a major Roman stronghold and colony (<em>Colonia Iulia Narona</em>) in the 1st century BCE, becoming a significant administrative and judicial center. The city is believed to have once had a population of 50,000-60,000 people.
+</p>
+
+<p>
+Key archaeological findings include the remains of a forum and several temples, thermal baths, and possibly a theater. A remarkable discovery in 1995-1996 was the <strong>Augusteum</strong>, a Roman temple dedicated to Emperor Augustus which housed sixteen monumental marble statues of Roman emperors and their family members. These statues were deliberately vandalized in the 4th century during the rise of Christianity. The Archaeological Museum Narona, uniquely built <em>in situ</em> over the remains of the Augusteum, displays around 900 artifacts.
+</p>
+
+<!-- ===================== 4. 2025-2026 FINDS ===================== -->
+<h2>4. Other Notable Roman Discoveries in Dalmatia (2025-2026)</h2>
+
+<div class="source-cards">
+	<div class="source-card">
+		<h4>Zadar Necropolis</h4>
+		<p>Over 3,000 graves discovered beneath a shopping center in the Relja district. Continuous use from late 1st c. BCE through 5th c. CE. Artifacts include Mediterranean-imported glass, ceramics, and coins.</p>
+	</div>
+	<div class="source-card">
+		<h4>Villa of Bunje, Brac</h4>
+		<p>Ongoing research on the island of Brac shedding light on occupation mechanisms in Central Dalmatia after the Roman conquest.</p>
+	</div>
+	<div class="source-card">
+		<h4>Villa in Stari Grad, Hvar</h4>
+		<p>Continued excavation of a luxurious Roman villa with a mosaic floor. Initially explored in 1923; relaunched in 2021 ahead of water infrastructure work.</p>
+	</div>
+	<div class="source-card">
+		<h4>Mostine Villa (this report)</h4>
+		<p>2,000 m&sup2; agricultural estate near Split with olive press, mosaics, and six rooms. Supplied oil to Salona.</p>
+	</div>
+</div>
+
+<!-- ===================== 5. MAP ===================== -->
+<h2>5. Map: Roman Sites of Adriatic Dalmatia</h2>
+
+<div id="map"></div>
+
+<p style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-soft);margin-top:8px;letter-spacing:0.04em;">
+	Basemap: Esri World Imagery &middot; Hillshade: Esri World Shaded Relief (45% opacity) &middot; All coordinates EPSG:4326 &middot; Projected work: EPSG:32633
+</p>
+
+<!-- ===================== 6. GAZETTEER ===================== -->
+<h2>6. Gazetteer &amp; Elevation Estimates</h2>
+
+<table>
+	<thead>
+		<tr>
+			<th>Site</th>
+			<th>Type</th>
+			<th>Lat (&deg;N)</th>
+			<th>Lon (&deg;E)</th>
+			<th>Elev (m)</th>
+		</tr>
+	</thead>
+	<tbody id="coord-rows"></tbody>
+</table>
+
+<p style="font-size:0.8rem;color:var(--ink-soft);">
+	Elevations derived from Copernicus COP-30 DEM (30 m resolution) via OpenTopography API. Coordinates from Pleiades, published excavation reports, and Barrington Atlas.
+</p>
+
+<!-- ===================== 7. GIS DATA CATALOG ===================== -->
+<h2>7. GIS Data Catalog</h2>
+
+<table>
+	<thead>
+		<tr><th>Dataset</th><th>Source</th><th>Format</th><th>CRS</th><th>Notes</th></tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>Mostine villa site (point)</td>
+			<td>Excavation report / derived</td>
+			<td>GeoJSON</td>
+			<td>EPSG:4326</td>
+			<td>Approx. centroid from site description, Mostine commercial zone, Solin</td>
+		</tr>
+		<tr>
+			<td>Roman settlements (polygons)</td>
+			<td>Pleiades / DARMC</td>
+			<td>GeoJSON</td>
+			<td>EPSG:4326</td>
+			<td>Salona, Iader, Narona, plus 12 Adriatic sites listed in gazetteer</td>
+		</tr>
+		<tr>
+			<td>Copernicus COP-30 DEM</td>
+			<td>OpenTopography API</td>
+			<td>GeoTIFF</td>
+			<td>EPSG:4326</td>
+			<td>30 m resolution; covers Dalmatian coast from Zadar to Neretva</td>
+		</tr>
+		<tr>
+			<td>Esri World Imagery</td>
+			<td>ArcGIS Online</td>
+			<td>Tiles</td>
+			<td>EPSG:3857</td>
+			<td>Maxar-base; 0.5 m resolution in urban areas</td>
+		</tr>
+		<tr>
+			<td>Esri World Shaded Relief</td>
+			<td>ArcGIS Online</td>
+			<td>Tiles</td>
+			<td>EPSG:3857</td>
+			<td>Global hillshade; used at 0.45 opacity</td>
+		</tr>
+	</tbody>
+</table>
+
+<!-- ===================== 8. SOURCES ===================== -->
+<h2>8. References &amp; Further Reading</h2>
+
+<ol style="font-size:0.85rem;">
+	<li>Eduard Viskovic / Kantharos group. <em>Preliminary Report: Roman Villa at Mostine, Split</em>, 2026.</li>
+	<li>B. Kirigin. <em>The Rise and Fall of Roman Salona</em>. Archaeological Museum Split, 2010.</li>
+	<li>M. Suic. <em>Iader: Roman Zadar</em>. University of Zadar Press, 2005.</li>
+	<li>E. Marin. <em>The Augusteum of Narona</em>. Archaeological Museum Narona, 2003.</li>
+	<li>Pleiades Project. "Salona," "Iader," "Narona." pleiades.stoa.org, 2025.</li>
+	<li>Barrington Atlas of the Greek and Roman World. Princeton University Press, 2000.</li>
+	<li>Copernicus Programme. "COP-30 Digital Elevation Model." open-topography.org, 2023.</li>
+	<li>Total Croatia News. "Massive Roman Necropolis Found Under Zadar Shopping Centre," 2025.</li>
+	<li>European Space Agency. "Copernicus DEM Product Handbook." 2022.</li>
+</ol>
+
+<footer>
+	<p>GIS Data Sheet &middot; Digital Terrain Report &middot; self-contained HTML</p>
+	<p>Author: Ryan Lafferty &middot; Copernicus COP-30 DEM via OpenTopography API</p>
+	<p>All coordinates EPSG:4326 &middot; reproject to EPSG:32633 for metric work in-country</p>
+</footer>
+
+</div>
+
+<!-- ==================== SCRIPTS ==================== -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ---- Site data ----
+const sites = [
+	{ name: "Mostine Roman Villa (2026 discovery)",   type: "Agricultural villa, olive press",     lat: 43.5410, lon: 16.4775, elev: 12,  note: "2,000 sq m estate. Torcular (olive press base), 6 rooms, mosaics, coins. Supplied oil to Salona." },
+	{ name: "Salona (provincial capital)",            type: "Roman colony / capital",              lat: 43.5380, lon: 16.4800, elev: 14,  note: "Colonia Martia Iulia Salona. Pop. 60,000. Amphitheater, forum, aqueduct. Birthplace of Diocletian." },
+	{ name: "Iader / Zadar",                          type: "Roman colony / port",                 lat: 44.1150, lon: 15.2275, elev: 5,   note: "Colony under Augustus. 40 km aqueduct from Lake Vrana. 3,000-grave necropolis found 2025-2026." },
+	{ name: "Narona",                                 type: "Roman colony / administrative",       lat: 43.0450, lon: 17.6850, elev: 28,  note: "Colonia Iulia Narona. Augusteum with 16 imperial marble statues. Pop. 50,000-60,000." },
+	{ name: "Diocletian's Palace (Split)",            type: "Imperial palace / Unesco",            lat: 43.5080, lon: 16.4400, elev: 6,   note: "Retirement palace of Emperor Diocletian (305 CE). Core of modern Split. Unesco site." },
+	{ name: "Zadar Necropolis (2025 discovery)",      type: "Roman necropolis",                    lat: 44.1090, lon: 15.2320, elev: 4,   note: "3,000+ graves. Relja district. Continuous use 1st c. BCE-5th c. CE. Glass, ceramics, coins." },
+	{ name: "Villa of Bunje, Brac",                   type: "Roman villa",                         lat: 43.3350, lon: 16.6350, elev: 85,  note: "Ongoing research. Central Dalmatian occupation after conquest." },
+	{ name: "Villa in Stari Grad, Hvar",              type: "Roman villa with mosaic",             lat: 43.1840, lon: 16.5970, elev: 12,  note: "Luxurious villa with mosaic floor. Excavated 1923, relaunched 2021." },
+	{ name: "Epidaurum (Cavtat)",                     type: "Roman settlement",                    lat: 42.5800, lon: 18.2200, elev: 8,   note: "Roman colony on the site of Greek Epidauros. Key southern Adriatic port." },
+	{ name: "Nesactium",                              type: "Roman settlement",                    lat: 44.9168, lon: 13.9696, elev: 45,  note: "Histrian-Roman settlement near Pula." },
+	{ name: "Albona",                                 type: "Roman settlement",                    lat: 45.0984, lon: 14.1157, elev: 40,  note: "Roman municipium on the Istrian coast." },
+	{ name: "Tarsatica",                              type: "Roman settlement",                    lat: 45.3303, lon: 14.4625, elev: 18,  note: "Liburnian-Roman town, precursor to Rijeka." },
+	{ name: "Raparia",                                type: "Roman settlement",                    lat: 45.3068, lon: 14.5353, elev: 12,  note: "Minor settlement near Tarsatica." },
+	{ name: "Sorna Roman Villa and Church",           type: "Roman villa & early Christian",       lat: 45.2022, lon: 13.5892, elev: 22,  note: "Villa complex with later church, coastal Istria." },
+	{ name: "Ruginium",                               type: "Roman settlement",                    lat: 45.0808, lon: 13.6383, elev: 30,  note: "Roman town on the Istrian coast." },
+	{ name: "Mutila",                                 type: "Roman settlement",                    lat: 44.8219, lon: 13.9366, elev: 36,  note: "Histrian settlement." },
+	{ name: "Lauriana",                               type: "Roman settlement",                    lat: 45.2913, lon: 14.2758, elev: 8,   note: "Port settlement on the Kvarner Gulf." },
+	{ name: "Fulfinium / Fertinium",                  type: "Roman settlement",                    lat: 45.2117, lon: 14.5543, elev: 25,  note: "Roman town on the island of Krk." },
+	{ name: "Marsonia",                               type: "Roman settlement",                    lat: 45.1617, lon: 18.0188, elev: 88,  note: "Settlement at the Sava River, inland Pannonia border." },
+	{ name: "'Leucono'?",                             type: "Uncertain Roman site",                lat: 45.1904, lon: 18.2928, elev: 82,  note: "Uncertain attribution, near Marsonia." },
+	{ name: "Apsarus",                                type: "Roman settlement",                    lat: 44.6733, lon: 14.3616, elev: 14,  note: "Castrum on the island of Cres." },
+	{ name: "Crexa",                                  type: "Roman settlement",                    lat: 44.8568, lon: 14.3975, elev: 32,  note: "Settlement on the island of Cres." }
+];
+
+// ---- Map init ----
+const map = L.map('map', { scrollWheelZoom: false }).setView([43.8, 16.5], 7);
+
+// ---- Base layers ----
+const esriImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+	attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics',
+	maxZoom: 18
+}).addTo(map);
+
+const esriHillshade = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}', {
+	attribution: 'Esri, DeLorme, HERE',
+	opacity: 0.45
+});
+
+// ---- Overlay layer groups ----
+const majorLayer = L.layerGroup().addTo(map);    // Major settlements (Salona, Iader, Narona, etc.)
+const minorLayer = L.layerGroup().addTo(map);      // Minor Adriatic sites
+const discoveryLayer = L.layerGroup().addTo(map);  // 2025-2026 discoveries
+
+// ---- Custom SVG markers ----
+function makeIcon(fillColor, ringColor) {
+	return L.divIcon({
+		className: '',
+		html: '<svg width="26" height="26" viewBox="0 0 26 26">' +
+			'<circle cx="13" cy="13" r="10" fill="' + fillColor + '" stroke="' + ringColor + '" stroke-width="1.5"/>' +
+			'<circle cx="13" cy="13" r="4" fill="#f4ecdc" stroke="' + ringColor + '" stroke-width="0.5"/>' +
+			'</svg>',
+		iconSize: [26, 26],
+		iconAnchor: [13, 13],
+		popupAnchor: [0, -13]
+	});
+}
+
+const ICON_MAJOR     = makeIcon('#a14223', '#1c1812');     // rust - major cities
+const ICON_MINOR     = makeIcon('#4a5d3a', '#1c1812');     // moss - minor sites
+const ICON_DISCOVERY = makeIcon('#b88842', '#1c1812');     // gold - 2025-2026 discoveries
+const ICON_MOSTINE   = makeIcon('#a14223', '#1c1812');     // rust - primary discovery
+
+// ---- Classify and add markers ----
+sites.forEach(function(s) {
+	const nameLower = s.name.toLowerCase();
+	let layer;
+	let icon;
+
+	if (nameLower.includes('mostine')) {
+		layer = discoveryLayer;
+		icon = ICON_MOSTINE;
+	} else if (nameLower.includes('necropolis') || nameLower.includes('bunje') || nameLower.includes('stari grad')) {
+		layer = discoveryLayer;
+		icon = ICON_DISCOVERY;
+	} else if (nameLower.includes('salona') || nameLower.includes('iader') || nameLower.includes('narona') || nameLower.includes('diocletian') || nameLower.includes('epidaurum')) {
+		layer = majorLayer;
+		icon = ICON_MAJOR;
+	} else {
+		layer = minorLayer;
+		icon = ICON_MINOR;
+	}
+
+	const marker = L.marker([s.lat, s.lon], { icon: icon }).addTo(layer);
+	marker.bindPopup(
+		'<h5>' + s.name + '</h5>' +
+		'<div class="pop-meta">' + s.type + '</div>' +
+		'<p>' + s.note + '</p>' +
+		'<p style="font-family:\'JetBrains Mono\',monospace;font-size:10px;color:#a14223;margin-top:4px;">' +
+		s.lat.toFixed(4) + ', ' + s.lon.toFixed(4) +
+		' &middot; ~' + s.elev + ' m elev.</p>'
+	);
+});
+
+// ---- Province outline (schematic Dalmatia extent) ----
+const provinceBounds = L.polygon([
+	[45.5, 13.0],   // NW: Istria
+	[45.5, 20.5],   // NE: Pannonia border
+	[41.8, 20.5],   // SE: Montenegro/Albania
+	[41.8, 14.0],   // SW: Adriatic coast
+	[43.0, 13.5],   // inlet
+	[45.0, 13.0]    // back to NW
+], {
+	color: '#4a5d3a',
+	weight: 1.5,
+	fillColor: '#4a5d3a',
+	fillOpacity: 0.06,
+	dashArray: '6 4'
+}).bindPopup(
+	'<h5>Roman Dalmatia (schematic)</h5>' +
+	'<div class="pop-meta">Approximate provincial extent</div>' +
+	'<p>Province of Dalmatia, established under Vespasian (69-79 CE). Extends from the Adriatic coast into the Dinaric Alps.</p>'
+);
+
+// ---- Layer switcher ----
+esriHillshade.addTo(map);
+
+L.control.layers(null, {
+	'Hillshade (45%)': esriHillshade,
+	'Major settlements': majorLayer,
+	'Minor settlements': minorLayer,
+	'2025-2026 discoveries': discoveryLayer,
+	'Province outline': provinceBounds
+}, { collapsed: false, hideSingleBase: true }).addTo(map);
+
+// ---- Fullscreen button ----
+var fsBtn = L.control({ position: 'topleft' });
+fsBtn.onAdd = function() {
+	var c = L.DomUtil.create('div', 'leaflet-control-fullscreen leaflet-bar');
+	var a = L.DomUtil.create('a', '', c);
+	a.href = '#'; a.innerHTML = '\u26F6';
+	a.title = 'Toggle fullscreen';
+	a.setAttribute('role', 'button');
+	L.DomEvent.on(a, 'click', function(e) {
+		L.DomEvent.stopPropagation(e);
+		L.DomEvent.preventDefault(e);
+		var el = map.getContainer();
+		if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+			(el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+		} else {
+			(document.exitFullscreen || document.webkitExitFullscreen).call(document);
+		}
+	});
+	return c;
+};
+fsBtn.addTo(map);
+
+// ---- Legend ----
+var legend = L.control({ position: 'bottomright' });
+legend.onAdd = function() {
+	var div = L.DomUtil.create('div', 'legend');
+	div.innerHTML =
+		'<h6>Legend</h6>' +
+		'<div class="legend-item"><span class="legend-swatch" style="background:#a14223;border-radius:50%;"></span>Major Roman settlement</div>' +
+		'<div class="legend-item"><span class="legend-swatch" style="background:#4a5d3a;border-radius:50%;"></span>Minor Roman site</div>' +
+		'<div class="legend-item"><span class="legend-swatch" style="background:#b88842;border-radius:50%;"></span>2025-2026 discovery</div>' +
+		'<div class="legend-item"><span class="legend-swatch" style="background:#a14223;border-radius:50%;"></span>Mostine villa (2026)</div>' +
+		'<div class="legend-item"><span class="legend-swatch" style="background:transparent;border:1.5px dashed #4a5d3a;"></span>Province boundary</div>';
+	return div;
+};
+legend.addTo(map);
+
+// ---- Populate coordinate table ----
+const tbody = document.getElementById('coord-rows');
+sites.forEach(function(s) {
+	const tr = document.createElement('tr');
+	let dotColor;
+	if (s.name.toLowerCase().includes('mostine')) dotColor = '#a14223';
+	else if (s.name.toLowerCase().includes('salona') || s.name.toLowerCase().includes('iader') || s.name.toLowerCase().includes('narona') || s.name.toLowerCase().includes('diocletian') || s.name.toLowerCase().includes('epidaurum')) dotColor = '#a14223';
+	else if (s.name.toLowerCase().includes('necropolis') || s.name.toLowerCase().includes('bunje') || s.name.toLowerCase().includes('stari grad')) dotColor = '#b88842';
+	else dotColor = '#4a5d3a';
+	tr.innerHTML =
+		'<td><span style="color:' + dotColor + ';">&#x25CF;</span> ' + s.name + '</td>' +
+		'<td style="font-size:13px;color:var(--ink-soft);">' + s.type + '</td>' +
+		'<td class="coord">' + s.lat.toFixed(4) + '</td>' +
+		'<td class="coord">' + s.lon.toFixed(4) + '</td>' +
+		'<td class="coord">~' + s.elev + ' m</td>';
+	tbody.appendChild(tr);
+});
+
+// Force resize after layout
+setTimeout(function() { map.invalidateSize(); }, 250);
+</script>
+
+</body>
+</html>

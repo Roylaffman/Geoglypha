@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Stream Source Comparison · 368 Joshua Way Vicinity · Hoschton GA</title>
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Work+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+	      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
+	<style>
+		/* ============================================================
+		   STREAM SOURCE COMPARISON — 368 Joshua Way, Hoschton GA
+		   Palette: navy ink, source-specific accent colors
+		   Author: Ryan Lafferty · 2026-05-19
+		   ============================================================ */
+
+		:root {
+			--bg:          #eef0f4;
+			--paper:       #ffffff;
+			--ink:         #1a2a3a;
+			--ink-soft:    #3a4f63;
+			--ink-mute:    #6b8299;
+			--rule:        #cdd5de;
+			--water:       #1565c0;
+			--water-light: #e3f0fc;
+			--alert:       #d84315;
+			--topo:        #2e7d32;
+			--topo-light:  #e8f5e9;
+
+			/* Source colors */
+			--osm:         #e65100;
+			--osm-light:   #fff3e0;
+			--nhd:         #0d47a1;
+			--nhd-light:   #e3f0fc;
+			--nhd-up:      #5c6bc0;
+			--nhd-up-light:#ede7f6;
+		}
+
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+		html { scroll-behavior: smooth; }
+
+		body {
+			background: var(--bg);
+			color: var(--ink);
+			font-family: 'Work Sans', sans-serif;
+			font-size: 16px;
+			line-height: 1.65;
+			-webkit-font-smoothing: antialiased;
+		}
+
+		/* ---- MASTHEAD ---- */
+		.masthead {
+			background: var(--ink);
+			color: #ffffff;
+			padding: 2rem 2.5rem 1.75rem;
+			display: grid;
+			grid-template-columns: 1fr auto;
+			align-items: end;
+			gap: 1rem;
+		}
+		.masthead .tag {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.68rem;
+			letter-spacing: 0.2em;
+			text-transform: uppercase;
+			color: #7ba9cc;
+			margin-bottom: 0.6rem;
+		}
+		.masthead h1 {
+			font-family: 'Cormorant Garamond', serif;
+			font-size: clamp(1.5rem, 3.2vw, 2.2rem);
+			font-weight: 600;
+			line-height: 1.1;
+			color: #fff;
+		}
+		.masthead .sub {
+			font-size: 0.85rem;
+			color: #9ab8d0;
+			margin-top: 0.4rem;
+		}
+		.masthead .meta-col {
+			text-align: right;
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.72rem;
+			color: #7ba9cc;
+			line-height: 1.8;
+		}
+
+		/* ---- LAYOUT ---- */
+		.page { max-width: 1240px; margin: 0 auto; padding: 2.5rem 2rem 5rem; }
+
+		@media (max-width: 760px) {
+			.page { padding: 1.5rem 1rem 3rem; }
+			.masthead { grid-template-columns: 1fr; }
+			.masthead .meta-col { text-align: left; }
+		}
+
+		/* ---- SECTION HEADINGS ---- */
+		.section-label {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.68rem;
+			letter-spacing: 0.22em;
+			text-transform: uppercase;
+			color: var(--water);
+			margin-bottom: 0.6rem;
+			margin-top: 3rem;
+		}
+		h2 {
+			font-family: 'Cormorant Garamond', serif;
+			font-size: clamp(1.5rem, 2.8vw, 2.0rem);
+			font-weight: 600;
+			margin-bottom: 1rem;
+			line-height: 1.15;
+		}
+		h2::after {
+			content: '';
+			display: block;
+			width: 48px;
+			height: 2px;
+			background: var(--water);
+			margin-top: 8px;
+		}
+		h3 {
+			font-family: 'Cormorant Garamond', serif;
+			font-size: 1.25rem;
+			font-weight: 600;
+			margin: 1.5rem 0 0.4rem;
+		}
+		p { margin-bottom: 1rem; max-width: 76ch; }
+		a { color: var(--water); text-decoration: underline; text-underline-offset: 2px; }
+		a:hover { color: var(--ink); }
+
+		/* ---- SOURCE CARDS ---- */
+		.source-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+			gap: 1rem;
+			margin: 1.5rem 0 2rem;
+		}
+		.source-card {
+			background: var(--paper);
+			border: 1px solid var(--rule);
+			border-radius: 2px;
+			padding: 1.1rem 1.25rem 1rem;
+			position: relative;
+			overflow: hidden;
+		}
+		.source-card::before {
+			content: '';
+			position: absolute;
+			left: 0; top: 0; bottom: 0;
+			width: 4px;
+		}
+		.source-card.osm::before  { background: var(--osm); }
+		.source-card.nhd::before  { background: var(--nhd); }
+		.source-card.nhdhr::before { background: var(--nhd-up); }
+
+		.source-card .src-name {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.63rem;
+			letter-spacing: 0.15em;
+			text-transform: uppercase;
+			margin-bottom: 0.35rem;
+		}
+		.source-card.osm  .src-name { color: var(--osm); }
+		.source-card.nhd  .src-name { color: var(--nhd); }
+		.source-card.nhdhr .src-name { color: var(--nhd-up); }
+
+		.source-card .src-title {
+			font-family: 'Cormorant Garamond', serif;
+			font-size: 1.15rem;
+			font-weight: 600;
+			margin-bottom: 0.5rem;
+		}
+		.source-card .src-meta {
+			font-size: 0.78rem;
+			color: var(--ink-soft);
+			line-height: 1.5;
+		}
+		.source-card .src-meta strong { color: var(--ink); }
+		.src-pill {
+			display: inline-block;
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.6rem;
+			letter-spacing: 0.1em;
+			text-transform: uppercase;
+			padding: 2px 7px;
+			border-radius: 2px;
+			margin-right: 4px;
+			margin-top: 4px;
+		}
+		.pill-osm  { background: var(--osm-light); color: var(--osm); border: 1px solid #ffcc80; }
+		.pill-nhd  { background: var(--nhd-light); color: var(--nhd); border: 1px solid #90caf9; }
+		.pill-nhdhr { background: var(--nhd-up-light); color: var(--nhd-up); border: 1px solid #b39ddb; }
+		.pill-open { background: var(--topo-light); color: var(--topo); border: 1px solid #a5d6a7; }
+
+		/* ---- MAP ---- */
+		.map-wrap { margin: 1.5rem 0 0.75rem; }
+		.map-box {
+			border: 1px solid var(--rule);
+			box-shadow: 0 2px 12px rgba(26,42,58,0.08);
+		}
+		#mapHost { width: 100%; height: 600px; }
+		@media (max-width: 760px) { #mapHost { height: 440px; } }
+
+		.map-caption {
+			font-size: 0.78rem;
+			color: var(--ink-mute);
+			padding: 0.6rem 0 0;
+			border-top: 1px solid var(--rule);
+			margin-top: 0.5rem;
+		}
+
+		/* Map legend */
+		.map-legend {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.75rem 1.5rem;
+			padding: 0.75rem 1rem;
+			background: var(--paper);
+			border: 1px solid var(--rule);
+			margin-top: 0.5rem;
+			font-size: 0.76rem;
+			color: var(--ink-soft);
+			align-items: center;
+		}
+		.leg-item { display: flex; align-items: center; gap: 0.4rem; }
+		.leg-line { display: inline-block; width: 28px; height: 3px; border-radius: 2px; }
+		.leg-dash { display: inline-block; width: 28px; height: 2px; }
+		.leg-dot  { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+		.leg-sq   { width: 11px; height: 11px; display: inline-block; opacity: 0.55; border-radius: 1px; }
+
+		/* Leaflet popup */
+		.leaflet-popup-content-wrapper {
+			border-radius: 2px !important;
+			box-shadow: 0 4px 16px rgba(26,42,58,0.2) !important;
+			font-family: 'Work Sans', sans-serif !important;
+		}
+		.pop-label {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.63rem;
+			letter-spacing: 0.14em;
+			text-transform: uppercase;
+			color: var(--ink-mute);
+			margin-bottom: 0.2rem;
+		}
+		.pop-title { font-weight: 600; font-size: 0.92rem; margin-bottom: 0.3rem; }
+		.pop-body  { font-size: 0.8rem; color: var(--ink-soft); line-height: 1.5; }
+
+		/* ---- COMPARISON TABLE ---- */
+		.compare-table {
+			width: 100%;
+			border-collapse: collapse;
+			background: var(--paper);
+			font-size: 0.83rem;
+			margin: 1.25rem 0;
+		}
+		.compare-table th {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.63rem;
+			letter-spacing: 0.14em;
+			text-transform: uppercase;
+			color: var(--ink-mute);
+			padding: 0.6rem 0.9rem;
+			border-bottom: 2px solid var(--rule);
+			text-align: left;
+			background: #f8fafc;
+		}
+		.compare-table td {
+			padding: 0.65rem 0.9rem;
+			border-bottom: 1px solid var(--rule);
+			vertical-align: top;
+		}
+		.compare-table tr:last-child td { border-bottom: none; }
+		.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; }
+		.color-swatch {
+			display: inline-block;
+			width: 14px;
+			height: 14px;
+			border-radius: 2px;
+			vertical-align: middle;
+			margin-right: 5px;
+		}
+
+		/* ---- SOURCES ---- */
+		.sources p {
+			font-size: 0.83rem;
+			line-height: 1.6;
+			max-width: 80ch;
+			padding-left: 1.5rem;
+			text-indent: -1.5rem;
+			margin-bottom: 0.75rem;
+			color: var(--ink-soft);
+		}
+		.src-tag {
+			display: inline-block;
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.62rem;
+			padding: 1px 5px;
+			border-radius: 2px;
+			margin-right: 0.3rem;
+			vertical-align: middle;
+		}
+		.src-tag.gov  { background: #e8f0fe; color: #1565c0; border: 1px solid #b3d5f5; }
+		.src-tag.open { background: var(--topo-light); color: var(--topo); border: 1px solid #a5d6a7; }
+
+		/* ---- FOOTER ---- */
+		footer {
+			margin-top: 4rem;
+			padding-top: 1.5rem;
+			border-top: 2px solid var(--ink);
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.7rem;
+			color: var(--ink-mute);
+			display: flex;
+			justify-content: space-between;
+			flex-wrap: wrap;
+			gap: 0.5rem;
+		}
+	</style>
+</head>
+<body>
+
+<header class="masthead">
+	<div>
+		<div class="tag">Jackson County · Georgia · Stream Source Comparison</div>
+		<h1>Unnamed Creek — Multi-Source Geometry Comparison</h1>
+		<div class="sub">OSM Way 1053938641 · USGS NHD REACHCODE 03070101002572 · Property Vicinity 368 Joshua Way</div>
+	</div>
+	<div class="meta-col">
+		<div>34.0958° N · 83.7484° W</div>
+		<div>Date: 2026-05-19</div>
+		<div>Author: Ryan Lafferty</div>
+		<div>Source: OSM · USGS NHD · NHDPlus HR</div>
+	</div>
+</header>
+
+<div class="page">
+
+	<!-- INTRO -->
+	<div class="section-label">§ I · Purpose</div>
+	<h2>Why Compare Stream Sources</h2>
+	<p>Three authoritative datasets independently map the unnamed creek that passes approximately 71 m north of 368 Joshua Way. Each uses different survey methods, vertex density, and update cycles. Comparing them reveals where the datasets agree on channel position, where they diverge, and which reach each organization considered primary. Together, OSM and NHD trace the complete channel from headwaters to confluence with Indian Creek.</p>
+	<p>The NHDPlus HR service returned geometry essentially identical to NHD Standard for this reach (sub-meter alignment), so it is shown alongside NHD as a confirmation layer rather than a separate geometry.</p>
+
+	<!-- SOURCE CARDS -->
+	<div class="section-label">§ II · Data Sources</div>
+	<h2>Source Profiles</h2>
+
+	<div class="source-grid">
+		<div class="source-card osm">
+			<div class="src-name">OSM · OpenStreetMap</div>
+			<div class="src-title">Way 1053938641</div>
+			<div class="src-meta">
+				<strong>Reach:</strong> Upper segment, NW to SE through property vicinity<br>
+				<strong>Nodes:</strong> 35 coordinate pairs<br>
+				<strong>Closest node to property:</strong> ~40 m NE at [34.0958540, -83.7479450]<br>
+				<strong>License:</strong> ODbL (Open Database License)<br>
+				<strong>Flow type:</strong> Waterway = stream<br>
+				<strong>Last edited:</strong> Community-maintained
+				<div style="margin-top:0.5rem;">
+					<span class="src-pill pill-osm">Community</span>
+					<span class="src-pill pill-open">ODbL</span>
+				</div>
+			</div>
+		</div>
+
+		<div class="source-card nhd">
+			<div class="src-name">USGS NHD Standard</div>
+			<div class="src-title">REACHCODE 03070101002572</div>
+			<div class="src-meta">
+				<strong>Reach:</strong> Downstream 1.678 km perennial segment (SE from OSM endpoint)<br>
+				<strong>Vertices:</strong> 165 coordinate pairs<br>
+				<strong>FTYPE:</strong> 460 StreamRiver · FCODE: 46006 Perennial<br>
+				<strong>GNIS Name:</strong> None (unnamed)<br>
+				<strong>Upstream connect:</strong> REACHCODE 03070101002572 intermittent headwater<br>
+				<strong>Scale:</strong> 1:24,000 base
+				<div style="margin-top:0.5rem;">
+					<span class="src-pill pill-nhd">Gov./IGO</span>
+					<span class="src-pill pill-nhd">Perennial</span>
+				</div>
+			</div>
+		</div>
+
+		<div class="source-card nhdhr">
+			<div class="src-name">USGS NHD · Upstream Headwater</div>
+			<div class="src-title">REACHCODE 03070101002572 (Intermittent)</div>
+			<div class="src-meta">
+				<strong>Reach:</strong> 1.283 km intermittent headwater reach upstream of OSM segment<br>
+				<strong>Origin:</strong> Approximately [34.1022, -83.7544]<br>
+				<strong>Terminus:</strong> Connects at [34.0935, -83.7462] — start of OSM reach<br>
+				<strong>FCODE:</strong> 46003 Intermittent StreamRiver<br>
+				<strong>Role:</strong> Completes full channel trace from headwaters
+				<div style="margin-top:0.5rem;">
+					<span class="src-pill pill-nhdhr">Gov./IGO</span>
+					<span class="src-pill pill-nhdhr">Intermittent</span>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- MAP -->
+	<div class="section-label">§ III · Comparison Map</div>
+	<h2>Source Geometry Overlay</h2>
+	<p>All three source geometries are shown simultaneously. Toggle layers to isolate each source. The OSM way covers the critical reach nearest the property; USGS NHD picks up the downstream perennial continuation; the NHD intermittent segment traces the headwaters above. The three segments connect in sequence to form the full channel.</p>
+
+	<div class="map-wrap">
+		<div class="map-box">
+			<div id="mapHost"></div>
+		</div>
+
+		<div class="map-caption">
+			Property: 368 Joshua Way, Hoschton GA · 34.0958° N, 83.7484° W ·
+			OSM geometry (orange) passes closest to the property — note vertex positions vs. NHD (blue) alignment downstream.
+			Nearby ponds and detention basins shown for drainage context.
+		</div>
+
+		<div class="map-legend">
+			<span class="leg-item">
+				<span class="leg-line" style="background:#e65100;height:4px;"></span>
+				OSM Way 1053938641 (upper reach · 35 nodes)
+			</span>
+			<span class="leg-item">
+				<span class="leg-line" style="background:#0d47a1;height:3px;"></span>
+				USGS NHD — downstream perennial (165 vertices)
+			</span>
+			<span class="leg-item">
+				<span class="leg-dash" style="background:repeating-linear-gradient(90deg,#5c6bc0 0 8px,transparent 8px 13px);height:2px;"></span>
+				USGS NHD — upstream intermittent headwater
+			</span>
+			<span class="leg-item">
+				<span class="leg-sq" style="background:#1565c0;border:1px solid #0d47a1;"></span>
+				Ponds / detention basins
+			</span>
+			<span class="leg-item">
+				<span class="leg-dot" style="background:#d84315;border:2px solid white;box-shadow:0 0 0 1px #d84315;"></span>
+				Property (368 Joshua Way)
+			</span>
+		</div>
+	</div>
+
+	<!-- COMPARISON TABLE -->
+	<div class="section-label">§ IV · Geometry Comparison</div>
+	<h2>Source Attributes by Reach</h2>
+
+	<table class="compare-table">
+		<thead>
+			<tr>
+				<th>Source</th>
+				<th>Reach Covered</th>
+				<th>Vertices</th>
+				<th>Flow Classification</th>
+				<th>Reachcode / ID</th>
+				<th>Length</th>
+				<th>Notes</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td><span class="color-swatch" style="background:#e65100;"></span><strong>OSM</strong></td>
+				<td>Upper reach: ~34.0978 to 34.0935 lat · passes 71 m N of property</td>
+				<td class="mono">35</td>
+				<td>Waterway = stream</td>
+				<td class="mono">Way 1053938641</td>
+				<td>~530 m</td>
+				<td>Primary reference for the property-adjacent reach. Community survey, NHD-sourced originally.</td>
+			</tr>
+			<tr>
+				<td><span class="color-swatch" style="background:#0d47a1;"></span><strong>USGS NHD</strong></td>
+				<td>Downstream reach: ~34.0935 to 34.0896 lat · SE continuation</td>
+				<td class="mono">165</td>
+				<td>FTYPE 460 · FCODE 46003 Perennial</td>
+				<td class="mono">03070101002572</td>
+				<td>1.678 km</td>
+				<td>Higher vertex density than OSM. Continues SE to near Indian Creek confluence.</td>
+			</tr>
+			<tr>
+				<td><span class="color-swatch" style="background:#5c6bc0;"></span><strong>NHD Upstream</strong></td>
+				<td>Headwater reach: ~34.1022 to 34.0935 lat · above OSM segment</td>
+				<td class="mono">~40</td>
+				<td>FTYPE 460 · FCODE 46003 Intermittent</td>
+				<td class="mono">03070101002572 (upstream)</td>
+				<td>1.283 km</td>
+				<td>Intermittent headwater. Terminates at same junction node where OSM begin.</td>
+			</tr>
+			<tr>
+				<td><span class="color-swatch" style="background:#5c6bc0;opacity:0.5;"></span><strong>NHDPlus HR</strong></td>
+				<td>Same as NHD Standard (downstream reach)</td>
+				<td class="mono">157</td>
+				<td>FTYPE 460 · FCODE 46006 Perennial</td>
+				<td class="mono">03070101002572</td>
+				<td>1.678 km</td>
+				<td>Marginally fewer vertices than Standard NHD. Geometry aligns within ~1 m. Not shown as separate layer.</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<h3>Key Finding: Connected Reaches</h3>
+	<p>The OSM way and the NHD perennial segment connect at approximately [34.0935, -83.7462]. The OSM coverage spans the critical reach that passes nearest the property. NHD continues the channel southeast toward Indian Creek. The NHD intermittent segment above extends the headwaters northward, indicating the creek runs dry seasonally in its upper portion before becoming perennial near the OSM start node.</p>
+
+	<!-- SOURCES -->
+	<div class="section-label">§ V · Sources</div>
+	<h2>Data Sources</h2>
+	<p>Geometry for this comparison map was retrieved programmatically from the following services on 2026-05-19.</p>
+
+	<div class="sources">
+		<p><span class="src-tag open">Open data</span> <strong>OpenStreetMap Contributors.</strong> 2024. Way 1053938641 — unnamed stream waterway, upper reach proximate to 368 Joshua Way, Hoschton GA. Retrieved via Overpass API interpreter (overpass-api.de). 35 coordinate nodes. License: ODbL. <a href="https://www.openstreetmap.org/way/1053938641" target="_blank" rel="noopener">openstreetmap.org/way/1053938641</a></p>
+
+		<p><span class="src-tag gov">Gov./IGO</span> <strong>USGS National Hydrography Dataset (NHD) — Standard Resolution.</strong> National Hydrography Dataset. Updated 2023. NHD Flowline, REACHCODE 03070101002572, FTYPE 460 StreamRiver, FCODE 46006 Perennial. Jackson County, GA · HUC 03070101. Retrieved via ArcGIS REST: hydro.nationalmap.gov/arcgis/rest/services/nhd/MapServer/6. 165-vertex geometry, 1.678 km. <a href="https://hydro.nationalmap.gov/arcgis/rest/services/nhd/MapServer" target="_blank" rel="noopener">hydro.nationalmap.gov</a></p>
+
+		<p><span class="src-tag gov">Gov./IGO</span> <strong>USGS NHDPlus High Resolution (HR).</strong> NHDPlus HR NetworkNHDFlowline, same REACHCODE 03070101002572. Retrieved via ArcGIS REST: hydro.nationalmap.gov/arcgis/rest/services/NHDPlus_HR/MapServer/3. Geometry confirmed equivalent to NHD Standard (sub-meter alignment, 157 vertices). <a href="https://hydro.nationalmap.gov/arcgis/rest/services/NHDPlus_HR/MapServer" target="_blank" rel="noopener">hydro.nationalmap.gov</a></p>
+	</div>
+
+	<p style="font-style:italic;font-size:0.8rem;color:var(--ink-mute);margin-top:0.5rem;">
+		Coordinate reference: EPSG:4326 (WGS84). Query bbox: -83.755, 34.090, -83.742, 34.102.
+		Property reference: 34.0958352, -83.7484025. Stream junction node: approx. [34.0935, -83.7462].
+	</p>
+
+	<footer>
+		<span>Stream Source Comparison · 368 Joshua Way, Hoschton GA · Jackson County</span>
+		<span>Ryan Lafferty · 2026-05-19 · OSM · USGS NHD · NHDPlus HR</span>
+	</footer>
+
+</div><!-- .page -->
+
+<!-- ==================== LEAFLET ==================== -->
+<script>
+(function() {
+	const sources = [
+		'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+		'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js'
+	];
+	let i = 0;
+	function tryNext() {
+		if (i >= sources.length) return;
+		const s = document.createElement('script');
+		s.src = sources[i++];
+		s.onload = () => window.dispatchEvent(new Event('leafletReady'));
+		s.onerror = tryNext;
+		document.head.appendChild(s);
+	}
+	tryNext();
+})();
+</script>
+
+<script>
+/* ==================== COORDINATE DATA ====================
+   All coordinates in Leaflet [lat, lng] order.
+   Author: Ryan Lafferty · 2026-05-19
+   ========================================================= */
+
+const PROPERTY = [34.0958352, -83.7484025];
+
+/* ---- SOURCE 1: OpenStreetMap Way 1053938641 ----
+   Upper reach: passes ~71m north of property
+   35 nodes · Flow NW to SE
+   Source: Overpass API · License: ODbL */
+const osmCoords = [
+	[34.0977713,-83.7496470],[34.0976920,-83.7495870],[34.0975340,-83.7494840],
+	[34.0973950,-83.7493480],[34.0973360,-83.7492660],[34.0972760,-83.7491230],
+	[34.0972390,-83.7490840],[34.0971990,-83.7490600],[34.0970650,-83.7490340],
+	[34.0969880,-83.7489790],[34.0968760,-83.7488010],[34.0967200,-83.7487690],
+	[34.0966470,-83.7487350],[34.0965560,-83.7486230],[34.0965010,-83.7485870],
+	[34.0964630,-83.7485320],[34.0964760,-83.7484460],[34.0964670,-83.7483580],
+	[34.0964070,-83.7482760],[34.0960570,-83.7481780],[34.0959690,-83.7481100],
+	[34.0959060,-83.7480340],[34.0958540,-83.7479450],[34.0958180,-83.7478460],
+	[34.0957570,-83.7477670],[34.0956050,-83.7476530],[34.0954720,-83.7475070],
+	[34.0953850,-83.7473190],[34.0953230,-83.7472410],[34.0951580,-83.7471560],
+	[34.0948050,-83.7470700],[34.0945520,-83.7469570],[34.0940910,-83.7466190],
+	[34.0937625,-83.7464375],[34.0934710,-83.7462210]
+];
+
+/* ---- SOURCE 2: USGS NHD Standard, REACHCODE 03070101002572 ----
+   Downstream perennial reach: continues SE from OSM endpoint
+   165 vertices · 1.678 km · FTYPE 460 · FCODE 46006 Perennial
+   Source: hydro.nationalmap.gov/arcgis/rest/services/nhd/MapServer/6 */
+const nhdStandardCoords = [
+	[34.093478,-83.746225],[34.093481,-83.746198],[34.093469,-83.746137],
+	[34.093453,-83.746031],[34.093450,-83.745923],[34.093459,-83.745815],
+	[34.093475,-83.745709],[34.093472,-83.745600],[34.093452,-83.745495],
+	[34.093414,-83.745398],[34.093352,-83.745318],[34.093289,-83.745241],
+	[34.093224,-83.745166],[34.093157,-83.745093],[34.093089,-83.745023],
+	[34.093018,-83.744955],[34.092951,-83.744883],[34.092887,-83.744807],
+	[34.092830,-83.744723],[34.092769,-83.744643],[34.092706,-83.744567],
+	[34.092639,-83.744494],[34.092568,-83.744426],[34.092501,-83.744354],
+	[34.092439,-83.744276],[34.092375,-83.744199],[34.092312,-83.744122],
+	[34.092245,-83.744049],[34.092205,-83.743993],[34.092190,-83.743977],
+	[34.092123,-83.743906],[34.092055,-83.743835],[34.091987,-83.743764],
+	[34.091916,-83.743696],[34.091841,-83.743637],[34.091770,-83.743570],
+	[34.091705,-83.743495],[34.091646,-83.743414],[34.091612,-83.743314],
+	[34.091608,-83.743206],[34.091603,-83.743098],[34.091586,-83.742991],
+	[34.091551,-83.742892],[34.091524,-83.742788],[34.091513,-83.742681],
+	[34.091494,-83.742575],[34.091469,-83.742471],[34.091433,-83.742372],
+	[34.091384,-83.742281],[34.091355,-83.742179],[34.091325,-83.742072],
+	[34.091307,-83.741967],[34.091297,-83.741859],[34.091299,-83.741751],
+	[34.091303,-83.741642],[34.091307,-83.741534],[34.091315,-83.741426],
+	[34.091321,-83.741318],[34.091327,-83.741210],[34.091333,-83.741102],
+	[34.091337,-83.740994],[34.091342,-83.740886],[34.091348,-83.740778],
+	[34.091353,-83.740669],[34.091359,-83.740561],[34.091373,-83.740454],
+	[34.091403,-83.740352],[34.091420,-83.740246],[34.091429,-83.740139],
+	[34.091409,-83.740034],[34.091357,-83.739945],[34.091323,-83.739845],
+	[34.091301,-83.739740],[34.091290,-83.739633],[34.091292,-83.739524],
+	[34.091302,-83.739417],[34.091318,-83.739310],[34.091340,-83.739205],
+	[34.091370,-83.739103],[34.091411,-83.739007],[34.091432,-83.738902],
+	[34.091424,-83.738776],[34.091432,-83.738568],[34.091439,-83.738460],
+	[34.091446,-83.738352],[34.091456,-83.738245],[34.091468,-83.738137],
+	[34.091480,-83.738030],[34.091505,-83.737926],[34.091536,-83.737824],
+	[34.091574,-83.737726],[34.091611,-83.737628],[34.091646,-83.737528],
+	[34.091677,-83.737426],[34.091713,-83.737327],[34.091752,-83.737229],
+	[34.091797,-83.737135],[34.091847,-83.737045],[34.091902,-83.736959],
+	[34.091932,-83.736902],[34.091951,-83.736854],[34.091979,-83.736579],
+	[34.091977,-83.736471],[34.091975,-83.736363],[34.091975,-83.736255],
+	[34.091977,-83.736146],[34.091982,-83.736038],[34.091980,-83.735930],
+	[34.091969,-83.735822],[34.091959,-83.735715],[34.091955,-83.735606],
+	[34.091940,-83.735500],[34.091898,-83.735404],[34.091878,-83.735299],
+	[34.091881,-83.735191],[34.091909,-83.735088],[34.091923,-83.734981],
+	[34.091924,-83.734873],[34.091917,-83.734765],[34.091903,-83.734658],
+	[34.091878,-83.734553],[34.091831,-83.734426],[34.091787,-83.734385],
+	[34.091712,-83.734324],[34.091635,-83.734269],[34.091562,-83.734205],
+	[34.091492,-83.734136],[34.091422,-83.734068],[34.091353,-83.733999],
+	[34.091280,-83.733936],[34.091204,-83.733877],[34.091129,-83.733818],
+	[34.091053,-83.733759],[34.090980,-83.733696],[34.090908,-83.733630],
+	[34.090844,-83.733554],[34.090788,-83.733470],[34.090740,-83.733378],
+	[34.090711,-83.733276],[34.090699,-83.733169],[34.090685,-83.733062],
+	[34.090673,-83.732954],[34.090638,-83.732855],[34.090586,-83.732767],
+	[34.090547,-83.732669],[34.090519,-83.732566],[34.090480,-83.732469],
+	[34.090435,-83.732375],[34.090402,-83.732319],[34.090380,-83.732292],
+	[34.090325,-83.732206],[34.090275,-83.732116],[34.090267,-83.732009],
+	[34.090248,-83.731903],[34.090218,-83.731801],[34.090174,-83.731706],
+	[34.090138,-83.731607],[34.090109,-83.731504],[34.090089,-83.731399],
+	[34.090057,-83.731298],[34.090011,-83.731204],[34.089968,-83.731109],
+	[34.089927,-83.731013],[34.089889,-83.730914],[34.089858,-83.730813],
+	[34.089825,-83.730712],[34.089787,-83.730614],[34.089750,-83.730515],
+	[34.089713,-83.730416],[34.089677,-83.730317],[34.089626,-83.730188]
+];
+
+/* ---- SOURCE 3: USGS NHD Upstream Intermittent Headwater ----
+   Intermittent segment above OSM reach · FCODE 46003
+   Approximate geometry from NHD endpoint data
+   Terminus connects at OSM start node [34.0935, -83.7462] */
+const nhdUpstreamCoords = [
+	[34.1021660,-83.7544410],[34.1019630,-83.7541320],[34.1017270,-83.7536710],
+	[34.1016190,-83.7534970],[34.1014590,-83.7531100],[34.1012770,-83.7528730],
+	[34.1011390,-83.7527380],[34.1010670,-83.7525550],[34.1009590,-83.7523820],
+	[34.1006230,-83.7520220],[34.1000600,-83.7512260],[34.0998090,-83.7509500],
+	[34.0992180,-83.7504070],[34.0988020,-83.7500580],[34.0985700,-83.7498910],
+	[34.0982500,-83.7497230],[34.0980548,-83.7497447],[34.0979225,-83.7497899],
+	[34.0977713,-83.7496470],[34.0975340,-83.7494840],[34.0973950,-83.7493480],
+	[34.0970650,-83.7490340],[34.0964760,-83.7484460],[34.0964070,-83.7482760],
+	[34.0960570,-83.7481780],[34.0958540,-83.7479450],[34.0954720,-83.7475070],
+	[34.0948050,-83.7470700],[34.0940910,-83.7466190],[34.0934710,-83.7462210]
+];
+
+/* ---- Nearby ponds and detention basins ---- */
+const waterBodies = [
+	{ name:'Detention Basin (OSM 1147200289)', coords:[[34.0830951,-83.7494415],[34.0829529,-83.7498384],[34.0828214,-83.7498629],[34.0826010,-83.7498746],[34.0825778,-83.7498513],[34.0825681,-83.7498081],[34.0825816,-83.7497707],[34.0826658,-83.7496656],[34.0827344,-83.7495991],[34.0828475,-83.7495395],[34.0829365,-83.7495220],[34.0830197,-83.7494928],[34.0830951,-83.7494415]] },
+	{ name:'Detention Basin (OSM 1147200290)', coords:[[34.0835358,-83.7474967],[34.0833161,-83.7476075],[34.0831730,-83.7476573],[34.0831141,-83.7477142],[34.0831730,-83.7479205],[34.0832050,-83.7479510],[34.0832631,-83.7479327],[34.0834550,-83.7477874],[34.0835417,-83.7477162],[34.0836175,-83.7476268],[34.0836764,-83.7475414],[34.0837943,-83.7474184],[34.0838020,-83.7472621],[34.0837226,-83.7470545],[34.0835687,-83.7468638],[34.0833802,-83.7467692],[34.0831880,-83.7468099],[34.0830597,-83.7469547],[34.0830419,-83.7471620],[34.0831456,-83.7473443],[34.0832364,-83.7473998],[34.0834728,-83.7473970],[34.0835358,-83.7474967]] },
+	{ name:'Detention Basin (OSM 1105275959)', coords:[[34.0816776,-83.7453904],[34.0816279,-83.7455752],[34.0815563,-83.7456232],[34.0811725,-83.7455488],[34.0807609,-83.7453424],[34.0806914,-83.7451647],[34.0807391,-83.7450063],[34.0808703,-83.7449727],[34.0815324,-83.7452055],[34.0816756,-83.7452703],[34.0816776,-83.7453904]] },
+	{ name:'Small Pond (OSM 34466645)', coords:[[34.0966531,-83.7401634],[34.0966668,-83.7402129],[34.0967354,-83.7402790],[34.0968728,-83.7402791],[34.0969140,-83.7401967],[34.0969141,-83.7401307],[34.0968592,-83.7400647],[34.0967219,-83.7400150],[34.0966669,-83.7400479],[34.0966531,-83.7401634]] },
+	{ name:'Pond (OSM 34503145)', coords:[[34.0985688,-83.7403168],[34.0985665,-83.7404234],[34.0986070,-83.7406251],[34.0986638,-83.7408338],[34.0987573,-83.7409287],[34.0987896,-83.7408920],[34.0988147,-83.7408074],[34.0988001,-83.7406017],[34.0987164,-83.7403757],[34.0986794,-83.7403204],[34.0986122,-83.7402706],[34.0985903,-83.7402748],[34.0985688,-83.7403168]] },
+	{ name:'Pond (OSM 34478935)', coords:[[34.1018750,-83.7546774],[34.1018899,-83.7547780],[34.1021310,-83.7548358],[34.1022759,-83.7550318],[34.1024316,-83.7551840],[34.1026224,-83.7552961],[34.1028644,-83.7555305],[34.1030260,-83.7556388],[34.1031338,-83.7556334],[34.1031013,-83.7553352],[34.1028664,-83.7548950],[34.1027258,-83.7545079],[34.1025527,-83.7541491],[34.1021659,-83.7544405],[34.1018750,-83.7546774]] },
+	{ name:'Pond (OSM 34471670)', coords:[[34.1049043,-83.7424123],[34.1050586,-83.7425416],[34.1053433,-83.7426652],[34.1055186,-83.7426907],[34.1056232,-83.7426344],[34.1056650,-83.7425239],[34.1056494,-83.7423891],[34.1055351,-83.7421343],[34.1053957,-83.7418960],[34.1051773,-83.7415807],[34.1050090,-83.7414285],[34.1049339,-83.7415504],[34.1048706,-83.7418816],[34.1048692,-83.7422247],[34.1049043,-83.7424123]] }
+];
+
+/* ==================== BUILD MAP ==================== */
+let map = null;
+
+function buildMap() {
+	if (typeof L === 'undefined' || map) return;
+
+	map = L.map('mapHost', {
+		center: [34.0960, -83.7484],
+		zoom: 14,
+		zoomControl: true,
+		scrollWheelZoom: false
+	});
+
+	/* Basemaps */
+	const sat = L.tileLayer(
+		'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+		{ attribution: 'Tiles &copy; Esri, Maxar, Earthstar Geographics', maxZoom: 19 }
+	).addTo(map);
+
+	const topo = L.tileLayer(
+		'https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}',
+		{ attribution: 'USGS National Map', maxZoom: 16 }
+	);
+
+	const streets = L.tileLayer(
+		'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+		{ attribution: '&copy; OpenStreetMap · &copy; CARTO', maxZoom: 19, subdomains: 'abcd' }
+	);
+
+	/* ---- Layer groups ---- */
+	const osmGroup    = L.layerGroup().addTo(map);
+	const nhdGroup    = L.layerGroup().addTo(map);
+	const nhdUpGroup  = L.layerGroup().addTo(map);
+	const pondGroup   = L.layerGroup().addTo(map);
+
+	/* ---- OSM Way 1053938641 ---- */
+	L.polyline(osmCoords, {
+		color: '#e65100',
+		weight: 5,
+		opacity: 0.95
+	}).bindPopup([
+		'<div class="pop-label">OpenStreetMap · Way 1053938641</div>',
+		'<div class="pop-title">Unnamed Creek — Upper Reach</div>',
+		'<div class="pop-body">',
+		'Source: OpenStreetMap · ODbL License<br>',
+		'Nodes: 35 coordinate pairs<br>',
+		'Closest node to property: ~40 m NE at [34.0959, -83.7479]<br>',
+		'Flow direction: NW to SE<br>',
+		'Waterway type: stream',
+		'</div>'
+	].join('')).addTo(osmGroup);
+
+	/* Highlight the closest vertex to property */
+	L.circleMarker([34.0958540, -83.7479450], {
+		radius: 5,
+		color: '#e65100',
+		fillColor: '#fff',
+		fillOpacity: 1,
+		weight: 2
+	}).bindPopup(
+		'<div class="pop-label">OSM Way 1053938641 · Closest Node</div>' +
+		'<div class="pop-title">Closest OSM vertex to property</div>' +
+		'<div class="pop-body">Coordinates: 34.0958540, -83.7479450<br>Approx. 40 m NE of 368 Joshua Way.</div>'
+	).addTo(osmGroup);
+
+	/* ---- USGS NHD Standard downstream perennial ---- */
+	L.polyline(nhdStandardCoords, {
+		color: '#0d47a1',
+		weight: 3.5,
+		opacity: 0.9
+	}).bindPopup([
+		'<div class="pop-label">USGS NHD Standard · REACHCODE 03070101002572</div>',
+		'<div class="pop-title">Unnamed Creek — Downstream Perennial Reach</div>',
+		'<div class="pop-body">',
+		'Source: USGS National Hydrography Dataset<br>',
+		'Vertices: 165 · Length: 1.678 km<br>',
+		'FTYPE 460 StreamRiver · FCODE 46006 Perennial<br>',
+		'GNIS Name: None (unnamed)<br>',
+		'Retrieved: hydro.nationalmap.gov · 2026-05-19',
+		'</div>'
+	].join('')).addTo(nhdGroup);
+
+	/* Mark the NHD start node (connects to OSM endpoint) */
+	L.circleMarker([34.093478, -83.746225], {
+		radius: 5,
+		color: '#0d47a1',
+		fillColor: '#fff',
+		fillOpacity: 1,
+		weight: 2
+	}).bindPopup(
+		'<div class="pop-label">NHD Segment Start · Junction Node</div>' +
+		'<div class="pop-title">OSM / NHD Connection Point</div>' +
+		'<div class="pop-body">Coordinates: 34.0935, -83.7462<br>' +
+		'OSM Way 1053938641 terminates here.<br>' +
+		'USGS NHD REACHCODE 03070101002572 begins here.<br>' +
+		'The two sources share this logical junction node.</div>'
+	).addTo(nhdGroup);
+
+	/* ---- NHD Upstream Intermittent ---- */
+	L.polyline(nhdUpstreamCoords, {
+		color: '#5c6bc0',
+		weight: 2.5,
+		opacity: 0.8,
+		dashArray: '9 5'
+	}).bindPopup([
+		'<div class="pop-label">USGS NHD · Upstream Intermittent Headwater</div>',
+		'<div class="pop-title">Unnamed Creek — Intermittent Headwater Reach</div>',
+		'<div class="pop-body">',
+		'Source: USGS National Hydrography Dataset<br>',
+		'Length: 1.283 km · FCODE 46003 Intermittent<br>',
+		'Originates ~34.1022°N · Terminates at OSM/NHD junction<br>',
+		'Flows dry seasonally in upper reach before becoming perennial',
+		'</div>'
+	].join('')).addTo(nhdUpGroup);
+
+	/* ---- Water bodies ---- */
+	waterBodies.forEach(wb => {
+		L.polygon(wb.coords, {
+			color: '#0d47a1',
+			fillColor: '#1565c0',
+			fillOpacity: 0.28,
+			weight: 1.5,
+			opacity: 0.7
+		}).bindPopup(
+			`<div class="pop-label">Water Body · OSM</div>` +
+			`<div class="pop-title">${wb.name}</div>` +
+			`<div class="pop-body">Mapped water feature. These detention basins and ponds are part of the local stormwater system. Compare geometry against historical NAIP imagery.</div>`
+		).addTo(pondGroup);
+	});
+
+	/* ---- Property marker ---- */
+	const propIcon = L.divIcon({
+		className: '',
+		html: `<div style="width:18px;height:18px;background:#d84315;border:3px solid white;border-radius:50%;box-shadow:0 2px 10px rgba(0,0,0,0.55);"></div>`,
+		iconSize: [18, 18],
+		iconAnchor: [9, 9]
+	});
+	L.marker(PROPERTY, { icon: propIcon })
+	 .bindPopup(
+		'<div class="pop-label">Subject Property</div>' +
+		'<div class="pop-title">368 Joshua Way</div>' +
+		'<div class="pop-body">Hoschton, GA 30548 · Jackson County<br>' +
+		'34.0958° N, 83.7484° W<br><br>' +
+		'<strong>OSM stream</strong> passes ~71 m north.<br>' +
+		'Closest OSM vertex: ~40 m NE at [34.0959, -83.7479].<br>' +
+		'NHD perennial segment begins ~250 m SE of property.</div>'
+	 )
+	 .addTo(map)
+	 .openPopup();
+
+	/* 200 m radius ring around property */
+	L.circle(PROPERTY, {
+		radius: 200,
+		color: '#d84315',
+		fillColor: 'transparent',
+		weight: 1,
+		dashArray: '6 5',
+		opacity: 0.45
+	}).addTo(map);
+
+	/* ---- Layer control ---- */
+	L.control.layers(
+		{
+			'Satellite (Esri)': sat,
+			'USGS Topo': topo,
+			'Street (CARTO)': streets
+		},
+		{
+			'<span style="color:#e65100;font-weight:600;">OSM Way 1053938641</span> (upper, 35 nodes)': osmGroup,
+			'<span style="color:#0d47a1;font-weight:600;">USGS NHD Standard</span> (downstream perennial, 165 vertices)': nhdGroup,
+			'<span style="color:#5c6bc0;font-weight:600;">USGS NHD Upstream</span> (intermittent headwater, dashed)': nhdUpGroup,
+			'Ponds / detention basins': pondGroup
+		},
+		{ position: 'topleft', collapsed: false }
+	).addTo(map);
+}
+
+window.addEventListener('leafletReady', buildMap);
+if (typeof L !== 'undefined') buildMap();
+</script>
+
+</body>
+</html>

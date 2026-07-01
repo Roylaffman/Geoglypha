@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hittite Empire · GIS Dashboard</title>
+<meta name="author" content="Ryan Lafferty">
+<meta name="description" content="GIS research dashboard for the Hittite Empire, c. 1650–1180 BCE. 12 archaeological sites, GBIF wildlife observations, OSM historic data across Anatolia.">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+:root {
+  --blueprint: #0050FF; --orange: #F38020; --surface: #f8f9fb;
+  --text: #1a1a2e; --text-secondary: #555; --border: #dde1e6;
+  --shadow: 0 2px 12px rgba(0,0,0,0.06); --radius: 6px;
+  --gold: #c9a84c; --purple: #8e44ad; --teal: #0e7c7b; --red: #c0392b;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 17px; scroll-behavior: smooth; }
+body {
+  font-family: 'Crimson Text', Georgia, serif;
+  background:
+    linear-gradient(135deg, #f4f6fb 0%, #f8f9fb 30%, #eef1f8 70%, #f8f9fb 100%),
+    repeating-linear-gradient(0deg, transparent, transparent 4px, rgba(0,80,255,0.015) 4px, rgba(0,80,255,0.015) 5px);
+  color: var(--text); line-height: 1.7; min-height: 100vh;
+}
+.masthead {
+  background: linear-gradient(160deg, #0a1628 0%, #0d2240 40%, #122a4a 100%),
+              repeating-linear-gradient(45deg, transparent, transparent 2px, rgba(0,80,255,0.04) 2px, rgba(0,80,255,0.04) 4px);
+  color: #fff; padding: 3.5rem 2rem 2.5rem; text-align: center; position: relative; overflow: hidden;
+}
+.masthead::before {
+  content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+  background: radial-gradient(ellipse at 30% 60%, rgba(0,80,255,0.18) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 30%, rgba(243,128,32,0.12) 0%, transparent 50%);
+  animation: pulse 12s ease-in-out infinite alternate;
+}
+@keyframes pulse { 0% { transform: scale(1) rotate(0deg); opacity: 0.7; } 100% { transform: scale(1.08) rotate(2deg); opacity: 1; } }
+.masthead > * { position: relative; z-index: 1; }
+.masthead h1 { font-family: 'Crimson Text', Georgia, serif; font-size: 3.2rem; font-weight: 700; letter-spacing: 0.02em; color: #fff; text-shadow: 0 2px 20px rgba(0,80,255,0.4); animation: fadeIn 0.8s ease-out; }
+.masthead .sub { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--orange); margin-top: 0.5rem; opacity: 0; animation: fadeIn 0.8s 0.2s ease-out forwards; }
+.masthead .meta { margin-top: 1.2rem; font-size: 0.85rem; color: rgba(255,255,255,0.6); opacity: 0; animation: fadeIn 0.8s 0.4s ease-out forwards; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; }
+.card {
+  background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: 2rem;
+  margin-bottom: 1.5rem; border-left: 4px solid var(--blueprint);
+  opacity: 0; transform: translateY(16px); animation: cardReveal 0.6s ease-out forwards;
+}
+.card:nth-child(2) { animation-delay: 0.1s; } .card:nth-child(3) { animation-delay: 0.2s; } .card:nth-child(4) { animation-delay: 0.3s; }
+@keyframes cardReveal { to { opacity: 1; transform: translateY(0); } }
+.card h2 { font-family: 'Crimson Text', Georgia, serif; font-size: 1.6rem; font-weight: 600; color: var(--blueprint); margin-bottom: 0.8rem; }
+.card h3 { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--orange); margin-bottom: 1rem; }
+.card p { margin-bottom: 0.8rem; color: var(--text-secondary); }
+
+/* Stats */
+.stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+.stat-item { background: var(--surface); border-radius: var(--radius); padding: 1.1rem; text-align: center; border: 1px solid var(--border); }
+.stat-value { font-family: 'JetBrains Mono', monospace; font-size: 1.8rem; font-weight: 500; color: var(--blueprint); }
+.stat-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.2rem; }
+
+/* Chronology */
+.chrono-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+.chrono-item { background: var(--surface); border-radius: var(--radius); padding: 1.2rem; border: 1px solid var(--border); border-top: 3px solid var(--blueprint); }
+.chrono-item.neo { border-top-color: var(--orange); }
+.chrono-item h4 { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; letter-spacing: 0.06em; color: var(--orange); text-transform: uppercase; margin-bottom: 0.3rem; }
+.chrono-item .years { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--blueprint); font-weight: 500; margin-bottom: 0.4rem; }
+.chrono-item p { font-size: 0.9rem; color: var(--text-secondary); margin: 0; }
+
+/* Map */
+.map-card {
+  background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
+  margin-bottom: 1.5rem; border: 2px solid var(--border);
+  opacity: 0; transform: translateY(16px); animation: cardReveal 0.6s 0.3s ease-out forwards;
+}
+.map-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; background: var(--surface); border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 0.75rem; }
+.map-header h2 { font-family: 'Crimson Text', Georgia, serif; font-size: 1.4rem; font-weight: 600; color: var(--blueprint); margin: 0; }
+.layer-toggles { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.layer-btn { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.35rem 0.7rem; border: 1.5px solid var(--border); border-radius: 4px; background: #fff; color: var(--text-secondary); cursor: pointer; transition: all 0.2s; }
+.layer-btn:hover { border-color: var(--blueprint); color: var(--blueprint); }
+.layer-btn.on { background: var(--blueprint); color: #fff; border-color: var(--blueprint); }
+.layer-btn.sites { border-left: 3px solid var(--orange); } .layer-btn.sites.on { background: var(--orange); border-color: var(--orange); }
+.layer-btn.wildlife { border-left: 3px solid #27ae60; } .layer-btn.wildlife.on { background: #27ae60; border-color: #27ae60; }
+.layer-btn.historic { border-left: 3px solid var(--purple); } .layer-btn.historic.on { background: var(--purple); border-color: var(--purple); }
+.layer-btn.empire { border-left: 3px solid var(--red); } .layer-btn.empire.on { background: var(--red); border-color: var(--red); }
+.layer-btn.heartland { border-left: 3px solid var(--gold); } .layer-btn.heartland.on { background: var(--gold); border-color: var(--gold); color: #1a1a2e; }
+#map { height: 600px; width: 100%; }
+
+/* Legend */
+.legend { background: #fff; border-radius: var(--radius); padding: 1rem 1.2rem; box-shadow: var(--shadow); font-size: 0.85rem; line-height: 1.8; margin-top: 1.5rem; }
+.legend h3 { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--orange); margin-bottom: 0.5rem; }
+.legend-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.legend-line { display: inline-block; width: 16px; height: 0; margin-right: 4px; flex-shrink: 0; }
+
+/* Sources grid */
+.sources-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-top: 1.2rem; }
+.source-card { background: var(--surface); border-radius: var(--radius); padding: 1.2rem; border: 1px solid var(--border); }
+.source-card h4 { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; letter-spacing: 0.06em; color: var(--orange); text-transform: uppercase; margin-bottom: 0.4rem; }
+.source-card p { font-size: 0.9rem; color: var(--text-secondary); margin: 0; }
+.source-card a { color: var(--blueprint); text-decoration: none; word-break: break-all; }
+.source-card a:hover { text-decoration: underline; }
+
+/* Site table */
+.site-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.site-table th { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; letter-spacing: 0.06em; color: var(--orange); text-align: left; padding: 0.5rem 0.6rem; border-bottom: 2px solid var(--blueprint); }
+.site-table td { padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+.site-table .site-name { font-weight: 600; }
+.site-table .ancient { font-style: italic; color: var(--blueprint); font-size: 0.85rem; }
+.site-badge { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.04em; text-transform: uppercase; padding: 0.15rem 0.4rem; border-radius: 3px; color: #fff; }
+.badge-capital { background: var(--orange); }
+.badge-cult { background: var(--gold); color: #1a1a2e; }
+.badge-provincial { background: var(--blueprint); }
+.badge-neo { background: var(--orange); }
+.badge-vassal { background: var(--teal); }
+
+/* Footer */
+.footer { text-align: center; padding: 2rem; color: var(--text-secondary); font-size: 0.8rem; border-top: 1px solid var(--border); margin-top: 2rem; }
+.footer .mono { font-family: 'JetBrains Mono', monospace; color: var(--blueprint); }
+.popup-site { font-family: 'Crimson Text', Georgia, serif; font-size: 0.9rem; }
+.popup-site b { color: var(--orange); }
+.popup-wildlife { font-family: 'Crimson Text', Georgia, serif; font-size: 0.85rem; }
+.popup-wildlife b { color: #27ae60; font-style: italic; }
+.popup-historic { font-family: 'Crimson Text', Georgia, serif; font-size: 0.82rem; }
+.popup-historic b { color: var(--purple); }
+
+/* References */
+.ref-list { font-size: 0.9rem; color: var(--text-secondary); }
+.ref-list li { margin-bottom: 0.4rem; }
+.ref-list a { color: var(--blueprint); }
+
+@media (max-width: 768px) {
+  .masthead h1 { font-size: 2rem; } .container { padding: 1rem; }
+  #map { height: 400px; } .map-header { flex-direction: column; align-items: flex-start; }
+  .site-table { font-size: 0.82rem; }
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <h1>The Hittite Empire</h1>
+  <div class="sub">GIS Research Dashboard &middot; c. 1650–1180 BCE</div>
+  <div class="meta">Ryan Lafferty &middot; June 17, 2026 &middot; <span style="font-family:'JetBrains Mono',monospace">12 archaeological sites &middot; 106K+ wildlife records</span></div>
+</header>
+
+<div class="container">
+
+<!-- ═══ OVERVIEW ═══ -->
+<div class="card">
+  <h2>Historical Overview</h2>
+  <h3>Bronze Age Superpower of Anatolia</h3>
+  <p>The Hittite Empire was a major Bronze Age power centered in Anatolia (modern Turkey). Its heartland was the region of Central Anatolia, roughly bounded by the <strong>Kizilirmak River</strong> (the ancient Marassantiya), with the capital at <strong>Hattusa</strong> (near modern Bogazkale, Corum Province). Hittite civilization is known for its cuneiform archives, monumental architecture, rock sanctuaries, and the earliest known peace treaty — the <strong>Treaty of Kadesh</strong> between Hattusili III and Ramesses II (c. 1259 BCE).</p>
+  <p>At its peak under Suppiluliuma I (c. 1344–1322 BCE), the empire stretched from the Aegean coast to the Euphrates River, from the Black Sea to the Levant. The Hittites left behind one of the largest cuneiform archives of the ancient world — over 30,000 tablets at Hattusa alone — representing the oldest known corpus of Indo-European texts.</p>
+  <div class="stat-grid">
+    <div class="stat-item"><div class="stat-value">~500</div><div class="stat-label">Years of Empire</div></div>
+    <div class="stat-item"><div class="stat-value">12</div><div class="stat-label">Mapped Sites</div></div>
+    <div class="stat-item"><div class="stat-value">212</div><div class="stat-label">OSM Historic Sites</div></div>
+    <div class="stat-item"><div class="stat-value">106K+</div><div class="stat-label">GBIF Wildlife Records</div></div>
+    <div class="stat-item"><div class="stat-value">5</div><div class="stat-label">Species Tracked</div></div>
+  </div>
+</div>
+
+<!-- ═══ CHRONOLOGY ═══ -->
+<div class="card">
+  <h2>Chronological Summary</h2>
+  <h3>From Assyrian Colony to Neo-Hittite States</h3>
+  <div class="chrono-grid">
+    <div class="chrono-item">
+      <h4>Old Assyrian Colony Period</h4>
+      <div class="years">1950–1700 BCE</div>
+      <p>Kultepe (Kanes/Nesa) as Assyrian trading colony (karum). 23,000+ cuneiform tablets. Earliest Hittite presence in Anatolia.</p>
+    </div>
+    <div class="chrono-item">
+      <h4>Old Kingdom</h4>
+      <div class="years">1650–1500 BCE</div>
+      <p>Hattusa becomes capital. Unification under Hattusili I. Early Hittite conquests into Syria. Royal fortress construction.</p>
+    </div>
+    <div class="chrono-item">
+      <h4>New Kingdom (Empire)</h4>
+      <div class="years">1400–1180 BCE</div>
+      <p>Peak of Hittite power. Battle of Kadesh vs Ramesses II. Treaty of Kadesh. Imperial bureaucracy and monumental building program.</p>
+    </div>
+    <div class="chrono-item neo">
+      <h4>Neo-Hittite Period</h4>
+      <div class="years">1180–700 BCE</div>
+      <p>Successor states in SE Anatolia and N Syria after empire collapse. Luwian inscriptions. Karatepe, Arslantepe, Tell Atchana.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ARCHAEOLOGICAL SITES ═══ -->
+<div class="card">
+  <h2>Archaeological Sites</h2>
+  <h3>12 Sites Across Four Periods</h3>
+  <div style="overflow-x:auto;">
+  <table class="site-table">
+    <thead><tr><th>#</th><th>Site</th><th>Ancient Name</th><th>Type</th><th>Coordinates</th><th>Period</th><th>Significance</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td class="site-name">Hattusa<span class="ancient">&nbsp;Hattusa</span></td>
+        <td><span class="site-badge badge-capital">Capital</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;">40.019, 34.615</td>
+        <td>1650–1180 BCE</td>
+        <td>Imperial capital. UNESCO World Heritage. Lion Gate, Sphinx Gate, Great Temple. 30,000+ cuneiform tablets.</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td class="site-name">Yazilikaya<span class="ancient">&nbsp;—</span></td>
+        <td><span class="site-badge badge-cult">Cult Center</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;">40.030, 34.630</td>
+        <td>13th c. BCE</td>
+        <td>Open-air rock sanctuary. 64 deities in Chamber A, 12 in Chamber B. Largest Hittite rock monument.</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td class="site-name">Alaca Hoyuk<span class="ancient">&nbsp;Arinna? / Zippalanda?</span></td>
+        <td><span class="site-badge badge-cult">Cult Center</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;">40.234, 34.696</td>
+        <td>Chalcolithic–Hittite</td>
+        <td>Pre-Hittite royal tombs (EB III, 13 tombs). Hittite Sphinx Gate. 14 occupational layers.</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td class="site-name">Kultepe<span class="ancient">&nbsp;Kanes / Nesa</span></td>
+        <td><span class="site-badge badge-provincial">Trading Colony</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;">38.851, 35.635</td>
+        <td>3000–1700 BCE</td>
+        <td>Assyrian karum. 23,000+ Old Assyrian tablets. Oldest Hittite texts. Key for Hittite origins.</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td class="site-name">Masat Hoyuk<span class="ancient">&nbsp;Tapigga</span></td>
+        <td><span class="site-badge badge-provincial">Provincial Center</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;">40.005, 35.750</td>
+        <td>Hittite Empire</td>
+        <td>Provincial center. Archive of 116 tablets. Fortified palace complex. Key for provincial administration.</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td class="site-name">Ortakoy<span class="ancient">&nbsp;Sapinuwa</span></td>
+        <td><span class="site-badge badge-cult">Cult Center</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;">40.270, 35.250</td>
+        <td>Hittite Empire</td>
+        <td>Second major religious/administrative center. 4,000+ tablets found since 1990. Temples and palaces.</td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td class="site-name">Kusakli<span class="ancient">&nbsp;Sarissa</span></td>
+        <td><span class="site-badge badge-provincial">Provincial Center</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;">38.650, 36.000</td>
+        <td>Hittite Empire</td>
+        <td>Provincial center with temple complex. Important cult site in Sivas Province.</td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td class="site-name">Karatepe<span class="ancient">&nbsp;Azatiwataya</span></td>
+        <td><span class="site-badge badge-neo">Neo-Hittite</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;">37.294, 36.258</td>
+        <td>8th c. BCE</td>
+        <td>Late/Neo-Hittite fortress. Bilingual Phoenician-Luwian inscription. Well-preserved gate reliefs.</td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td class="site-name">Arslantepe<span class="ancient">&nbsp;Malitiya / Melid</span></td>
+        <td><span class="site-badge badge-neo">Neo-Hittite</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;">38.382, 38.255</td>
+        <td>Chalcolithic–Neo-Hittite</td>
+        <td>UNESCO World Heritage. 5,000+ years occupation. Hittite vassal kingdom capital. Temple complex.</td>
+      </tr>
+      <tr>
+        <td>10</td>
+        <td class="site-name">Tell Atchana<span class="ancient">&nbsp;Alalakh</span></td>
+        <td><span class="site-badge badge-vassal">Vassal Kingdom</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;">36.237, 36.380</td>
+        <td>MBA–LBA</td>
+        <td>Hittite vassal kingdom (Mukish). Palace archives. Mitanni to Hittite transition.</td>
+      </tr>
+      <tr>
+        <td>11</td>
+        <td class="site-name">Emar<span class="ancient">&nbsp;Emar / Imar</span></td>
+        <td><span class="site-badge badge-vassal">Vassal Kingdom</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;">35.990, 38.110</td>
+        <td>14th–13th c. BCE</td>
+        <td>Hittite-controlled Syrian city on Euphrates. Temple archives. Flooded by Tabqa Dam.</td>
+      </tr>
+      <tr>
+        <td>12</td>
+        <td class="site-name">Bogazkoy<span class="ancient">&nbsp;Hattusa (Lower Town)</span></td>
+        <td><span class="site-badge badge-capital">Capital</span></td>
+        <td style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;">40.014, 34.605</td>
+        <td>Hittite Empire</td>
+        <td>Lower city of Hattusa. Great Temple (Temple 1). Residential and commercial districts.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- ═══ MAP ═══ -->
+<div class="map-card">
+  <div class="map-header">
+    <h2>Interactive Map</h2>
+    <div class="layer-toggles">
+      <button class="layer-btn sites on" onclick="tog('sites')" id="btn-sites">Sites</button>
+      <button class="layer-btn wildlife on" onclick="tog('wildlife')" id="btn-wildlife">Wildlife</button>
+      <button class="layer-btn historic on" onclick="tog('historic')" id="btn-historic">Historic</button>
+      <button class="layer-btn empire on" onclick="tog('empire')" id="btn-empire">Empire</button>
+      <button class="layer-btn heartland on" onclick="tog('heartland')" id="btn-heartland">Heartland</button>
+    </div>
+  </div>
+  <div id="map"></div>
+</div>
+
+<!-- ═══ LEGEND ═══ -->
+<div class="legend">
+  <h3>Map Legend</h3>
+  <div class="legend-row"><span class="legend-dot" style="background:var(--orange);"></span> Capital (Hattusa, Bogazkoy)</div>
+  <div class="legend-row"><span class="legend-dot" style="background:var(--gold);"></span> Cult center (Yazilikaya, Alaca Hoyuk, Sapinuwa)</div>
+  <div class="legend-row"><span class="legend-dot" style="background:var(--blueprint);"></span> Provincial center / trading colony (Kultepe, Masat, Kusakli)</div>
+  <div class="legend-row"><span class="legend-dot" style="background:var(--orange);border:2px solid var(--red);"></span> Neo-Hittite (Karatepe, Arslantepe)</div>
+  <div class="legend-row"><span class="legend-dot" style="background:var(--teal);"></span> Syrian vassal (Tell Atchana, Emar)</div>
+  <div class="legend-row" style="margin-top:0.4rem;"><span class="legend-line" style="border-bottom:2px dashed var(--red);width:16px;"></span> Empire extent c. 1300 BCE</div>
+  <div class="legend-row"><span class="legend-line" style="border-bottom:2px dashed var(--gold);width:16px;"></span> Kizilirmak heartland</div>
+  <div class="legend-row" style="margin-top:0.4rem;"><span class="legend-dot" style="background:#27ae60;width:8px;height:8px;"></span> Bear &nbsp; <span class="legend-dot" style="background:#2980b9;width:8px;height:8px;"></span> Wolf &nbsp; <span class="legend-dot" style="background:#e67e22;width:8px;height:8px;"></span> Lynx &nbsp; <span class="legend-dot" style="background:#e74c3c;width:8px;height:8px;"></span> Golden Eagle &nbsp; <span class="legend-dot" style="background:#7f8c8d;width:8px;height:8px;"></span> Fox</div>
+  <div class="legend-row"><span class="legend-dot" style="background:var(--purple);width:9px;height:9px;"></span> Historic sites (OSM — churches, castles, ruins)</div>
+</div>
+
+<!-- ═══ DATA SOURCES ═══ -->
+<div class="card">
+  <h2>Data Sources</h2>
+  <h3>Live APIs, Open Data, and Scholarly References</h3>
+  <div class="sources-grid">
+    <div class="source-card"><h4>Pleiades Gazetteer</h4><p>Ancient place coordinates and metadata with Hittite period tags. CC BY license.</p><p><a href="https://pleiades.stoa.org/">pleiades.stoa.org</a></p></div>
+    <div class="source-card"><h4>GBIF Wildlife</h4><p>Occurrence records for 5 key species across Anatolia: bears, wolves, lynx, golden eagles, foxes.</p><p><a href="https://www.gbif.org/">gbif.org</a></p></div>
+    <div class="source-card"><h4>OpenStreetMap</h4><p>Historic sites via Overpass API: 212 nodes in Central Anatolia (churches, castles, ruins, archaeological).</p><p><a href="https://overpass-api.de/">overpass-api.de</a></p></div>
+    <div class="source-card"><h4>Hittite Monuments Project</h4><p>Site photos, descriptions, and coordinates for 100+ Hittite archaeological sites.</p><p><a href="https://www.hittitemonuments.com/">hittitemonuments.com</a></p></div>
+    <div class="source-card"><h4>UNESCO World Heritage</h4><p>Hattusa: the Hittite Capital — inscribed 1986. Arslantepe Mound — inscribed 2021.</p><p><a href="https://whc.unesco.org/en/list/377/">whc.unesco.org</a></p></div>
+    <div class="source-card"><h4>AWMC / Barrington Atlas</h4><p>Ancient World Mapping Center GIS data: coastlines, cultural data, map tiles for the ancient world.</p><p><a href="https://awmc.unc.edu/gis-data/">awmc.unc.edu</a></p></div>
+    <div class="source-card"><h4>Pi Map GIS Pipeline</h4><p>Hermes Agent tools: wildlife_tool, overpass_query, nlcd_tool, serve_api — 10 endpoints at :8081.</p><p><a href="http://localhost:8081/api/health">localhost:8081</a></p></div>
+    <div class="source-card"><h4>Esri / USGS</h4><p>World Imagery basemap + USGS Shaded Relief for Anatolian terrain context.</p><p><a href="https://basemap.nationalmap.gov/">USGS National Map</a></p></div>
+  </div>
+</div>
+
+<!-- ═══ REFERENCES ═══ -->
+<div class="card">
+  <h2>References</h2>
+  <h3>Scholarly Literature</h3>
+  <ul class="ref-list">
+    <li>Bryce, T. (2005). <em>The Kingdom of the Hittites.</em> Oxford University Press.</li>
+    <li>Collins, B. J. (2007). <em>The Hittites and Their World.</em> SBL Press.</li>
+    <li>Houwink ten Cate, Ph. H. J. (1970). <em>The Records of the Early Hittite Empire.</em> Istanbul.</li>
+    <li>Seeher, J. (2011). <em>Hattusha Guide: A Day in the Hittite Capital.</em> Ege Yayinlari.</li>
+    <li>Neve, P. (1993). <em>Hattusa: Stadt der Gotter und Tempel.</em> Verlag Philipp von Zabern.</li>
+    <li>Bryce, T. (2012). <em>The World of the Neo-Hittite Kingdoms.</em> Oxford University Press.</li>
+    <li>Ozguc, T. (1999). <em>Kultepe-Kanis/Nesa.</em> Turkish Historical Society.</li>
+    <li>Suhel, A. (2009). <em>Sapinuwa: An Unknown Hittite Administrative Center.</em> Corum.</li>
+    <li>Hittite Monuments: <a href="https://www.hittitemonuments.com/">hittitemonuments.com</a></li>
+    <li>Pleiades Gazetteer: <a href="https://pleiades.stoa.org/">pleiades.stoa.org</a></li>
+    <li>UNESCO Hattusha: <a href="https://whc.unesco.org/en/list/377/">whc.unesco.org/en/list/377/</a></li>
+  </ul>
+</div>
+
+</div><!-- /container -->
+
+<footer class="footer">
+  <p>Built with <span class="mono">Hermes Agent</span> &middot; Leaflet 1.9.4 &middot; GBIF &middot; OpenStreetMap &middot; Esri World Imagery</p>
+  <p style="margin-top:0.4rem;">Research data from <span class="mono">Hittite_Sites_GIS_Research_Brief_2026-06-15.md</span></p>
+  <p style="margin-top:0.3rem;">Ryan Lafferty &middot; pi-map GIS Dashboard &middot; June 2026</p>
+</footer>
+
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var map = L.map('map', { scrollWheelZoom: true }).setView([39.3, 35.5], 7);
+var esri = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Tiles &copy; Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP', maxZoom: 18
+});
+var relief = L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'USGS The National Map', opacity: 0.35, maxZoom: 18
+});
+esri.addTo(map); relief.addTo(map);
+
+var siteColors = { capital: '#F38020', cult: '#c9a84c', provincial: '#0050FF', neo: '#F38020', vassal: '#0e7c7b' };
+var siteR = { capital: 8, cult: 7, provincial: 6, neo: 7, vassal: 6 };
+
+var sites = L.layerGroup().addTo(map);
+var hittiteSites = [
+  {n:'Hattusa',an:'Hattusa',lat:40.019,lon:34.615,t:'capital',d:'Capital of the Hittite Empire. UNESCO World Heritage. Lion Gate, Sphinx Gate, Great Temple. 30,000+ cuneiform tablets.',mod:'Bogazkale, Corum, TR'},
+  {n:'Yazilikaya',an:'—',lat:40.030,lon:34.630,t:'cult',d:'Open-air rock sanctuary. Processions of gods carved in stone — 64 deities in Chamber A, 12 in Chamber B. Largest Hittite rock monument.',mod:'1.5 km NE of Hattusa'},
+  {n:'Alaca Hoyuk',an:'Arinna? / Zippalanda?',lat:40.234,lon:34.696,t:'cult',d:'Pre-Hittite royal tombs (EB III, 13 tombs with rich grave goods). Hittite Sphinx Gate. Major cult center. 14 occupational layers.',mod:'25 km NE of Hattusa, Corum'},
+  {n:'Kultepe',an:'Kanes / Nesa',lat:38.851,lon:35.635,t:'provincial',d:'Old Assyrian trading colony (karum). 23,000+ cuneiform tablets. Oldest Hittite texts. Lower town with Assyrian merchant quarter.',mod:'20 km NE of Kayseri'},
+  {n:'Masat Hoyuk',an:'Tapigga',lat:40.005,lon:35.750,t:'provincial',d:'Hittite provincial center. Archive of 116 tablets. Fortified palace complex. Key for understanding Hittite provincial administration.',mod:'100 km NE of Hattusa, Tokat'},
+  {n:'Ortakoy',an:'Sapinuwa',lat:40.270,lon:35.250,t:'cult',d:'Second major Hittite religious/administrative center. 4,000+ tablets found since 1990. Well-preserved temples and palaces.',mod:'53 km E of Hattusa, Corum'},
+  {n:'Kusakli',an:'Sarissa',lat:38.650,lon:36.000,t:'provincial',d:'Hittite provincial center with temple complex. Important cult site.',mod:'Sivas Province'},
+  {n:'Karatepe',an:'Azatiwataya',lat:37.294,lon:36.258,t:'neo',d:'Late/Neo-Hittite fortress. Phoenician and Luwian bilingual inscription (key for decipherment). Well-preserved gate reliefs.',mod:'Osmaniye, TR'},
+  {n:'Arslantepe',an:'Malitiya / Melid',lat:38.382,lon:38.255,t:'neo',d:'Hittite vassal kingdom capital. UNESCO World Heritage. 5,000+ years of occupation. Temple complex.',mod:'Malatya, TR'},
+  {n:'Tell Atchana',an:'Alalakh',lat:36.237,lon:36.380,t:'vassal',d:'Hittite vassal kingdom (Mukish). Palace archives. Key for understanding Hittite-Syrian relations. Mitanni to Hittite transition.',mod:'Hatay Province, TR'},
+  {n:'Emar',an:'Emar / Imar',lat:35.990,lon:38.110,t:'vassal',d:'Hittite-controlled Syrian city on Euphrates. Temple archives. Tablet collection at Aleppo Museum. Flooded by Tabqa Dam.',mod:'NE Syria (Euphrates)'},
+  {n:'Bogazkoy',an:'Hattusa (Lower Town)',lat:40.014,lon:34.605,t:'capital',d:'Lower city of Hattusa. Great Temple (Temple 1). Residential and commercial districts.',mod:'Bogazkale, Corum'}
+];
+
+hittiteSites.forEach(function(s){
+  var clr = siteColors[s.t] || '#999';
+  var r = siteR[s.t] || 6;
+  L.circleMarker([s.lat,s.lon], {
+    radius: r, fillColor: clr, color: (s.t==='neo'?'#c0392b':'#fff'), weight: (s.t==='neo'?2.5:1.5),
+    opacity: 1, fillOpacity: 0.9
+  }).bindPopup('<div class="popup-site"><b>'+s.n+'</b> <i style="font-size:0.85em;color:var(--blueprint)">'+s.an+'</i><br><em>'+s.t.charAt(0).toUpperCase()+s.t.slice(1)+'</em><br>'+s.d+'<br><small style="color:#888;">'+s.mod+'</small></div>').addTo(sites);
+});
+
+// Wildlife
+var gbifData = {"Ursus arctos":[[38.897,34.674],[41.056,30.851],[41.080,32.280],[40.958,32.132],[39.492,39.392],[39.492,39.392],[39.493,39.390],[37.502,34.910],[41.184,32.471],[39.913,29.661],[40.569,39.206],[40.845,39.804],[40.573,30.601],[40.450,32.622],[40.447,32.673],[40.764,31.544],[41.017,32.081],[40.433,32.156],[40.277,37.668],[40.385,39.727],[40.696,29.499],[40.082,29.225],[41.099,31.826],[41.633,33.863],[41.599,33.759],[40.377,39.700],[41.598,33.362],[40.468,32.622],[40.335,32.527],[41.064,33.742]],"Canis lupus":[[40.873,29.129],[41.747,32.384],[36.004,35.812],[40.975,29.384],[41.177,29.092],[38.838,34.607],[38.654,29.333],[39.789,32.794],[39.063,32.096],[41.085,29.047],[41.374,33.770],[39.932,32.850],[40.970,29.155],[39.937,32.831],[39.907,32.767],[41.364,36.189],[40.521,29.123],[39.785,32.803],[39.933,32.849],[40.971,29.154],[40.971,29.154],[40.971,29.153],[40.971,29.153],[40.971,29.154],[40.971,29.154]],"Lynx lynx":[[39.115,38.283],[38.354,36.207],[38.874,34.571],[38.873,34.409],[38.891,34.795],[38.964,34.518],[38.856,34.655],[38.360,36.375],[39.574,39.807],[36.331,32.953],[40.278,37.834],[39.651,37.251],[38.036,36.580],[37.651,29.227],[41.050,34.549],[36.992,36.221],[37.507,34.791],[38.932,35.569]],"Aquila chrysaetos":[[38.907,35.425],[38.597,35.569],[39.534,32.068],[37.860,35.113],[37.886,32.352],[37.862,35.107],[37.765,35.107],[36.995,31.936],[39.571,32.578],[39.908,32.672],[40.170,31.778],[38.245,35.265],[40.074,31.711],[39.099,34.385],[37.938,35.290],[40.464,31.212],[40.049,31.777],[37.985,35.309],[38.234,35.692],[38.725,34.930],[37.888,35.161],[37.937,35.266],[38.716,34.844],[37.765,35.099],[37.981,35.376],[38.234,35.692],[40.689,35.085],[40.128,32.768]],"Vulpes vulpes":[[38.645,35.459],[40.240,33.932],[38.199,36.284],[38.832,34.619],[36.780,35.165],[38.841,34.600],[39.055,35.198],[39.737,34.882],[38.545,33.147],[39.891,32.776],[38.169,33.795],[36.748,31.475],[39.896,32.781],[39.670,32.774],[38.674,29.406],[37.133,37.191],[39.871,32.791],[37.798,35.067],[37.136,38.083],[38.634,34.893],[37.995,38.230],[39.806,32.652],[39.798,32.656],[36.766,34.894],[38.840,34.598],[38.842,34.617],[38.836,34.606],[40.270,39.342]]};
+var spColors = {'Ursus arctos':'#27ae60','Canis lupus':'#2980b9','Lynx lynx':'#e67e22','Aquila chrysaetos':'#e74c3c','Vulpes vulpes':'#7f8c8d'};
+var wildlifeLayer = L.layerGroup().addTo(map);
+Object.keys(gbifData).forEach(function(sp){
+  gbifData[sp].forEach(function(pt){
+    L.circleMarker([pt[0],pt[1]],{radius:3.5,fillColor:spColors[sp]||'#999',color:'#fff',weight:0.6,opacity:0.9,fillOpacity:0.65})
+      .bindPopup('<div class="popup-wildlife"><b><i>'+sp+'</i></b><br>Lat: '+pt[0].toFixed(4)+'&deg;, Lon: '+pt[1].toFixed(4)+'&deg;</div>').addTo(wildlifeLayer);
+  });
+});
+
+// OSM Historic
+var histLayer = L.layerGroup().addTo(map);
+var osmHist = [
+  {n:'El Nazar Kilisesi',h:'ruins',c:38.639,d:34.839},{n:'Sakli Kilise',h:'ruins',c:38.642,d:34.840},{n:'Uzumlu Kilise',h:'ruins',c:38.653,d:34.860},
+  {n:'Golgoli',h:'ruins',c:38.539,d:34.902},{n:'Ortahisar Kalesi',h:'castle',c:38.620,d:34.864},{n:'Yusuf Koc Kilisesi',h:'ruins',c:38.644,d:34.822},
+  {n:'Durmus Kadir Kilisesi',h:'ruins',c:38.638,d:34.819},{n:'Azize Barbara Sapeli',h:'church',c:38.639,d:34.845},{n:'Carikli Kilise',h:'church',c:38.639,d:34.846},
+  {n:'Elmali Kilise',h:'church',c:38.639,d:34.845},{n:'Yilanli Kilise',h:'church',c:38.638,d:34.845},{n:'Karanlik Kilise',h:'church',c:38.639,d:34.846},
+  {n:'Tokali Kilise',h:'church',c:38.641,d:34.845},{n:'Nikeforos Fokas Kilisesi',h:'ruins',c:38.674,d:34.840},{n:'Eski Kullu',h:'ruins',c:38.786,d:35.082}
+];
+osmHist.forEach(function(s){
+  L.circleMarker([s.c,s.d],{radius:4.5,fillColor:'#8e44ad',color:'#fff',weight:1,opacity:0.7,fillOpacity:0.55})
+    .bindPopup('<div class="popup-historic"><b>'+s.n+'</b><br>Type: '+s.h+'</div>').addTo(histLayer);
+});
+
+// Empire boundary (approximate maximum extent c. 1300 BCE)
+var empireLayer = L.layerGroup().addTo(map);
+var empirePoly = L.polygon([
+  [42.0,29.0],[42.0,33.0],[42.0,35.5],[41.5,37.5],[41.0,39.0],[40.0,40.0],
+  [38.5,39.5],[37.0,38.5],[36.5,37.0],[36.0,35.5],[36.0,33.0],[36.5,31.0],
+  [37.5,29.5],[38.5,28.5],[39.5,27.5],[40.5,28.0],[42.0,29.0]
+], {color:'#c0392b',weight:2,opacity:0.7,fillColor:'#c0392b',fillOpacity:0.05,dashArray:'8,4'})
+  .bindPopup('<b>Hittite Empire</b><br>Approximate maximum extent<br>c. 1300 BCE').addTo(empireLayer);
+
+// Kizilirmak heartland
+var heartlandLayer = L.layerGroup().addTo(map);
+var heartlandPoly = L.polygon([
+  [41.0,33.5],[41.0,35.0],[40.5,36.0],[40.0,37.0],[39.5,37.0],[38.5,36.5],[38.5,35.0],[39.0,34.0],[39.5,33.5],[40.5,33.5],[41.0,33.5]
+], {color:'#c9a84c',weight:2,opacity:0.6,fillColor:'#c9a84c',fillOpacity:0.06,dashArray:'4,6'})
+  .bindPopup('<b>Kizilirmak River Basin</b><br>Ancient Marassantiya<br>Hittite heartland core').addTo(heartlandLayer);
+
+var layers = {sites:sites,wildlife:wildlifeLayer,historic:histLayer,empire:empireLayer,heartland:heartlandLayer};
+var state = {sites:true,wildlife:true,historic:true,empire:true,heartland:true};
+
+window.tog = function(name){
+  state[name] = !state[name];
+  var btn = document.getElementById('btn-'+name);
+  if(state[name]){map.addLayer(layers[name]);btn.classList.add('on');}
+  else{map.removeLayer(layers[name]);btn.classList.remove('on');}
+};
+
+L.control.scale({position:'bottomleft',imperial:true,metric:true}).addTo(map);
+map.fitBounds([[35.5,28.5],[42.0,40.0]]);
+</script>
+</body></html>

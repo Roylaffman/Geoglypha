@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Drainage Analysis · 368 Joshua Way, Hoschton GA</title>
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Work+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+	      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
+	<style>
+		/* ============================================================
+		   HOSCHTON DRAINAGE REPORT — technical document theme
+		   Palette: navy ink, water blue, alert orange, slate field
+		   Type: Cormorant Garamond (display) + Work Sans (body) + JetBrains Mono (data)
+		   Author: Ryan Lafferty
+		   ============================================================ */
+
+		:root {
+			--bg:          #eef0f4;
+			--paper:       #ffffff;
+			--ink:         #1a2a3a;
+			--ink-soft:    #3a4f63;
+			--ink-mute:    #6b8299;
+			--rule:        #cdd5de;
+			--water:       #1565c0;
+			--water-light: #e3f0fc;
+			--alert:       #d84315;
+			--alert-light: #fbe9e7;
+			--topo:        #2e7d32;
+			--topo-light:  #e8f5e9;
+		}
+
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+		html { scroll-behavior: smooth; }
+
+		body {
+			background: var(--bg);
+			color: var(--ink);
+			font-family: 'Work Sans', sans-serif;
+			font-size: 16px;
+			line-height: 1.65;
+			-webkit-font-smoothing: antialiased;
+		}
+
+		/* ---- MASTHEAD ---- */
+		.masthead {
+			background: var(--ink);
+			color: #ffffff;
+			padding: 2rem 2.5rem 1.75rem;
+			display: grid;
+			grid-template-columns: 1fr auto;
+			align-items: end;
+			gap: 1rem;
+		}
+		.masthead .tag {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.68rem;
+			letter-spacing: 0.2em;
+			text-transform: uppercase;
+			color: #7ba9cc;
+			margin-bottom: 0.6rem;
+		}
+		.masthead h1 {
+			font-family: 'Cormorant Garamond', serif;
+			font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+			font-weight: 600;
+			line-height: 1.1;
+			color: #fff;
+		}
+		.masthead .sub {
+			font-size: 0.85rem;
+			color: #9ab8d0;
+			margin-top: 0.4rem;
+		}
+		.masthead .meta-col {
+			text-align: right;
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.72rem;
+			color: #7ba9cc;
+			line-height: 1.8;
+		}
+
+		/* ---- ALERT BANNER ---- */
+		.alert-banner {
+			background: var(--alert);
+			color: #fff;
+			padding: 0.75rem 2.5rem;
+			font-size: 0.82rem;
+			font-weight: 500;
+			display: flex;
+			align-items: center;
+			gap: 0.75rem;
+		}
+		.alert-banner .dot {
+			width: 8px; height: 8px;
+			background: #fff;
+			border-radius: 50%;
+			flex-shrink: 0;
+		}
+
+		/* ---- LAYOUT ---- */
+		.page { max-width: 1240px; margin: 0 auto; padding: 2.5rem 2rem 5rem; }
+
+		@media (max-width: 760px) {
+			.page { padding: 1.5rem 1rem 3rem; }
+			.masthead { grid-template-columns: 1fr; }
+			.masthead .meta-col { text-align: left; }
+		}
+
+		/* ---- SECTION HEADINGS ---- */
+		.section-label {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.68rem;
+			letter-spacing: 0.22em;
+			text-transform: uppercase;
+			color: var(--water);
+			margin-bottom: 0.6rem;
+			margin-top: 3rem;
+		}
+		h2 {
+			font-family: 'Cormorant Garamond', serif;
+			font-size: clamp(1.6rem, 3vw, 2.2rem);
+			font-weight: 600;
+			margin-bottom: 1rem;
+			line-height: 1.15;
+		}
+		h2::after {
+			content: '';
+			display: block;
+			width: 48px;
+			height: 2px;
+			background: var(--water);
+			margin-top: 10px;
+		}
+		h3 {
+			font-family: 'Cormorant Garamond', serif;
+			font-size: 1.35rem;
+			font-weight: 600;
+			margin: 1.75rem 0 0.5rem;
+		}
+		p { margin-bottom: 1rem; max-width: 72ch; }
+
+		a { color: var(--water); text-decoration: underline; text-underline-offset: 2px; }
+		a:hover { color: var(--ink); }
+
+		/* ---- INFO CARDS ROW ---- */
+		.info-row {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+			gap: 1rem;
+			margin: 1.5rem 0;
+		}
+		.info-card {
+			background: var(--paper);
+			border: 1px solid var(--rule);
+			border-top: 3px solid var(--water);
+			padding: 1rem 1.25rem;
+			border-radius: 2px;
+		}
+		.info-card.alert { border-top-color: var(--alert); }
+		.info-card.topo  { border-top-color: var(--topo); }
+		.info-card .lbl {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.65rem;
+			letter-spacing: 0.18em;
+			text-transform: uppercase;
+			color: var(--ink-mute);
+			margin-bottom: 0.35rem;
+		}
+		.info-card .val {
+			font-size: 1.05rem;
+			font-weight: 600;
+			color: var(--ink);
+			line-height: 1.2;
+		}
+		.info-card .note {
+			font-size: 0.75rem;
+			color: var(--ink-mute);
+			margin-top: 0.25rem;
+		}
+
+		/* ---- MAP ---- */
+		.map-wrap { margin: 1.5rem 0 0.75rem; }
+		.map-box {
+			border: 1px solid var(--rule);
+			box-shadow: 0 2px 12px rgba(26,42,58,0.08);
+		}
+		#mapHost { width: 100%; height: 580px; }
+		@media (max-width: 760px) { #mapHost { height: 440px; } }
+
+		.map-caption {
+			font-size: 0.78rem;
+			color: var(--ink-mute);
+			padding: 0.6rem 0 0;
+			border-top: 1px solid var(--rule);
+			margin-top: 0.5rem;
+		}
+		.map-legend {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 1rem 1.5rem;
+			margin: 0.75rem 0 0;
+			padding: 0.7rem 1rem;
+			background: var(--paper);
+			border: 1px solid var(--rule);
+			font-size: 0.76rem;
+			color: var(--ink-soft);
+		}
+		.leg-item { display: flex; align-items: center; gap: 0.4rem; }
+		.leg-line { display: inline-block; width: 24px; height: 3px; border-radius: 2px; }
+		.leg-dash { display: inline-block; width: 24px; height: 2px; background: repeating-linear-gradient(90deg,var(--alert) 0 6px,transparent 6px 10px); }
+		.leg-dot  { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+		.leg-sq   { width: 12px; height: 12px; display: inline-block; opacity: 0.6; }
+
+		/* Leaflet popup */
+		.leaflet-popup-content-wrapper {
+			border-radius: 2px !important;
+			box-shadow: 0 4px 16px rgba(26,42,58,0.2) !important;
+			font-family: 'Work Sans', sans-serif !important;
+		}
+		.pop-label {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.65rem;
+			letter-spacing: 0.15em;
+			text-transform: uppercase;
+			color: var(--ink-mute);
+			margin-bottom: 0.2rem;
+		}
+		.pop-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 0.3rem; }
+		.pop-body  { font-size: 0.82rem; color: #3a4f63; line-height: 1.5; }
+
+		/* ---- STREAM TABLE ---- */
+		.stream-table {
+			width: 100%;
+			border-collapse: collapse;
+			background: var(--paper);
+			font-size: 0.84rem;
+			margin: 1.25rem 0;
+		}
+		.stream-table th {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.66rem;
+			letter-spacing: 0.15em;
+			text-transform: uppercase;
+			color: var(--ink-mute);
+			padding: 0.65rem 0.9rem;
+			border-bottom: 2px solid var(--rule);
+			text-align: left;
+			background: #f8fafc;
+		}
+		.stream-table td {
+			padding: 0.65rem 0.9rem;
+			border-bottom: 1px solid var(--rule);
+			vertical-align: top;
+		}
+		.stream-table tr:last-child td { border-bottom: none; }
+		.stream-table tr.highlight td { background: var(--alert-light); }
+		.stream-table .tag-alert {
+			display: inline-block;
+			background: var(--alert);
+			color: #fff;
+			font-size: 0.62rem;
+			font-weight: 600;
+			letter-spacing: 0.1em;
+			text-transform: uppercase;
+			padding: 1px 6px;
+			border-radius: 2px;
+		}
+		.stream-table .tag-water {
+			display: inline-block;
+			background: var(--water);
+			color: #fff;
+			font-size: 0.62rem;
+			font-weight: 600;
+			letter-spacing: 0.1em;
+			text-transform: uppercase;
+			padding: 1px 6px;
+			border-radius: 2px;
+		}
+		.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
+
+		/* ---- YEAR COMPARISON PANEL ---- */
+		.year-panel {
+			background: var(--ink);
+			padding: 0.9rem 1.1rem;
+			display: flex;
+			align-items: center;
+			gap: 1.25rem;
+			flex-wrap: wrap;
+		}
+		.year-panel .yl {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.63rem;
+			letter-spacing: 0.18em;
+			text-transform: uppercase;
+			color: #7ba9cc;
+			white-space: nowrap;
+		}
+		.year-btns {
+			display: flex;
+			gap: 4px;
+			flex-wrap: wrap;
+		}
+		.year-btn {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.7rem;
+			font-weight: 500;
+			padding: 4px 11px;
+			border: 1px solid rgba(123,169,204,0.4);
+			background: transparent;
+			color: #9ab8d0;
+			cursor: pointer;
+			border-radius: 2px;
+			transition: all 0.15s;
+			white-space: nowrap;
+		}
+		.year-btn:hover { background: rgba(123,169,204,0.15); color: #fff; }
+		.year-btn.active {
+			background: var(--water);
+			border-color: var(--water);
+			color: #fff;
+		}
+		.year-btn.naip { border-color: rgba(100,200,130,0.5); }
+		.year-btn.naip.active { background: #2e7d32; border-color: #2e7d32; }
+		.opacity-row {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			margin-left: auto;
+		}
+		.opacity-row label {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.63rem;
+			color: #7ba9cc;
+			white-space: nowrap;
+		}
+		#opacitySlider {
+			width: 80px;
+			accent-color: var(--water);
+			cursor: pointer;
+		}
+		.year-note {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.63rem;
+			color: #5c8fae;
+			padding: 0.35rem 1.1rem 0.5rem;
+			background: var(--ink);
+			border-top: 1px solid rgba(123,169,204,0.15);
+		}
+
+		/* ---- TIMELINE ---- */
+		.timeline {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+			gap: 0.75rem;
+			margin: 1.25rem 0;
+		}
+		.timeline-yr {
+			background: var(--paper);
+			border: 1px solid var(--rule);
+			padding: 0.85rem 1rem;
+			border-radius: 2px;
+		}
+		.timeline-yr .yr {
+			font-family: 'Cormorant Garamond', serif;
+			font-size: 1.6rem;
+			font-weight: 700;
+			color: var(--ink);
+			line-height: 1;
+		}
+		.timeline-yr .res {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.65rem;
+			color: var(--ink-mute);
+			margin-top: 0.2rem;
+		}
+		.timeline-yr .note {
+			font-size: 0.73rem;
+			color: var(--ink-soft);
+			margin-top: 0.35rem;
+			line-height: 1.35;
+		}
+		.timeline-yr.key-year { border-top: 3px solid var(--alert); }
+
+		/* ---- LINKS BOX ---- */
+		.links-box {
+			background: var(--water-light);
+			border: 1px solid #b3d5f5;
+			padding: 1.25rem 1.5rem;
+			margin: 1.25rem 0;
+			border-radius: 2px;
+		}
+		.links-box h4 {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.72rem;
+			letter-spacing: 0.15em;
+			text-transform: uppercase;
+			color: var(--water);
+			margin-bottom: 0.75rem;
+		}
+		.links-box ul { padding-left: 1rem; }
+		.links-box li { font-size: 0.84rem; margin-bottom: 0.5rem; color: var(--ink-soft); }
+
+		/* ---- SOURCES ---- */
+		.sources p {
+			font-size: 0.83rem;
+			line-height: 1.6;
+			max-width: 80ch;
+			padding-left: 1.5rem;
+			text-indent: -1.5rem;
+			margin-bottom: 0.75rem;
+			color: var(--ink-soft);
+		}
+		.src-tag {
+			display: inline-block;
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.62rem;
+			padding: 1px 5px;
+			border-radius: 2px;
+			margin-right: 0.3rem;
+			vertical-align: middle;
+		}
+		.src-tag.gov  { background: #e8f0fe; color: #1565c0; border: 1px solid #b3d5f5; }
+		.src-tag.open { background: var(--topo-light); color: var(--topo); border: 1px solid #a5d6a7; }
+		.src-tag.lidar{ background: #f3e5f5; color: #6a1b9a; border: 1px solid #ce93d8; }
+
+		/* ---- FOOTER ---- */
+		footer {
+			margin-top: 4rem;
+			padding-top: 1.5rem;
+			border-top: 2px solid var(--ink);
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.7rem;
+			color: var(--ink-mute);
+			display: flex;
+			justify-content: space-between;
+			flex-wrap: wrap;
+			gap: 0.5rem;
+		}
+	</style>
+</head>
+<body>
+
+<header class="masthead">
+	<div>
+		<div class="tag">Jackson County · Georgia · Drainage Analysis</div>
+		<h1>368 Joshua Way — Creek &amp; Drainage Report</h1>
+		<div class="sub">Hoschton, GA 30548 · Indian Creek Watershed · Oconee River Basin</div>
+	</div>
+	<div class="meta-col">
+		<div>34.0958° N · 83.7484° W</div>
+		<div>Date: 2026-05-19</div>
+		<div>Author: Ryan Lafferty</div>
+		<div>Source: OSM · USGS NHD · NAIP</div>
+	</div>
+</header>
+
+<div class="alert-banner">
+	<div class="dot"></div>
+	Concern: an unnamed creek routing change is directing flow to a constructed pond, causing active washout in the yard.
+	The closest mapped waterway passes approximately 71 m north of the property.
+</div>
+
+<div class="page">
+
+	<!-- OVERVIEW CARDS -->
+	<div class="info-row">
+		<div class="info-card alert">
+			<div class="lbl">Closest Named Creek</div>
+			<div class="val">Indian Creek</div>
+			<div class="note">~1.85 km east · GNIS 315898 · tributary of Oconee River</div>
+		</div>
+		<div class="info-card alert">
+			<div class="lbl">Closest Unnamed Stream</div>
+			<div class="val">OSM Way 1053938641</div>
+			<div class="note">~71 m north of property · flows NW to SE · culvert crossings present</div>
+		</div>
+		<div class="info-card topo">
+			<div class="lbl">Elevation Context</div>
+			<div class="val">~310 m ASL</div>
+			<div class="note">1-meter LiDAR available (USGS 3DEP, GA Statewide 2018–2019)</div>
+		</div>
+		<div class="info-card">
+			<div class="lbl">Imagery Record</div>
+			<div class="val">2006–2024</div>
+			<div class="note">NAIP aerial: 9 vintages at 0.6–1.0 m resolution</div>
+		</div>
+	</div>
+
+	<!-- MAP -->
+	<div class="section-label">§ I · Interactive Map</div>
+	<h2>Site Map</h2>
+	<p>The map shows the property location, all OSM-mapped waterways within approximately 4 km, and the unnamed stream network passing through the immediate area. Toggle layers using the control (top-left). Click any feature for source data.</p>
+
+	<div class="map-wrap">
+		<div class="year-panel">
+			<span class="yl">Imagery year</span>
+			<div class="year-btns">
+				<button class="year-btn naip" data-rid="4756"  data-note="2019 baseline · Esri Wayback WB_2019_R16 · NAIP 2019 GA at 1.0 m resolution. Pre-recent-change reference.">2019 NAIP</button>
+				<button class="year-btn"      data-rid="26120" data-note="Dec 2021 · Esri Wayback WB_2021_R17 · Before recent grading or pond modifications.">2021</button>
+				<button class="year-btn naip" data-rid="45134" data-note="Dec 2022 · Esri Wayback WB_2022_R15 · GA NAIP 2022 at 0.6 m captured. Compare pond extent vs. 2019.">2022 NAIP</button>
+				<button class="year-btn"      data-rid="56102" data-note="Dec 2023 · Esri Wayback WB_2023_R11 · Post-2022 NAIP update. Look for new erosion, channel change.">2023</button>
+				<button class="year-btn naip" data-rid="16453" data-note="Dec 2024 · Esri Wayback WB_2024_R13 · GA NAIP 2024 at 0.6 m if ingested. Shows most recent condition.">2024 NAIP</button>
+				<button class="year-btn"      data-rid="13192" data-note="Dec 2025 · Esri Wayback WB_2025_R12 · Most recent archive snapshot before current.">2025</button>
+				<button class="year-btn active" data-rid="current" data-note="Current · Esri World Imagery · most recent available tiles (continuously updated).">Current</button>
+			</div>
+			<div class="opacity-row">
+				<label>Opacity <span id="opacityVal">100%</span></label>
+				<input type="range" id="opacitySlider" min="20" max="100" value="100" step="5">
+			</div>
+		</div>
+		<div class="year-note" id="yearNote">Current · Esri World Imagery · most recent available tiles (continuously updated).</div>
+		<div class="map-box">
+			<div id="mapHost"></div>
+		</div>
+		<div class="map-caption">
+			Property: 368 Joshua Way, Hoschton GA · 34.0958° N, 83.7484° W ·
+			Satellite basemap default — switch to USGS Topo or OpenTopoMap to see elevation contours.
+			The orange highlighted stream is the unnamed waterway closest to the property (~71 m north).
+		</div>
+		<div class="map-legend">
+			<span class="leg-item"><span class="leg-line" style="background:#1565c0;height:3px;"></span> Indian Creek (named river)</span>
+			<span class="leg-item"><span class="leg-line" style="background:#42a5f5;height:2px;"></span> Unnamed streams</span>
+			<span class="leg-item"><span class="leg-line" style="background:#d84315;height:3px;"></span> Closest creek (~71 m N)</span>
+			<span class="leg-dash"></span><span style="margin-left:0.25rem;"> Culvert crossings</span>
+			<span class="leg-item"><span class="leg-sq" style="background:#1565c0;border:1px solid #0d47a1;"></span> Ponds / water bodies</span>
+			<span class="leg-item"><span class="leg-dot" style="background:#d84315;border:2px solid white;box-shadow:0 0 0 1px #d84315;"></span> Property</span>
+		</div>
+	</div>
+
+	<!-- WATERSHED ANALYSIS -->
+	<div class="section-label">§ II · Watershed Analysis</div>
+	<h2>Drainage Context</h2>
+	<p>The property sits in the upper drainage basin of Indian Creek, a named tributary of the North Oconee River in Jackson County. The immediate area is drained by a network of small unnamed tributaries that flow generally northwest-to-southeast before joining Indian Creek approximately 2.5 km to the east-southeast.</p>
+
+	<h3>Stream Network at Property</h3>
+	<p>OSM data (sourced from USGS NHD at 1:24,000 scale) maps two unnamed stream segments in the direct vicinity of the property. The primary concern is OSM Way 1053938641, which passes approximately 71 m north of the property building location. This stream receives drainage from OSM Way 34448764 (a longer unnamed tributary originating approximately 700 m to the north-northwest) via a culvert crossing.</p>
+
+	<p>The stream network in this area includes several culvert crossings at road and subdivision infrastructure, which alter natural flow paths. Any new pond constructed within this drainage network — particularly one that intercepts the unnamed tributary — would redirect velocity and volume downstream, potentially creating erosive conditions at the outlet.</p>
+
+	<h3>Nearby Stream Inventory</h3>
+	<table class="stream-table">
+		<thead>
+			<tr>
+				<th>Waterway</th>
+				<th>OSM Way ID</th>
+				<th>Type</th>
+				<th>Approx. Distance</th>
+				<th>Direction</th>
+				<th>Notes</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr class="highlight">
+				<td><strong>Unnamed Creek</strong> <span class="tag-alert">CLOSEST</span></td>
+				<td class="mono">1053938641</td>
+				<td>Stream</td>
+				<td>~71 m north</td>
+				<td>NW → SE</td>
+				<td>Passes near property; connects to larger tributary via culvert (Way 1053938642)</td>
+			</tr>
+			<tr>
+				<td>Unnamed Tributary</td>
+				<td class="mono">34448764</td>
+				<td>Stream</td>
+				<td>~265 m NNW</td>
+				<td>N → SE</td>
+				<td>Feeds closest creek; long upstream reach from ~700 m north</td>
+			</tr>
+			<tr>
+				<td>Unnamed Stream</td>
+				<td class="mono">34462848</td>
+				<td>Stream</td>
+				<td>~710 m west</td>
+				<td>NW → SE</td>
+				<td>Parallel drainage, same watershed</td>
+			</tr>
+			<tr>
+				<td>Unnamed Stream</td>
+				<td class="mono">34513218</td>
+				<td>Stream</td>
+				<td>~350 m SE</td>
+				<td>N → E</td>
+				<td>Flows south then east toward Indian Creek; possible confluence with Way 1053938641</td>
+			</tr>
+			<tr>
+				<td>Indian Creek <span class="tag-water">NAMED</span></td>
+				<td class="mono">34540678, 34429068 +</td>
+				<td>River / Stream</td>
+				<td>~1.85 km east</td>
+				<td>N → SW</td>
+				<td>GNIS 315898. Main receiving water for all local drainage. Tributary of North Oconee River.</td>
+			</tr>
+		</tbody>
+	</table>
+
+	<!-- HISTORICAL IMAGERY -->
+	<div class="section-label">§ III · Historical Imagery</div>
+	<h2>Aerial Photography Record</h2>
+	<p>NAIP (National Agriculture Imagery Program) provides the best aerial imagery record for documenting land change at this property. Georgia has 9 NAIP vintages since 2006. The subdivision at Joshua Way was built approximately 2010–2015; comparing pre- and post-construction imagery will reveal whether any drainage modification was part of the original grading plan or a subsequent alteration.</p>
+
+	<div class="timeline">
+		<div class="timeline-yr">
+			<div class="yr">2006</div>
+			<div class="res">1.0 m</div>
+			<div class="note">Pre-subdivision baseline. Establishes natural drainage pattern.</div>
+		</div>
+		<div class="timeline-yr">
+			<div class="yr">2009</div>
+			<div class="res">1.0 m</div>
+			<div class="note">Pre- or early-construction. Compare against 2006 for initial grading.</div>
+		</div>
+		<div class="timeline-yr">
+			<div class="yr">2011</div>
+			<div class="res">1.0 m</div>
+			<div class="note">Construction period. Look for bare soil, graded lots, pond excavation.</div>
+		</div>
+		<div class="timeline-yr">
+			<div class="yr">2013</div>
+			<div class="res">1.0 m</div>
+			<div class="note">Early occupancy phase. Vegetation beginning to establish.</div>
+		</div>
+		<div class="timeline-yr">
+			<div class="yr">2015</div>
+			<div class="res">1.0 m</div>
+			<div class="note">Post-construction baseline. Established drainage pattern visible.</div>
+		</div>
+		<div class="timeline-yr key-year">
+			<div class="yr">2017</div>
+			<div class="res">1.0 m</div>
+			<div class="note">Key comparison year. Note any pond or channel changes vs. 2015.</div>
+		</div>
+		<div class="timeline-yr key-year">
+			<div class="yr">2019</div>
+			<div class="res">0.6 m</div>
+			<div class="note">Higher resolution. Compare pond extent and creek routing to 2017.</div>
+		</div>
+		<div class="timeline-yr key-year">
+			<div class="yr">2022</div>
+			<div class="res">0.6 m</div>
+			<div class="note">Post-modification check. Look for erosion scars, disturbed vegetation, ponding near Joshua Way.</div>
+		</div>
+		<div class="timeline-yr key-year">
+			<div class="yr">2024</div>
+			<div class="res">0.6 m</div>
+			<div class="note">Most recent. Current conditions visible. Compare washout extent.</div>
+		</div>
+	</div>
+
+	<p>Red-bordered years (2017–2024) are the most critical comparison windows. If the creek rerouting occurred after 2015, the change will appear as a visible alteration in pond geometry or channel alignment between two consecutive vintages.</p>
+
+	<div class="links-box">
+		<h4>Access Historical Imagery</h4>
+		<ul>
+			<li><strong>USGS EarthExplorer</strong> — <a href="https://earthexplorer.usgs.gov/" target="_blank" rel="noopener">earthexplorer.usgs.gov</a> — Select "Aerial Photography &gt; NAIP" dataset, draw AOI around 34.0958°N, 83.7484°W, browse all vintages. Free download.</li>
+			<li><strong>NAIP Image Dates Map</strong> — <a href="https://naip-image-dates-usdaonline.hub.arcgis.com/" target="_blank" rel="noopener">naip-image-dates-usdaonline.hub.arcgis.com</a> — Interactive map showing exact NAIP capture dates per tile for the property location.</li>
+			<li><strong>Google Earth Pro</strong> — Historical imagery slider typically shows this area from 2007 to present. Search the address, then use the clock icon to step through years. Useful for quick visual comparison.</li>
+			<li><strong>USDA NRCS Geospatial Data Gateway</strong> — <a href="https://datagateway.nrcs.usda.gov/" target="_blank" rel="noopener">datagateway.nrcs.usda.gov</a> — Bulk county downloads for all NAIP years in Georgia.</li>
+			<li><strong>Jackson County GIS Portal</strong> — <a href="https://gis.mijackson.org/" target="_blank" rel="noopener">gis.mijackson.org</a> — Parcel data, county layers. Contact GIS department for drainage or stormwater infrastructure data not in the public portal.</li>
+		</ul>
+	</div>
+
+	<!-- LIDAR / TOPO -->
+	<div class="section-label">§ IV · Elevation &amp; LiDAR</div>
+	<h2>Topographic Data</h2>
+	<p>Jackson County is covered by the 2018–2019 USGS 3DEP GA Statewide LiDAR project (task order 140G0218F0420), providing 1-meter bare-earth DEMs. This is sufficient resolution to model pre- and post-modification flow direction and identify where the natural drainage path of the unnamed creek would run absent the pond.</p>
+
+	<div class="links-box">
+		<h4>Access LiDAR and Topo Data</h4>
+		<ul>
+			<li><strong>NOAA Digital Coast Data Access Viewer</strong> — <a href="https://coast.noaa.gov/dataviewer/" target="_blank" rel="noopener">coast.noaa.gov/dataviewer</a> — Draw a custom AOI around the property, download the 1-meter DEM clip directly. Free, no account needed.</li>
+			<li><strong>OpenTopography GA Statewide 2018</strong> — <a href="https://portal.opentopography.org/usgsDataset?dsid=GA_Statewide_B1_2018" target="_blank" rel="noopener">portal.opentopography.org</a> — Process the LiDAR point cloud for the AOI; generate DEMs and hillshades on-demand.</li>
+			<li><strong>USGS LiDAR Explorer</strong> — <a href="https://www.usgs.gov/tools/lidarexplorer" target="_blank" rel="noopener">usgs.gov/tools/lidarexplorer</a> — Confirm tile coverage for Jackson County; download tiles by map selection.</li>
+			<li><strong>USGS National Map Viewer</strong> — <a href="https://apps.nationalmap.gov/viewer/" target="_blank" rel="noopener">apps.nationalmap.gov/viewer</a> — Stream the 1/3 arc-second (10m) or 1-meter 3DEP elevation layers directly; export contours for the property area.</li>
+		</ul>
+	</div>
+
+	<!-- SOURCES -->
+	<div class="section-label">§ V · Sources</div>
+	<h2>Data Sources</h2>
+	<p>The map and stream inventory draw on the following sources.</p>
+
+	<div class="sources">
+
+		<p><span class="src-tag open">Open data</span> <strong>OpenStreetMap Contributors.</strong> 2024. Waterway and water body features for the Hoschton, GA area, Jackson County. Data extracted via Overpass API (overpass-api.de) using bounding box 34.080–34.112°N, 83.770–83.728°W. Source NHD flowline data attributed on OSM ways. License: ODbL. <a href="https://www.openstreetmap.org/way/1053938641" target="_blank" rel="noopener">OSM Way 1053938641</a>.</p>
+
+		<p><span class="src-tag gov">Gov./IGO</span> <strong>USGS National Hydrography Dataset (NHD).</strong> Best Resolution. Updated December 2023. Hoschton area in Oconee River Basin (HUC 03070101). NHD flowlines at 1:24,000 scale. Indian Creek GNIS feature ID 315898. Data served via NHD MapServer and embedded in OSM attribution. <a href="https://www.sciencebase.gov/catalog/item/62511688d34e21f8276df603" target="_blank" rel="noopener">sciencebase.gov</a>.</p>
+
+		<p><span class="src-tag gov">Gov./IGO</span> <strong>USDA Farm Service Agency (FSA).</strong> National Agriculture Imagery Program (NAIP). Aerial imagery for Georgia: vintages 2006, 2009, 2011, 2013, 2015, 2017, 2019, 2022, 2024. Resolution 1.0 m (2006–2017), 0.6 m (2018+). Available via USGS EarthExplorer (earthexplorer.usgs.gov) and USDA Geospatial Data Gateway. <a href="https://www.fsa.usda.gov/programs-and-services/aerial-photography/imagery-programs/naip-imagery/" target="_blank" rel="noopener">fsa.usda.gov</a>.</p>
+
+		<p><span class="src-tag lidar">LiDAR</span> <strong>USGS 3D Elevation Program (3DEP).</strong> 2018–2019. USGS Lidar: GA Statewide B1. Task order 140G0218F0420. 0.71 m nominal pulse spacing, QL2 equivalent. Produces 1-meter bare-earth DEM for Jackson County. Accessible via NOAA Digital Coast Data Access Viewer and OpenTopography portal. <a href="https://portal.opentopography.org/usgsDataset?dsid=GA_Statewide_B1_2018" target="_blank" rel="noopener">opentopography.org</a>.</p>
+
+		<p><span class="src-tag gov">Gov./IGO</span> <strong>Jackson County GIS Department.</strong> Open Data Portal. Weekly-updated tax parcels, road centerlines, county boundary. Portal: <a href="https://jackson-county-ga-open-data-portal-jacksoncountyga.hub.arcgis.com/" target="_blank" rel="noopener">jackson-county-ga-open-data-portal-jacksoncountyga.hub.arcgis.com</a>. Web GIS: <a href="https://gis.mijackson.org/" target="_blank" rel="noopener">gis.mijackson.org</a>.</p>
+
+		<p><span class="src-tag gov">Gov./IGO</span> <strong>Georgia Environmental Protection Division (EPD).</strong> GIS Databases. DNR river basin polygons, HUC boundaries, groundwater recharge areas, 305(b)/303(d) impaired waters lists for Jackson County / Oconee River basin. <a href="https://epd.georgia.gov/geographic-information-systems-gis-databases-and-documentation" target="_blank" rel="noopener">epd.georgia.gov</a>.</p>
+	</div>
+
+	<p style="font-style:italic;font-size:0.8rem;color:var(--ink-mute);margin-top:0.5rem;">
+		Coordinate reference: EPSG:4326. Bounding box queried: 34.080–34.112°N, 83.770–83.728°W.
+		Property coordinates sourced via Nominatim / OpenStreetMap geocoder.
+	</p>
+
+	<footer>
+		<span>GIS Drainage Report · 368 Joshua Way, Hoschton GA · Jackson County</span>
+		<span>Ryan Lafferty · 2026-05-19 · OSM · USGS NHD · NAIP · 3DEP</span>
+	</footer>
+
+</div><!-- .page -->
+
+<!-- ==================== LEAFLET ==================== -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script>
+(function() {
+	const sources = [
+		'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+		'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js'
+	];
+	let i = 0;
+	function tryNext() {
+		if (i >= sources.length) return;
+		const s = document.createElement('script');
+		s.src = sources[i++];
+		s.onload = () => window.dispatchEvent(new Event('leafletReady'));
+		s.onerror = tryNext;
+		document.head.appendChild(s);
+	}
+	tryNext();
+})();
+</script>
+
+<script>
+/* ==================== MAP DATA ====================
+   All coordinates in Leaflet [lat, lng] order.
+   Source: OSM Overpass API / NHD attribution on OSM ways.
+   Author: Ryan Lafferty
+   =================================================== */
+
+/* Property */
+const PROPERTY = [34.0958352, -83.7484025];
+
+/* Indian Creek — named river/stream (NHD GNIS 315898) */
+const indianCreekSegs = [
+	// Upper reach (WAY 34445313) flows S from 34.108
+	[[34.1079220,-83.7354440],[34.1075500,-83.7354540],[34.1069050,-83.7354540],[34.1066370,-83.7354200],[34.1065530,-83.7353810],[34.1050900,-83.7343500],[34.1049040,-83.7341760],[34.1043830,-83.7337720],[34.1034300,-83.7329540],[34.1032960,-83.7328100],[34.1031810,-83.7326430],[34.1027990,-83.7318380],[34.1024410,-83.7309540],[34.1022490,-83.7304040],[34.1021090,-83.7301670],[34.1019820,-83.7300140],[34.1016050,-83.7297180],[34.1013640,-83.7295730],[34.1002450,-83.7291560],[34.0995420,-83.7287970],[34.0986960,-83.7285350],[34.0982540,-83.7284310]],
+	// Mid reach (WAY 34540678)
+	[[34.0968960,-83.7281230],[34.0966880,-83.7281710],[34.0964540,-83.7282600],[34.0958290,-83.7283570],[34.0953790,-83.7283830],[34.0948450,-83.7284780],[34.0943950,-83.7284790],[34.0941290,-83.7285110],[34.0937950,-83.7285070],[34.0933460,-83.7284740],[34.0928240,-83.7283090],[34.0925560,-83.7282710],[34.0917450,-83.7282950],[34.0911810,-83.7283610]],
+	// Connecting (WAY 34515909)
+	[[34.0911810,-83.7283610],[34.0910570,-83.7285600],[34.0909270,-83.7288440],[34.0908220,-83.7290200],[34.0902410,-83.7297860],[34.0900950,-83.7299130],[34.0897440,-83.7301480],[34.0896690,-83.7301810],[34.0896190,-83.7301840]],
+	// River section (WAY 34429068)
+	[[34.0896190,-83.7301840],[34.0894100,-83.7301510],[34.0890060,-83.7300060],[34.0888270,-83.7300250],[34.0886600,-83.7301030],[34.0883080,-83.7304400],[34.0882270,-83.7304850],[34.0881420,-83.7305050],[34.0880720,-83.7304960],[34.0879970,-83.7304390],[34.0878080,-83.7300720],[34.0876950,-83.7299030],[34.0875970,-83.7297210],[34.0874780,-83.7295600],[34.0873290,-83.7294400],[34.0871540,-83.7293940],[34.0870640,-83.7294030],[34.0867890,-83.7295190],[34.0866460,-83.7296170],[34.0865850,-83.7296970],[34.0865370,-83.7297890],[34.0865090,-83.7298910],[34.0865020,-83.7299990],[34.0865690,-83.7301980],[34.0865320,-83.7302950],[34.0864520,-83.7303410],[34.0862740,-83.7303650],[34.0861850,-83.7303550],[34.0859240,-83.7302680],[34.0857590,-83.7301830],[34.0856890,-83.7301160],[34.0856330,-83.7300310]],
+	// Westward river (WAY 34540418)
+	[[34.0848730,-83.7296450],[34.0844180,-83.7295650],[34.0836980,-83.7295190],[34.0832570,-83.7294440],[34.0831730,-83.7294060],[34.0830980,-83.7293460],[34.0829710,-83.7291940],[34.0828880,-83.7291550],[34.0828100,-83.7292070],[34.0826580,-83.7291280],[34.0824520,-83.7290320],[34.0820170,-83.7289770],[34.0815670,-83.7289480],[34.0811980,-83.7288970],[34.0806070,-83.7287490],[34.0804450,-83.7286590],[34.0802420,-83.7284450],[34.0800730,-83.7283790],[34.0799060,-83.7283000],[34.0796870,-83.7281090],[34.0795270,-83.7280120],[34.0794410,-83.7278320],[34.0793000,-83.7277080],[34.0790360,-83.7277400],[34.0784190,-83.7275830],[34.0782510,-83.7275950],[34.0779180,-83.7274570],[34.0773850,-83.7273720],[34.0769500,-83.7272310],[34.0765030,-83.7271710],[34.0757950,-83.7270070],[34.0753960,-83.7268410],[34.0748830,-83.7266360],[34.0746210,-83.7265580],[34.0741490,-83.7262460],[34.0738560,-83.7258410],[34.0735640,-83.7243630],[34.0730860,-83.7238820],[34.0727360,-83.7235440],[34.0724880,-83.7234140],[34.0720240,-83.7234520]],
+	// Upper Indian Creek connecting segments (WAY 34473156 + 34532245)
+	[[34.1150700,-83.7261510],[34.1143380,-83.7262280],[34.1135930,-83.7263310],[34.1131180,-83.7265710],[34.1128900,-83.7270910],[34.1126990,-83.7273230],[34.1113300,-83.7282240],[34.1108350,-83.7286860],[34.1106590,-83.7289320],[34.1105480,-83.7291170],[34.1101340,-83.7296340],[34.1099050,-83.7299680],[34.1095540,-83.7305980],[34.1092890,-83.7311810],[34.1090820,-83.7315860],[34.1088770,-83.7321630],[34.1087760,-83.7326240],[34.1088580,-83.7329330],[34.1087330,-83.7337820],[34.1087260,-83.7340590],[34.1086550,-83.7343710],[34.1085100,-83.7346450],[34.1084020,-83.7349430],[34.1083130,-83.7351310],[34.1081860,-83.7352840],[34.1079220,-83.7354440]],
+	[[34.1106179,-83.7389785],[34.1104560,-83.7384030],[34.1102930,-83.7378980],[34.1100280,-83.7374630],[34.1097050,-83.7370850],[34.1082100,-83.7354460]],
+	// Upper Indian Creek (WAY 1053965618)
+	[[34.1119070,-83.7418780],[34.1111810,-83.7403210],[34.1108090,-83.7394550],[34.1106551,-83.7391296]],
+	// Upper Indian Creek (WAY 34461321)
+	[[34.1114111,-83.7520690],[34.1112630,-83.7519480],[34.1111890,-83.7517500],[34.1111480,-83.7515400],[34.1111030,-83.7499180],[34.1111650,-83.7492420],[34.1113000,-83.7487590],[34.1115610,-83.7482160],[34.1117470,-83.7479480],[34.1121260,-83.7471070],[34.1121820,-83.7469010],[34.1123080,-83.7462200],[34.1124490,-83.7450195]],
+	// WAY 34531301 connecting upper
+	[[34.1153250,-83.7429880],[34.1150040,-83.7429230],[34.1147960,-83.7428070],[34.1139310,-83.7425980],[34.1128110,-83.7422870],[34.1120340,-83.7419180],[34.1119070,-83.7418780]]
+];
+
+/* CLOSEST unnamed creek (OSM Way 1053938641) — passes ~71m north of property */
+const closestCreek = [
+	[34.0977713,-83.7496470],[34.0976920,-83.7495870],[34.0975340,-83.7494840],[34.0973950,-83.7493480],[34.0972760,-83.7491230],[34.0970650,-83.7490340],[34.0969880,-83.7489790],[34.0968760,-83.7488010],[34.0967200,-83.7487690],[34.0966470,-83.7487350],[34.0965560,-83.7486230],[34.0965010,-83.7485870],[34.0964760,-83.7484460],[34.0964670,-83.7483580],[34.0964070,-83.7482760],[34.0960570,-83.7481780],[34.0959690,-83.7481100],[34.0959060,-83.7480340],[34.0958540,-83.7479450],[34.0958180,-83.7478460],[34.0957570,-83.7477670],[34.0956050,-83.7476530],[34.0954720,-83.7475070],[34.0953850,-83.7473190],[34.0953230,-83.7472410],[34.0951580,-83.7471560],[34.0948050,-83.7470700],[34.0945520,-83.7469570],[34.0940910,-83.7466190],[34.0937625,-83.7464375],[34.0934710,-83.7462210]
+];
+
+/* Tributary feeding closest creek (WAY 34448764) — approaches from N */
+const closestCreekTrib = [
+	[34.1021660,-83.7544410],[34.1019630,-83.7541320],[34.1017270,-83.7536710],[34.1016190,-83.7534970],[34.1014590,-83.7531100],[34.1012770,-83.7528730],[34.1011390,-83.7527380],[34.1010670,-83.7525550],[34.1009590,-83.7523820],[34.1006230,-83.7520220],[34.1000600,-83.7512260],[34.0998090,-83.7509500],[34.0992180,-83.7504070],[34.0988020,-83.7500580],[34.0985700,-83.7498910],[34.0982500,-83.7497230],[34.0980548,-83.7497447],[34.0979225,-83.7497899]
+];
+
+/* Culvert connecting trib to closest creek (WAY 1053938642) */
+const closestCulvert = [[34.0979225,-83.7497899],[34.0977713,-83.7496470]];
+
+/* Other unnamed streams in area */
+const otherStreams = [
+	{ id:'34513218', coords:[[34.0934710,-83.7462210],[34.0934430,-83.7459190],[34.0934680,-83.7457050],[34.0934460,-83.7454910],[34.0934070,-83.7453940],[34.0932170,-83.7451620],[34.0929440,-83.7448790],[34.0927630,-83.7446390],[34.0924940,-83.7443500],[34.0921840,-83.7439730],[34.0919100,-83.7436920],[34.0916060,-83.7433100],[34.0915800,-83.7429870],[34.0914880,-83.7425710],[34.0914270,-83.7423680],[34.0913010,-83.7419630],[34.0912960,-83.7416380],[34.0913520,-83.7405570],[34.0913960,-83.7403480],[34.0914020,-83.7400300],[34.0913500,-83.7399410],[34.0912940,-83.7397360],[34.0912860,-83.7395200],[34.0913340,-83.7392010],[34.0914050,-83.7390030],[34.0914260,-83.7385640],[34.0914730,-83.7380260],[34.0915290,-83.7378200],[34.0917460,-83.7372250],[34.0920034,-83.7367724]] },
+	{ id:'1053938645', coords:[[34.0920064,-83.7366412],[34.0919700,-83.7364670],[34.0919730,-83.7359260],[34.0919490,-83.7356020],[34.0918920,-83.7354000],[34.0918740,-83.7351870],[34.0919170,-83.7349770],[34.0919100,-83.7347610],[34.0918720,-83.7345490],[34.0918250,-83.7344220],[34.0915550,-83.7342010],[34.0912730,-83.7339320],[34.0909020,-83.7336260],[34.0907810,-83.7334660],[34.0907040,-83.7332720],[34.0906670,-83.7329500],[34.0905400,-83.7326650],[34.0904740,-83.7324650],[34.0902680,-83.7321120],[34.0902410,-83.7318990],[34.0901310,-83.7316030],[34.0900500,-83.7312940],[34.0899200,-83.7310090],[34.0896190,-83.7301840]] },
+	{ id:'34462848', coords:[[34.1000150,-83.7573020],[34.0992420,-83.7569590],[34.0989200,-83.7567830],[34.0987680,-83.7566680],[34.0984900,-83.7563920],[34.0982540,-83.7562350],[34.0980790,-83.7561630],[34.0977810,-83.7561080],[34.0974290,-83.7560180],[34.0971600,-83.7559800],[34.0966530,-83.7558440],[34.0964390,-83.7557480],[34.0961990,-83.7555990],[34.0960210,-83.7555760],[34.0958480,-83.7555180],[34.0957670,-83.7554700],[34.0952970,-83.7551010],[34.0950560,-83.7549620],[34.0949843,-83.7549576]] },
+	{ id:'34541783', coords:[[34.0999531,-83.7268693],[34.0996030,-83.7273910],[34.0995130,-83.7274960],[34.0994330,-83.7275460],[34.0992590,-83.7275990],[34.0990590,-83.7278090],[34.0985610,-83.7281310],[34.0984280,-83.7282440],[34.0982540,-83.7284310]] },
+	{ id:'34539474', coords:[[34.0908300,-83.7238610],[34.0906350,-83.7239820],[34.0903040,-83.7241530],[34.0898530,-83.7244250],[34.0894440,-83.7250920],[34.0894430,-83.7254170],[34.0894890,-83.7256250],[34.0897880,-83.7260270],[34.0903700,-83.7267860],[34.0905650,-83.7270810],[34.0909870,-83.7279130],[34.0911810,-83.7283610]] },
+	{ id:'34505629', coords:[[34.0946430,-83.7625830],[34.0942600,-83.7625710],[34.0935780,-83.7626910],[34.0929000,-83.7628710],[34.0921000,-83.7631080],[34.0912360,-83.7634830],[34.0907810,-83.7636560],[34.0906420,-83.7637930],[34.0904470,-83.7640170],[34.0901690,-83.7645720],[34.0899670,-83.7654010],[34.0896130,-83.7662110],[34.0893280,-83.7666260],[34.0890970,-83.7667940],[34.0887260,-83.7672620],[34.0882065,-83.7679209]] },
+	{ id:'34507810', coords:[[34.1028100,-83.7689800],[34.1023190,-83.7693380],[34.1019130,-83.7695920],[34.1016710,-83.7701700],[34.1012080,-83.7721360],[34.1011920,-83.7723520],[34.1012510,-83.7727680],[34.1012090,-83.7725010],[34.1011690,-83.7735140],[34.1009520,-83.7748125],[34.1008320,-83.7760850],[34.1006509,-83.7777254]] },
+	{ id:'34467644', coords:[[34.0858042,-83.7476989],[34.0856820,-83.7477943],[34.0854898,-83.7479201],[34.0852635,-83.7480763],[34.0848145,-83.7483235],[34.0846600,-83.7484450],[34.0844965,-83.7485144],[34.0842900,-83.7486337],[34.0840295,-83.7486944],[34.0838373,-83.7486987],[34.0833767,-83.7487202],[34.0831099,-83.7488189],[34.0827560,-83.7489966],[34.0825507,-83.7491197],[34.0821776,-83.7494595],[34.0819750,-83.7496540],[34.0815130,-83.7503020],[34.0810671,-83.7503965],[34.0799003,-83.7510214],[34.0796765,-83.7512810]] },
+	{ id:'34553183', coords:[[34.0860480,-83.7561560],[34.0859400,-83.7559820],[34.0857410,-83.7557290],[34.0852350,-83.7549680],[34.0847670,-83.7541720],[34.0844630,-83.7537720],[34.0839430,-83.7530430],[34.0835850,-83.7527220],[34.0827310,-83.7524150],[34.0821280,-83.7521950],[34.0814080,-83.7518120],[34.0801942,-83.7516676],[34.0796765,-83.7512810]] },
+	{ id:'34466023', coords:[[34.0813150,-83.7644240],[34.0808690,-83.7643380],[34.0803370,-83.7644240],[34.0793650,-83.7648350],[34.0784180,-83.7652060],[34.0779120,-83.7659160],[34.0772140,-83.7664020],[34.0758720,-83.7669740],[34.0751430,-83.7670680],[34.0739730,-83.7670920],[34.0729170,-83.7675510],[34.0722050,-83.7676830],[34.0716650,-83.7677180],[34.0709250,-83.7679200],[34.0702040,-83.7684070],[34.0699320,-83.7686560],[34.0697680,-83.7690680],[34.0697330,-83.7691656]] },
+	{ id:'34464667', coords:[[34.0976121,-83.7229479],[34.0975610,-83.7232040],[34.0976350,-83.7239550],[34.0975260,-83.7245900],[34.0974500,-83.7247860],[34.0972130,-83.7252470],[34.0969910,-83.7254290],[34.0968130,-83.7256580],[34.0968770,-83.7261650],[34.0969060,-83.7279580],[34.0968960,-83.7281230]] },
+	{ id:'34540829', coords:[[34.0939100,-83.7541780],[34.0935980,-83.7534230],[34.0934580,-83.7530370],[34.0934070,-83.7527190],[34.0934130,-83.7520760],[34.0934450,-83.7517540],[34.0934840,-83.7515980],[34.0934730,-83.7512740],[34.0934280,-83.7510650],[34.0932160,-83.7505540],[34.0931480,-83.7503540],[34.0930660,-83.7500440],[34.0930450,-83.7498290],[34.0930950,-83.7492280],[34.0931930,-83.7487900],[34.0932380,-83.7486960],[34.0933140,-83.7486380],[34.0934880,-83.7485880],[34.0935320,-83.7484960],[34.0935190,-83.7483910],[34.0933260,-83.7479040],[34.0932730,-83.7478160],[34.0933210,-83.7470020],[34.0933640,-83.7469080],[34.0934290,-83.7468340],[34.0935010,-83.7466360],[34.0934710,-83.7462210]] },
+	{ id:'34431861', coords:[[34.1091400,-83.7601130],[34.1096880,-83.7598600],[34.1100000,-83.7596440],[34.1103010,-83.7592440],[34.1104640,-83.7588590],[34.1105480,-83.7583280],[34.1105310,-83.7569410],[34.1104640,-83.7561300],[34.1104820,-83.7559150],[34.1106310,-83.7543540],[34.1108646,-83.7539976]] }
+];
+
+/* Culvert segments (dashed display) */
+const culverts = [
+	[[34.0979225,-83.7497899],[34.0977713,-83.7496470]],  // connects trib to closest creek
+	[[34.0856330,-83.7300310],[34.0855021,-83.7298770]],  // Indian Creek culvert
+	[[34.0993680,-83.7688676],[34.0992922,-83.7690688]],
+	[[34.0971520,-83.7599750],[34.0970750,-83.7599190]],
+	[[34.0959960,-83.7586240],[34.0959029,-83.7585310]],
+	[[34.0943263,-83.7563178],[34.0942108,-83.7561614]],
+	[[34.0949843,-83.7549576],[34.0948761,-83.7549510]],
+	[[34.1037054,-83.7572931],[34.1035012,-83.7571716]],
+	[[34.1108646,-83.7539976],[34.1109027,-83.7538884]],
+	[[34.1114429,-83.7521521],[34.1114111,-83.7520690]],
+	[[34.0920034,-83.7367724],[34.0920064,-83.7366412]]
+];
+
+/* Water bodies — polygon rings [lat, lng] */
+const waterBodies = [
+	{ name:'Pond (OSM 34478935)', coords:[[34.1018750,-83.7546774],[34.1018899,-83.7547780],[34.1021310,-83.7548358],[34.1022759,-83.7550318],[34.1024316,-83.7551840],[34.1026224,-83.7552961],[34.1028644,-83.7555305],[34.1030260,-83.7556388],[34.1031338,-83.7556334],[34.1031013,-83.7553352],[34.1028664,-83.7548950],[34.1027258,-83.7545079],[34.1025527,-83.7541491],[34.1021659,-83.7544405],[34.1018750,-83.7546774]] },
+	{ name:'Pond (OSM 34503145)', coords:[[34.0985688,-83.7403168],[34.0985665,-83.7404234],[34.0986070,-83.7406251],[34.0986638,-83.7408338],[34.0987573,-83.7409287],[34.0987896,-83.7408920],[34.0988147,-83.7408074],[34.0988001,-83.7406017],[34.0987164,-83.7403757],[34.0986794,-83.7403204],[34.0986122,-83.7402706],[34.0985903,-83.7402748],[34.0985688,-83.7403168]] },
+	{ name:'Small Pond (OSM 34466645)', coords:[[34.0966531,-83.7401634],[34.0966668,-83.7402129],[34.0967354,-83.7402790],[34.0968728,-83.7402791],[34.0969140,-83.7401967],[34.0969141,-83.7401307],[34.0968592,-83.7400647],[34.0967219,-83.7400150],[34.0966669,-83.7400479],[34.0966531,-83.7401634]] },
+	{ name:'Pond (OSM 34471670)', coords:[[34.1049043,-83.7424123],[34.1050586,-83.7425416],[34.1053433,-83.7426652],[34.1055186,-83.7426907],[34.1056232,-83.7426344],[34.1056650,-83.7425239],[34.1056494,-83.7423891],[34.1055351,-83.7421343],[34.1053957,-83.7418960],[34.1051773,-83.7415807],[34.1050090,-83.7414285],[34.1049339,-83.7415504],[34.1048706,-83.7418816],[34.1048692,-83.7422247],[34.1049043,-83.7424123]] },
+	{ name:'Water Body (OSM 34488814)', coords:[[34.0786343,-83.7512802],[34.0789303,-83.7515243],[34.0794709,-83.7516506],[34.0797813,-83.7518383],[34.0799981,-83.7519484],[34.0801784,-83.7519829],[34.0803606,-83.7521492],[34.0804389,-83.7522720],[34.0805993,-83.7521340],[34.0808266,-83.7519867],[34.0811344,-83.7518649],[34.0812280,-83.7517304],[34.0809625,-83.7516645],[34.0807498,-83.7515832],[34.0805177,-83.7515184],[34.0803985,-83.7515203],[34.0803294,-83.7514149],[34.0803896,-83.7512794],[34.0806183,-83.7508572],[34.0807923,-83.7507539],[34.0810588,-83.7505563],[34.0813034,-83.7502778],[34.0810111,-83.7503486],[34.0808755,-83.7504416],[34.0804595,-83.7505026],[34.0801128,-83.7506575],[34.0797623,-83.7507722],[34.0794203,-83.7505033],[34.0791729,-83.7502719],[34.0789230,-83.7503612],[34.0787651,-83.7503905],[34.0787009,-83.7504915],[34.0786188,-83.7507524],[34.0785527,-83.7509335],[34.0786343,-83.7512802]] },
+	{ name:'Pond (OSM 34523103)', coords:[[34.0803941,-83.7339277],[34.0806681,-83.7345286],[34.0810847,-83.7353661],[34.0813475,-83.7357298],[34.0814128,-83.7357467],[34.0814714,-83.7356992],[34.0814897,-83.7356159],[34.0814811,-83.7354479],[34.0813569,-83.7347580],[34.0813452,-83.7343580],[34.0813528,-83.7340177],[34.0813527,-83.7334700],[34.0812953,-83.7332807],[34.0811889,-83.7332674],[34.0803941,-83.7339277]] },
+	{ name:'Detention Basin (OSM 1105275959)', coords:[[34.0816776,-83.7453904],[34.0816279,-83.7455752],[34.0815563,-83.7456232],[34.0811725,-83.7455488],[34.0807609,-83.7453424],[34.0806914,-83.7451647],[34.0807391,-83.7450063],[34.0808703,-83.7449727],[34.0815324,-83.7452055],[34.0816756,-83.7452703],[34.0816776,-83.7453904]] },
+	{ name:'Detention Basin (OSM 1147200289)', coords:[[34.0830951,-83.7494415],[34.0829529,-83.7498384],[34.0828214,-83.7498629],[34.0826010,-83.7498746],[34.0825778,-83.7498513],[34.0825681,-83.7498081],[34.0825816,-83.7497707],[34.0826658,-83.7496656],[34.0827344,-83.7495991],[34.0828475,-83.7495395],[34.0829365,-83.7495220],[34.0830197,-83.7494928],[34.0830951,-83.7494415]] },
+	{ name:'Detention Basin (OSM 1147200290)', coords:[[34.0835358,-83.7474967],[34.0833161,-83.7476075],[34.0831730,-83.7476573],[34.0831141,-83.7477142],[34.0831730,-83.7479205],[34.0832050,-83.7479510],[34.0832631,-83.7479327],[34.0834550,-83.7477874],[34.0835417,-83.7477162],[34.0836175,-83.7476268],[34.0836764,-83.7475414],[34.0837943,-83.7474184],[34.0838020,-83.7472621],[34.0837226,-83.7470545],[34.0835687,-83.7468638],[34.0833802,-83.7467692],[34.0831880,-83.7468099],[34.0830597,-83.7469547],[34.0830419,-83.7471620],[34.0831456,-83.7473443],[34.0832364,-83.7473998],[34.0834728,-83.7473970],[34.0835358,-83.7474967]] }
+];
+
+/* ==================== BUILD MAP ==================== */
+let map = null;
+
+function buildMap() {
+	if (typeof L === 'undefined' || map) return;
+
+	map = L.map('mapHost', {
+		center: PROPERTY,
+		zoom: 15,
+		zoomControl: true,
+		scrollWheelZoom: false
+	});
+
+	/* ---- Wayback release catalogue ---- */
+	const WAYBACK_URL = 'https://wayback.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/WMTS/1.0.0/GoogleMapsCompatible/MapServer/tile/{rid}/{z}/{y}/{x}';
+	const waybackReleases = {
+		'4756':  { label:'2019 NAIP', date:'Dec 2019' },
+		'26120': { label:'2021',      date:'Dec 2021' },
+		'45134': { label:'2022 NAIP', date:'Dec 2022' },
+		'56102': { label:'2023',      date:'Dec 2023' },
+		'16453': { label:'2024 NAIP', date:'Dec 2024' },
+		'13192': { label:'2025',      date:'Dec 2025' }
+	};
+
+	/* ---- Base satellite (current) ---- */
+	const sat = L.tileLayer(
+		'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+		{ attribution: 'Tiles &copy; Esri, Maxar, Earthstar Geographics', maxZoom: 19 }
+	).addTo(map);
+
+	/* Wayback imagery layers (created on demand) */
+	let activeWBLayer = null;
+
+	function makeWBLayer(releaseId, opacity) {
+		return L.tileLayer(
+			WAYBACK_URL.replace('{rid}', releaseId),
+			{
+				attribution: 'Esri World Imagery Wayback · NAIP · USDA APFO · &copy; Esri',
+				maxZoom: 19,
+				opacity: opacity
+			}
+		);
+	}
+
+	function switchYearLayer(releaseId, opacity) {
+		/* Remove existing wayback layer */
+		if (activeWBLayer) { map.removeLayer(activeWBLayer); activeWBLayer = null; }
+		if (releaseId === 'current') {
+			/* Restore current satellite imagery */
+			sat.setOpacity(1);
+			return;
+		}
+		/* Hide current sat so wayback tiles are visible underneath overlays */
+		sat.setOpacity(0);
+		activeWBLayer = makeWBLayer(releaseId, opacity);
+		activeWBLayer.addTo(map);
+		activeWBLayer.bringToBack();
+	}
+
+	/* ---- Year button handlers ---- */
+	document.querySelectorAll('.year-btn').forEach(btn => {
+		btn.addEventListener('click', () => {
+			document.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
+			btn.classList.add('active');
+			const rid = btn.dataset.rid;
+			const note = btn.dataset.note;
+			const opacity = parseInt(document.getElementById('opacitySlider').value, 10) / 100;
+			document.getElementById('yearNote').textContent = note;
+			switchYearLayer(rid, opacity);
+		});
+	});
+
+	/* ---- Opacity slider ---- */
+	document.getElementById('opacitySlider').addEventListener('input', function() {
+		const pct = parseInt(this.value, 10);
+		document.getElementById('opacityVal').textContent = pct + '%';
+		if (activeWBLayer) activeWBLayer.setOpacity(pct / 100);
+	});
+
+	/* ---- Topo / street reference layers ---- */
+	const topo = L.tileLayer(
+		'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+		{ attribution: 'Map data: &copy; OSM, SRTM · Style: &copy; OpenTopoMap', maxZoom: 17, subdomains: 'abc' }
+	);
+
+	const usgsTopo = L.tileLayer(
+		'https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}',
+		{ attribution: 'USGS National Map', maxZoom: 16 }
+	);
+
+	const streets = L.tileLayer(
+		'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+		{ attribution: '&copy; OpenStreetMap · &copy; CARTO', maxZoom: 19, subdomains: 'abcd' }
+	);
+
+	/* Layer groups */
+	const icGroup      = L.layerGroup().addTo(map);
+	const streamGroup  = L.layerGroup().addTo(map);
+	const alertGroup   = L.layerGroup().addTo(map);
+	const culvertGroup = L.layerGroup().addTo(map);
+	const pondGroup    = L.layerGroup().addTo(map);
+
+	/* Indian Creek */
+	indianCreekSegs.forEach(seg => {
+		L.polyline(seg, { color:'#1565c0', weight:3, opacity:0.9 })
+		 .bindPopup('<div class="pop-label">Named Watercourse · NHD</div><div class="pop-title">Indian Creek</div><div class="pop-body">GNIS 315898 · Tributary of North Oconee River · Jackson County, GA</div>')
+		 .addTo(icGroup);
+	});
+
+	/* Other unnamed streams */
+	otherStreams.forEach(s => {
+		L.polyline(s.coords, { color:'#42a5f5', weight:2, opacity:0.75 })
+		 .bindPopup(`<div class="pop-label">Unnamed Stream · OSM</div><div class="pop-title">Unnamed Tributary</div><div class="pop-body">OSM Way ${s.id} · Part of Indian Creek drainage network</div>`)
+		 .addTo(streamGroup);
+	});
+
+	/* Closest creek upstream tributary */
+	L.polyline(closestCreekTrib, { color:'#e65100', weight:2.5, opacity:0.85, dashArray:'10 4' })
+	 .bindPopup('<div class="pop-label">Unnamed Stream · OSM Way 34448764</div><div class="pop-title">Creek Tributary (upstream of property)</div><div class="pop-body">Feeds directly into the closest creek via culvert (~265 m NNW of property). Long reach from ~700 m north.</div>')
+	 .addTo(alertGroup);
+
+	/* Closest creek — HIGHLIGHT */
+	L.polyline(closestCreek, { color:'#d84315', weight:4, opacity:1 })
+	 .bindPopup('<div class="pop-label">Closest Unnamed Stream · OSM Way 1053938641</div><div class="pop-title">Unnamed Creek — ~71 m North of Property</div><div class="pop-body">Passes approximately 71 m north of 368 Joshua Way. Flows NW to SE. Connected to upstream tributary (Way 34448764) via culvert. Drains to Indian Creek ~2.5 km east. This is the waterway most likely associated with the described routing change.</div>')
+	 .addTo(alertGroup);
+
+	/* Culverts */
+	culverts.forEach(c => {
+		L.polyline(c, { color:'#5d4037', weight:2, opacity:0.8, dashArray:'4 4' })
+		 .bindPopup('<div class="pop-label">Infrastructure</div><div class="pop-title">Culvert Crossing</div><div class="pop-body">Buried waterway crossing under road or subdivision infrastructure. Culverts can redirect or restrict natural flow paths.</div>')
+		 .addTo(culvertGroup);
+	});
+
+	/* Water bodies */
+	waterBodies.forEach(wb => {
+		L.polygon(wb.coords, { color:'#0d47a1', fillColor:'#1565c0', fillOpacity:0.3, weight:1.5, opacity:0.7 })
+		 .bindPopup(`<div class="pop-label">Water Body · OSM</div><div class="pop-title">${wb.name}</div><div class="pop-body">Mapped water feature. Compare against historical NAIP imagery to determine when this feature was constructed.</div>`)
+		 .addTo(pondGroup);
+	});
+
+	/* 500m radius circle around property */
+	L.circle(PROPERTY, { radius:500, color:'#9e9e9e', fillColor:'transparent', weight:1, dashArray:'6 6', opacity:0.5 })
+	 .addTo(map);
+
+	/* Property marker */
+	const propIcon = L.divIcon({
+		className: '',
+		html: `<div style="width:16px;height:16px;background:#d84315;border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.5);"></div>`,
+		iconSize: [16, 16],
+		iconAnchor: [8, 8]
+	});
+	L.marker(PROPERTY, { icon: propIcon })
+	 .bindPopup('<div class="pop-label">Subject Property</div><div class="pop-title">368 Joshua Way</div><div class="pop-body">Hoschton, GA 30548 · Jackson County · 34.0958° N, 83.7484° W<br><br>Unnamed creek (OSM 1053938641) passes ~71 m north.<br>Concern: creek rerouted to pond causing yard washout.</div>')
+	 .addTo(map)
+	 .openPopup();
+
+	/* Layer control */
+	L.control.layers(
+		{ 'Satellite (Esri)': sat, 'USGS Topo': usgsTopo, 'OpenTopoMap': topo, 'Street (CARTO)': streets },
+		{
+			'Indian Creek (named)': icGroup,
+			'Unnamed streams': streamGroup,
+			'Closest creek + tributary': alertGroup,
+			'Culvert crossings': culvertGroup,
+			'Ponds / water bodies': pondGroup
+		},
+		{ position: 'topleft', collapsed: window.innerWidth < 768 }
+	).addTo(map);
+}
+
+window.addEventListener('leafletReady', buildMap);
+if (typeof L !== 'undefined') buildMap();
+</script>
+
+</body>
+</html>

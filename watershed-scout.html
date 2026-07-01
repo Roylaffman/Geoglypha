@@ -1,0 +1,2125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Watershed Scout · Drainage, Floodplains &amp; Landslide Analysis</title>
+
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Work+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+	<!-- Mapbox GL JS -->
+	<link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet">
+	<script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
+
+	<!-- Mapbox token — loaded from GCS; create mapbox-config.js: window.MAPBOX_TOKEN = 'pk...' -->
+	<script src="https://www.geoglypha1.org/mapbox-config.js"></script>
+
+	<!-- Chart.js for elevation / terrain profiles -->
+	<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+	<style>
+		/* ============================================================
+		   WATERSHED SCOUT v2 — floodplain, watershed & landslide tool
+		   Palette: navy ink, water blue, alert orange, topo green, landslide maroon
+		   Type: Cormorant Garamond (display) + Work Sans (body) + JetBrains Mono (data)
+		   Author: Ryan Lafferty
+		   ============================================================ */
+
+		:root {
+			--bg:          #eef0f4;
+			--paper:       #ffffff;
+			--ink:         #1a2a3a;
+			--ink-soft:    #3a4f63;
+			--ink-mute:    #6b8299;
+			--rule:        #cdd5de;
+			--water:       #1565c0;
+			--water-light: #e3f0fc;
+			--alert:       #d84315;
+			--alert-light: #fbe9e7;
+			--topo:        #2e7d32;
+			--topo-light:  #e8f5e9;
+			--gold:        #b88842;
+			--gold-light:  #fdf3e2;
+			--flood-100:   #e6a020;
+			--flood-500:   #c0392b;
+			--landslide:   #8b1a1a;
+			--wshed:       #2e7d32;
+		}
+
+		* { margin: 0; padding: 0; box-sizing: border-box; }
+		html { scroll-behavior: smooth; }
+
+		body {
+			background: var(--bg);
+			color: var(--ink);
+			font-family: 'Work Sans', sans-serif;
+			font-size: 16px;
+			line-height: 1.65;
+			-webkit-font-smoothing: antialiased;
+		}
+
+		/* ---- MASTHEAD ---- */
+		.masthead {
+			background: var(--ink);
+			color: #ffffff;
+			padding: 2rem 2.5rem 1.75rem;
+		}
+		.masthead .tag {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.68rem;
+			letter-spacing: 0.2em;
+			text-transform: uppercase;
+			color: #7ba9cc;
+			margin-bottom: 0.6rem;
+		}
+		.masthead h1 {
+			font-family: 'Cormorant Garamond', serif;
+			font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+			font-weight: 600;
+			line-height: 1.1;
+			color: #fff;
+			margin-bottom: 0.5rem;
+		}
+		.masthead .sub {
+			font-size: 0.85rem;
+			color: #9ab8d0;
+			margin-bottom: 1.25rem;
+		}
+
+		/* ---- SEARCH ---- */
+		.search-row {
+			display: flex;
+			gap: 0.5rem;
+			align-items: center;
+			flex-wrap: wrap;
+		}
+		.search-input {
+			flex: 1 1 300px;
+			min-width: 220px;
+			padding: 0.65rem 1rem;
+			font-family: 'Work Sans', sans-serif;
+			font-size: 0.9rem;
+			border: 1px solid rgba(123,169,204,0.5);
+			background: rgba(255,255,255,0.08);
+			color: #fff;
+			border-radius: 2px;
+			outline: none;
+			transition: border-color 0.2s, background 0.2s;
+		}
+		.search-input::placeholder { color: #7ba9cc; }
+		.search-input:focus { border-color: #5c9fd4; background: rgba(255,255,255,0.13); }
+		.search-btn {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.72rem;
+			letter-spacing: 0.12em;
+			text-transform: uppercase;
+			padding: 0.65rem 1.4rem;
+			border: 1px solid rgba(123,169,204,0.5);
+			background: transparent;
+			color: #9ab8d0;
+			cursor: pointer;
+			border-radius: 2px;
+			transition: all 0.2s;
+			white-space: nowrap;
+		}
+		.search-btn:hover { background: rgba(123,169,204,0.15); color: #fff; border-color: #5c9fd4; }
+		.search-btn.primary { background: var(--water); border-color: var(--water); color: #fff; }
+		.search-btn.primary:hover { background: #1976d2; }
+		.loc-btn {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.72rem;
+			padding: 0.65rem 1rem;
+			border: 1px solid rgba(123,169,204,0.5);
+			background: transparent;
+			color: #9ab8d0;
+			cursor: pointer;
+			border-radius: 2px;
+			transition: all 0.2s;
+			white-space: nowrap;
+		}
+		.loc-btn:hover { background: rgba(123,169,204,0.15); color: #fff; }
+		.search-hint {
+			font-size: 0.68rem;
+			color: #5c8fae;
+			margin-top: 0.5rem;
+		}
+		.search-hint code { font-family: 'JetBrains Mono', monospace; font-size: 0.66rem; color: #7ba9cc; }
+
+		/* ---- STATUS BANNER ---- */
+		.status-banner {
+			padding: 0.75rem 2.5rem;
+			font-size: 0.82rem;
+			font-weight: 500;
+			display: flex;
+			align-items: center;
+			gap: 0.75rem;
+			transition: all 0.3s;
+		}
+		.status-banner.info    { background: var(--water-light); color: var(--water); border-bottom: 1px solid #b3d5f5; }
+		.status-banner.loading { background: var(--gold-light);  color: #8d6a2c; border-bottom: 1px solid #e8d5a8; }
+		.status-banner.error   { background: var(--alert-light); color: var(--alert); border-bottom: 1px solid #f5c6bc; }
+		.status-banner.hidden  { display: none; }
+		.status-banner .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+		.status-banner.info .dot    { background: var(--water); }
+		.status-banner.loading .dot { background: var(--gold); animation: pulse 1s infinite; }
+		.status-banner.error .dot   { background: var(--alert); }
+		@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+		/* ---- LAYOUT ---- */
+		.page { max-width: 1240px; margin: 0 auto; padding: 2.5rem 2rem 5rem; }
+		@media (max-width: 760px) {
+			.page { padding: 1.5rem 1rem 3rem; }
+			.masthead { padding: 1.5rem 1rem; }
+			.status-banner { padding: 0.6rem 1rem; }
+			.search-row { flex-direction: column; }
+			.search-btn, .loc-btn { width: 100%; text-align: center; }
+		}
+
+		/* ---- SECTION HEADINGS ---- */
+		.section-label {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.68rem;
+			letter-spacing: 0.22em;
+			text-transform: uppercase;
+			color: var(--water);
+			margin-bottom: 0.6rem;
+			margin-top: 3rem;
+		}
+		h2 {
+			font-family: 'Cormorant Garamond', serif;
+			font-size: clamp(1.6rem, 3vw, 2.2rem);
+			font-weight: 600;
+			margin-bottom: 1rem;
+			line-height: 1.15;
+		}
+		h2::after {
+			content: '';
+			display: block;
+			width: 48px;
+			height: 2px;
+			background: var(--water);
+			margin-top: 10px;
+		}
+		h3 {
+			font-family: 'Cormorant Garamond', serif;
+			font-size: 1.35rem;
+			font-weight: 600;
+			margin: 1.75rem 0 0.5rem;
+		}
+		p { margin-bottom: 1rem; max-width: 72ch; }
+		a { color: var(--water); text-decoration: underline; text-underline-offset: 2px; }
+		a:hover { color: var(--ink); }
+
+		/* ---- TABS ---- */
+		.tab-nav {
+			display: flex;
+			gap: 0;
+			border-bottom: 2px solid var(--rule);
+			margin: 2rem 0 1.5rem;
+		}
+		.tab-btn {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.7rem;
+			letter-spacing: 0.14em;
+			text-transform: uppercase;
+			padding: 0.7rem 1.5rem;
+			background: none;
+			border: none;
+			border-bottom: 2px solid transparent;
+			margin-bottom: -2px;
+			color: var(--ink-mute);
+			cursor: pointer;
+			transition: all 0.2s;
+		}
+		.tab-btn:hover { color: var(--water); }
+		.tab-btn.active { color: var(--water); border-bottom-color: var(--water); }
+		.tab-content { display: none; animation: fadeIn 0.3s ease; }
+		.tab-content.active { display: block; }
+		@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+		/* ---- INFO CARDS ---- */
+		.info-row {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+			gap: 1rem;
+			margin: 1.5rem 0;
+		}
+		.info-row.hidden { display: none; }
+		.info-card {
+			background: var(--paper);
+			border: 1px solid var(--rule);
+			border-top: 3px solid var(--water);
+			padding: 1rem 1.25rem;
+			border-radius: 2px;
+		}
+		.info-card.alert  { border-top-color: var(--alert); }
+		.info-card.topo   { border-top-color: var(--topo); }
+		.info-card.gold   { border-top-color: var(--gold); }
+		.info-card.landslide { border-top-color: var(--landslide); }
+		.info-card .lbl {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.65rem;
+			letter-spacing: 0.18em;
+			text-transform: uppercase;
+			color: var(--ink-mute);
+			margin-bottom: 0.35rem;
+		}
+		.info-card .val { font-size: 1.05rem; font-weight: 600; color: var(--ink); line-height: 1.2; }
+		.info-card .note { font-size: 0.75rem; color: var(--ink-mute); margin-top: 0.25rem; }
+
+		/* ---- MAP ---- */
+		.map-wrap { margin: 0 0 0.75rem; }
+		.map-box {
+			border: 1px solid var(--rule);
+			box-shadow: 0 2px 12px rgba(26,42,58,0.08);
+			position: relative;
+		}
+		#mapHost { width: 100%; height: 580px; }
+		@media (max-width: 760px) { #mapHost { height: 440px; } }
+
+		.map-overlay-info {
+			position: absolute;
+			bottom: 12px;
+			right: 12px;
+			background: rgba(26,42,58,0.85);
+			color: #9ab8d0;
+			padding: 6px 12px;
+			border-radius: 2px;
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.58rem;
+			pointer-events: none;
+			z-index: 5;
+			line-height: 1.5;
+		}
+
+		.map-caption {
+			font-size: 0.78rem;
+			color: var(--ink-mute);
+			padding: 0.6rem 0 0;
+			border-top: 1px solid var(--rule);
+			margin-top: 0.5rem;
+		}
+		.map-legend {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.75rem 1.25rem;
+			margin: 0.75rem 0 0;
+			padding: 0.7rem 1rem;
+			background: var(--paper);
+			border: 1px solid var(--rule);
+			font-size: 0.74rem;
+			color: var(--ink-soft);
+		}
+		.leg-item { display: flex; align-items: center; gap: 0.4rem; }
+		.leg-line { display: inline-block; width: 22px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+		.leg-sq   { width: 13px; height: 13px; display: inline-block; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.25); }
+		.leg-dot  { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,0.3); }
+
+		/* ---- YEAR PANEL ---- */
+		.year-panel {
+			background: var(--ink);
+			padding: 0.75rem 1.1rem;
+			display: flex;
+			align-items: center;
+			gap: 1rem;
+			flex-wrap: wrap;
+		}
+		.year-panel .yl {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.63rem;
+			letter-spacing: 0.18em;
+			text-transform: uppercase;
+			color: #7ba9cc;
+			white-space: nowrap;
+		}
+		.year-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+		.year-btn {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.68rem;
+			font-weight: 500;
+			padding: 3px 10px;
+			border: 1px solid rgba(123,169,204,0.4);
+			background: transparent;
+			color: #9ab8d0;
+			cursor: pointer;
+			border-radius: 2px;
+			transition: all 0.15s;
+			white-space: nowrap;
+		}
+		.year-btn:hover { background: rgba(123,169,204,0.15); color: #fff; }
+		.year-btn.active { background: var(--water); border-color: var(--water); color: #fff; }
+		.year-btn.naip { border-color: rgba(100,200,130,0.5); }
+		.year-btn.naip.active { background: #2e7d32; border-color: #2e7d32; }
+		.opacity-row {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			margin-left: auto;
+		}
+		.opacity-row label {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.63rem;
+			color: #7ba9cc;
+			white-space: nowrap;
+		}
+		#opacitySlider { width: 80px; accent-color: var(--water); cursor: pointer; }
+		.year-note {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.63rem;
+			color: #5c8fae;
+			padding: 0.3rem 1.1rem 0.45rem;
+			background: var(--ink);
+			border-top: 1px solid rgba(123,169,204,0.15);
+		}
+
+		/* Mapbox popup overrides */
+		.mapboxgl-popup-content {
+			border-radius: 2px !important;
+			box-shadow: 0 4px 16px rgba(26,42,58,0.2) !important;
+			font-family: 'Work Sans', sans-serif !important;
+			padding: 12px 14px !important;
+		}
+		.mapboxgl-popup-close-button { font-size: 16px; padding: 2px 6px; color: var(--ink-mute); }
+		.pop-label {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.62rem;
+			letter-spacing: 0.15em;
+			text-transform: uppercase;
+			color: var(--ink-mute);
+			margin-bottom: 0.15rem;
+		}
+		.pop-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 0.25rem; }
+		.pop-body  { font-size: 0.8rem; color: #3a4f63; line-height: 1.5; }
+
+		/* ---- STAT ROW ---- */
+		.stat-row {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+			gap: 1rem;
+			margin: 1rem 0 1.5rem;
+		}
+		.stat-row.hidden { display: none; }
+		.stat-item {
+			text-align: center;
+			padding: 0.75rem 0.5rem;
+			background: var(--paper);
+			border: 1px solid var(--rule);
+			border-radius: 2px;
+		}
+		.stat-item .stat-num {
+			font-family: 'Cormorant Garamond', serif;
+			font-size: 2rem;
+			font-weight: 700;
+			color: var(--water);
+			line-height: 1;
+		}
+		.stat-item .stat-lbl {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.62rem;
+			letter-spacing: 0.15em;
+			text-transform: uppercase;
+			color: var(--ink-mute);
+			margin-top: 0.25rem;
+		}
+
+		/* ---- STREAM TABLE ---- */
+		.stream-table {
+			width: 100%;
+			border-collapse: collapse;
+			background: var(--paper);
+			font-size: 0.84rem;
+			margin: 1.25rem 0;
+		}
+		.stream-table th {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.66rem;
+			letter-spacing: 0.15em;
+			text-transform: uppercase;
+			color: var(--ink-mute);
+			padding: 0.65rem 0.9rem;
+			border-bottom: 2px solid var(--rule);
+			text-align: left;
+			background: #f8fafc;
+		}
+		.stream-table td { padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+		.stream-table tr:last-child td { border-bottom: none; }
+		.stream-table tr.closest td { background: var(--alert-light); }
+		.stream-table .tag-alert, .stream-table .tag-water {
+			display: inline-block;
+			color: #fff;
+			font-size: 0.62rem;
+			font-weight: 600;
+			letter-spacing: 0.1em;
+			text-transform: uppercase;
+			padding: 1px 6px;
+			border-radius: 2px;
+		}
+		.stream-table .tag-alert { background: var(--alert); }
+		.stream-table .tag-water { background: var(--water); }
+		.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
+		.no-data { text-align: center; padding: 2rem; color: var(--ink-mute); font-style: italic; }
+
+		/* ---- POI GRID ---- */
+		.poi-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+			gap: 0.75rem;
+			margin: 1.25rem 0;
+		}
+		.poi-grid.hidden { display: none; }
+		.poi-card {
+			background: var(--paper);
+			border: 1px solid var(--rule);
+			padding: 0.85rem 1rem;
+			border-radius: 2px;
+			font-size: 0.82rem;
+		}
+		.poi-card .poi-name { font-weight: 600; color: var(--ink); margin-bottom: 0.15rem; }
+		.poi-card .poi-cat {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.62rem;
+			letter-spacing: 0.12em;
+			text-transform: uppercase;
+			color: var(--ink-mute);
+		}
+		.poi-card .poi-dist { font-size: 0.73rem; color: var(--ink-soft); margin-top: 0.15rem; }
+		.poi-card .poi-coords { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; color: var(--ink-mute); margin-top: 0.1rem; }
+
+		/* ---- FLOOD ZONE TABLE ---- */
+		.flood-table {
+			width: 100%;
+			border-collapse: collapse;
+			background: var(--paper);
+			font-size: 0.84rem;
+			margin: 1.25rem 0;
+		}
+		.flood-table th {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.66rem;
+			letter-spacing: 0.15em;
+			text-transform: uppercase;
+			color: var(--ink-mute);
+			padding: 0.65rem 0.9rem;
+			border-bottom: 2px solid var(--rule);
+			text-align: left;
+			background: #f8fafc;
+		}
+		.flood-table td { padding: 0.65rem 0.9rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+		.flood-table .zone-A  { color: #1565c0; font-weight: 600; }
+		.flood-table .zone-AE { color: #1565c0; font-weight: 600; }
+		.flood-table .zone-V  { color: #d84315; font-weight: 600; }
+
+		/* ---- LAYER TOGGLES ---- */
+		.toggle-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+			gap: 4px 0.75rem;
+		}
+		.tog-row {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			font-size: 0.76rem;
+			color: var(--ink-soft);
+			cursor: pointer;
+			padding: 3px 4px;
+			border-radius: 2px;
+			transition: background 0.15s;
+			user-select: none;
+		}
+		.tog-row:hover { background: var(--water-light); }
+		.tog-row.poi-off { color: var(--ink-mute); font-style: italic; }
+		.tog-check { accent-color: var(--water); cursor: pointer; }
+		.load-poi-btn {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.68rem;
+			padding: 4px 12px;
+			background: var(--gold-light);
+			border: 1px solid var(--gold);
+			color: #8d6a2c;
+			cursor: pointer;
+			border-radius: 2px;
+			margin-top: 6px;
+			transition: all 0.2s;
+		}
+		.load-poi-btn:hover { background: var(--gold); color: #fff; }
+		.load-poi-btn.loading { opacity: 0.6; pointer-events: none; }
+
+		/* ---- SOURCES ---- */
+		.sources p {
+			font-size: 0.83rem;
+			line-height: 1.6;
+			max-width: 80ch;
+			padding-left: 1.5rem;
+			text-indent: -1.5rem;
+			margin-bottom: 0.75rem;
+			color: var(--ink-soft);
+		}
+		.src-tag {
+			display: inline-block;
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.62rem;
+			padding: 1px 5px;
+			border-radius: 2px;
+			margin-right: 0.3rem;
+			vertical-align: middle;
+		}
+		.src-tag.gov  { background: #e8f0fe; color: #1565c0; border: 1px solid #b3d5f5; }
+		.src-tag.open { background: var(--topo-light); color: var(--topo); border: 1px solid #a5d6a7; }
+		.src-tag.fema { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+		.src-tag.state { background: #fce4ec; color: #880e4f; border: 1px solid #f8bbd0; }
+
+		/* ---- FOOTER ---- */
+		footer {
+			margin-top: 4rem;
+			padding-top: 1.5rem;
+			border-top: 2px solid var(--ink);
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 0.7rem;
+			color: var(--ink-mute);
+			display: flex;
+			justify-content: space-between;
+			flex-wrap: wrap;
+			gap: 0.5rem;
+		}
+	</style>
+</head>
+<body>
+
+<header class="masthead">
+	<div class="tag">Watershed · Floodplain · Landslide Analysis</div>
+	<h1>Watershed Scout</h1>
+	<div class="sub">Enter any address or coordinates to map waterways, FEMA flood zones, watershed boundaries, landslide hazard areas, and points of interest within a 2-mile radius</div>
+	<div class="search-row">
+		<input type="text" class="search-input" id="searchInput"
+		       placeholder="Address, place name, or lat,lon (e.g. 35.4515, -82.2873)"
+		       autocomplete="off">
+		<button class="search-btn primary" id="searchBtn">Search</button>
+		<button class="loc-btn" id="locBtn">📍 My Location</button>
+	</div>
+	<div class="search-hint">Try: <code>Bat Cave, NC</code> · <code>Asheville, NC</code> · <code>35.4515, -82.2873</code> · <code>368 Joshua Way, Hoschton GA</code></div>
+</header>
+
+<div class="status-banner hidden" id="statusBanner">
+	<div class="dot"></div>
+	<span id="statusText"></span><span id="statusGages"></span>
+</div>
+
+<div class="page">
+
+	<!-- OVERVIEW CARDS -->
+	<div class="info-row hidden" id="infoRow">
+		<div class="info-card alert" id="cardClosest">
+			<div class="lbl">Closest Waterway</div>
+			<div class="val">—</div>
+			<div class="note">—</div>
+		</div>
+		<div class="info-card" id="cardWaterways">
+			<div class="lbl">Waterways Found</div>
+			<div class="val">—</div>
+			<div class="note">Within 2-mile radius</div>
+		</div>
+		<div class="info-card gold" id="cardFlood">
+			<div class="lbl">FEMA Flood Zones</div>
+			<div class="val">—</div>
+			<div class="note">NFHL flood hazard areas</div>
+		</div>
+		<div class="info-card topo" id="cardWatershed">
+			<div class="lbl">Watershed (HUC12)</div>
+			<div class="val">—</div>
+			<div class="note">USGS WBD subwatershed</div>
+		</div>
+		<div class="info-card landslide" id="cardLandslide">
+			<div class="lbl">Landslide Hazard</div>
+			<div class="val">Terrain-slope derived</div>
+			<div class="note">Steep slope indicator from DEM; see state GS for official maps</div>
+		</div>
+		<div class="info-card" id="cardGages" style="border-top-color:#0277bd;">
+			<div class="lbl">Streamgages (USGS)</div>
+			<div class="val">—</div>
+			<div class="note">Real-time streamflow monitoring stations</div>
+		</div>
+	</div>
+
+	<!-- TABS -->
+	<div class="tab-nav">
+		<button class="tab-btn active" onclick="switchTab('map')">§ I · Interactive Map</button>
+		<button class="tab-btn" onclick="switchTab('waterways')">§ II · Waterways &amp; Flood Data</button>
+	</div>
+
+	<!-- TAB 1: MAP -->
+	<div class="tab-content active" id="tab-map">
+		<p id="mapDescription">Search for a location above to load waterways, FEMA flood zones, USGS watershed boundaries, and landslide hazard areas. Use the year buttons to compare historical satellite imagery via Esri Wayback. Tilt and rotate the map (right-click + drag) to see 3D terrain.</p>
+
+		<div class="map-wrap">
+			<div class="year-panel">
+				<span class="yl">Imagery year</span>
+				<div class="year-btns">
+					<button class="year-btn naip" data-rid="4756"  data-note="2019 · Esri Wayback · NAIP where available at 0.6—1.0m">2019</button>
+					<button class="year-btn"      data-rid="26120" data-note="Dec 2021 · Esri Wayback">2021</button>
+					<button class="year-btn naip" data-rid="45134" data-note="2022 · Esri Wayback · NAIP where available">2022</button>
+					<button class="year-btn"      data-rid="56102" data-note="Dec 2023 · Esri Wayback">2023</button>
+					<button class="year-btn naip" data-rid="16453" data-note="2024 · Esri Wayback · NAIP where available">2024</button>
+					<button class="year-btn"      data-rid="13192" data-note="Dec 2025 · Esri Wayback">2025</button>
+					<button class="year-btn active" data-rid="current" data-note="Current · Esri World Imagery (continuously updated)">Current</button>
+				</div>
+				<div class="opacity-row">
+					<label>Hillshade / Opacity <span id="opacityVal">100%</span></label>
+					<input type="range" id="opacitySlider" min="20" max="100" value="100" step="5">
+				</div>
+			</div>
+			<div class="year-note" id="yearNote">Current · Esri World Imagery (continuously updated)</div>
+			<div class="map-box">
+				<div id="mapHost"></div>
+				<div class="map-overlay-info">Right-click + drag to tilt/rotate · Scroll to zoom · 3D Terrain active</div>
+			</div>
+			<div class="map-caption" id="mapCaption">
+				Default view — search for a location to load data. Satellite basemap. Use layer toggles below to show/hide flood zones, watersheds, and landslide hazard areas.
+			</div>
+			<div class="map-legend">
+				<span class="leg-item"><span class="leg-line" style="background:#1565c0;"></span> Named waterways</span>
+				<span class="leg-item"><span class="leg-line" style="background:#42a5f5;"></span> Unnamed streams</span>
+				<span class="leg-item"><span class="leg-line" style="background:#d84315;"></span> Closest waterway</span>
+				<span class="leg-item"><span class="leg-sq" style="background:#1565c0;"></span> Water bodies</span>
+				<span class="leg-item"><span class="leg-sq" style="background:rgba(230,160,32,0.5);border:1px dashed #e6a020;"></span> 100-year floodplain</span>
+				<span class="leg-item"><span class="leg-sq" style="background:rgba(192,57,43,0.4);border:1px dotted #c0392b;"></span> 500-year floodplain</span>
+				<span class="leg-item"><span class="leg-line" style="background:#2e7d32;height:2px;""></span> Watershed (HUC12)</span>
+				<span class="leg-item"><span class="leg-sq" style="background:rgba(139,26,26,0.35);border:1px dashed #8b1a1a;"></span> Landslide hazard (terrain slope >30°, hillshade overlay)</span>
+				<span class="leg-item"><span class="leg-dot" style="background:#0277bd;"></span> USGS streamgage</span>
+				<span class="leg-item"><span class="leg-dot" style="background:#d84315;"></span> Search point</span>
+			</div>
+
+			<!-- LAYER TOGGLES -->
+			<div class="toggle-panel" id="togglePanel" style="display:none; background:var(--paper); border:1px solid var(--rule); padding:0.7rem 1rem; margin-top:0.75rem;">
+				<div style="font-family:'JetBrains Mono',monospace;font-size:0.66rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink-mute);margin-bottom:0.6rem;">Layer Visibility</div>
+				<div class="toggle-grid">
+					<label class="tog-row"><input type="checkbox" class="tog-check" data-layer="waterway-named" checked> Named waterways</label>
+					<label class="tog-row"><input type="checkbox" class="tog-check" data-layer="waterway-unnamed" checked> Unnamed streams</label>
+					<label class="tog-row"><input type="checkbox" class="tog-check" data-layer="closest-highlight" checked> Closest waterway hl</label>
+					<label class="tog-row"><input type="checkbox" class="tog-check" data-layer="waterbody-fill" checked> Water bodies</label>
+					<label class="tog-row"><input type="checkbox" class="tog-check" data-layer="flood-100-fill" checked> 100-year floodplain</label>
+					<label class="tog-row"><input type="checkbox" class="tog-check" data-layer="flood-500-fill" checked> 500-year floodplain</label>
+					<label class="tog-row"><input type="checkbox" class="tog-check" data-layer="watershed-line" checked> Watershed (HUC12)</label>
+					<label class="tog-row"><input type="checkbox" class="tog-check" data-layer="landslide-fill" checked> Landslide hazard</label>
+					<label class="tog-row"><input type="checkbox" class="tog-check" data-layer="gage-circle" checked> USGS streamgages</label>
+				<label class="tog-row poi-off"><input type="checkbox" class="tog-check" data-layer="poi-circle"> Points of interest</label>
+				<button class="load-poi-btn" id="loadPoiBtn" title="Load OSM points of interest (separate API call)">📌 Load POIs</button>
+				</div>
+			</div>
+		</div>
+
+		<!-- STATS ROW -->
+		<div class="stat-row hidden" id="statRow">
+			<div class="stat-item"><div class="stat-num" id="statRivers">0</div><div class="stat-lbl">Named Waterways</div></div>
+			<div class="stat-item"><div class="stat-num" id="statStreams">0</div><div class="stat-lbl">Streams / Creeks</div></div>
+			<div class="stat-item"><div class="stat-num" id="statWaterBodies">0</div><div class="stat-lbl">Water Bodies</div></div>
+			<div class="stat-item"><div class="stat-num" id="statFloodZones">0</div><div class="stat-lbl">FEMA Flood Zones</div></div>
+			<div class="stat-item"><div class="stat-num" id="statPOIs">0</div><div class="stat-lbl">Points of Interest</div></div>
+			<div class="stat-item"><div class="stat-num" id="statHUC12">0</div><div class="stat-lbl">Watershed (HUC12)</div></div>
+			<div class="stat-item"><div class="stat-num" id="statGages">0</div><div class="stat-lbl">USGS Streamgages</div></div>
+		</div>
+	</div>
+
+	<!-- TAB 2: WATERWAYS + FLOOD DATA -->
+	<div class="tab-content" id="tab-waterways">
+		<h3>Streams &amp; Waterways</h3>
+		<p id="pWaterways">All OSM-mapped waterways within approximately 2 miles (3.2 km) of the search point. Data sourced from OpenStreetMap via Overpass API. Named waterways are highlighted; unnamed features originate from USGS NHD flowline data attributed on OSM.</p>
+		<div id="streamTableWrap"></div>
+		<div class="no-data hidden" id="noWaterways">No waterways found within 2 miles of this location.</div>
+
+		<h3 style="margin-top:2rem;">FEMA Flood Hazard Zones</h3>
+		<p>Flood zones from the FEMA National Flood Hazard Layer (NFHL) intersecting the 2-mile search radius. Zone classifications: <strong>AE/A</strong> = 100-year floodplain (Base Flood Elevation determined). <strong>VE/V</strong> = coastal high-hazard. <strong>X (shaded)</strong> = 500-year floodplain. <strong>X (unshaded)</strong> = minimal hazard. Data queried from FEMA ArcGIS REST services.</p>
+		<div id="floodTableWrap"></div>
+		<div class="no-data hidden" id="noFloodZones">No FEMA flood zones found within 2 miles of this location.</div>
+
+		<h3 style="margin-top:2rem;">Points of Interest</h3>
+		<p id="pPOI">OSM-mapped amenities, landmarks, and notable features within 2 miles.</p>
+		<div class="poi-grid" id="poiGrid"></div>
+		<div class="no-data hidden" id="noPOI">No points of interest found within 2 miles of this location.</div>
+	</div>
+
+	<!-- SOURCES -->
+	<div class="section-label">§ III · Data Sources</div>
+	<h2>Sources &amp; Methodology</h2>
+	<div class="sources">
+		<p><span class="src-tag open">Open data</span> <strong>OpenStreetMap Contributors.</strong> Waterways, water bodies, and points of interest queried via Overpass API. Includes rivers, streams, canals, drains, and ditches. License: ODbL. <a href="https://www.openstreetmap.org/" target="_blank" rel="noopener">openstreetmap.org</a></p>
+
+		<p><span class="src-tag fema">FEMA</span> <strong>FEMA National Flood Hazard Layer (NFHL).</strong> Flood hazard zones (100-year, 500-year, floodways) queried via ArcGIS REST services. Official regulatory flood maps for the National Flood Insurance Program. <a href="https://msc.fema.gov/" target="_blank" rel="noopener">msc.fema.gov</a></p>
+
+		<p><span class="src-tag gov">USGS</span> <strong>USGS Watershed Boundary Dataset (WBD).</strong> HUC12 subwatershed boundaries queried via National Map ArcGIS REST services. Hydrologic unit codes and watershed names. <a href="https://www.usgs.gov/national-hydrography/watershed-boundary-dataset" target="_blank" rel="noopener">usgs.gov/wbd</a></p>
+
+		<p><span class="src-tag state">NCGS</span> <strong>North Carolina Geological Survey.</strong> Landslide hazard maps (where available in NC). Henderson County Slope Movement Hazard Maps (Wooten et al. 2011, DDS-GHMS-5). For other states, refer to the respective state geological survey. USGS national landslide susceptibility data is available at <a href="https://www.usgs.gov/programs/landslide-hazards" target="_blank" rel="noopener">usgs.gov/landslide-hazards</a>.</p>
+
+		<p><span class="src-tag gov">Esri / USDA</span> <strong>Esri World Imagery &amp; Wayback.</strong> Satellite basemap and historical imagery (2019—2025). NAIP imagery integrated in select Wayback releases for US coverage at 0.6—1.0 m resolution. <a href="https://livingatlas.arcgis.com/wayback/" target="_blank" rel="noopener">livingatlas.arcgis.com/wayback</a></p>
+
+		<p><span class="src-tag open">Open data</span> <strong>Nominatim (OSM).</strong> Geocoding for address/place name resolution. <a href="https://nominatim.org/" target="_blank" rel="noopener">nominatim.org</a></p>
+
+		<p><span class="src-tag open">Open data</span> <strong>Overture Maps Foundation.</strong> For deeper analysis, additional place, building, and infrastructure layers available via GeoParquet on S3. Accessible via DuckDB + httpfs. <a href="https://overturemaps.org/" target="_blank" rel="noopener">overturemaps.org</a></p>
+	</div>
+
+	<p style="font-style:italic;font-size:0.8rem;color:var(--ink-mute);margin-top:0.5rem;">
+		Coordinate reference: EPSG:4326. Search radius: 3,218 m (~2 miles). FEMA NFHL data is regulatory-grade but may not reflect recent flood events. Landslide hazard data availability varies by state.
+	</p>
+
+	<footer>
+		<span>Watershed Scout v2 · Floodplain &amp; Landslide Analysis Tool</span>
+		<span>Ryan Lafferty · 2026-05-24 · OSM · FEMA · USGS · Esri · NCGS</span>
+	</footer>
+
+</div><!-- .page -->
+
+<!-- ==================== MAIN SCRIPT ==================== -->
+<script>
+/* ============================================================
+   WATERSHED SCOUT v2 — Mapbox GL JS edition
+   Author: Ryan Lafferty
+   ============================================================ */
+
+const SEARCH_RADIUS_M = 3218;  /* ~2 miles */
+const WAYBACK_URL = 'https://wayback.maptiles.arcgis.com/arcgis/rest/services/World_Imagery/WMTS/1.0.0/GoogleMapsCompatible/MapServer/tile/{rid}/{z}/{y}/{x}';
+
+/* ---- Globals ---- */
+let map = null;
+let searchPoint = null;
+let activeWaybackLayerId = null;
+let activeWaybackSourceId = 'wayback-active';
+let waybackOpacity = 1.0;
+let satShown = true;
+let allResults = null; /* { named, unnamed, waterBodies, pois, floodZones, huc12 } */
+
+/* ---- Tab switching ---- */
+function switchTab(tab) {
+	document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+	document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+	document.querySelector(`[onclick="switchTab('${tab}')"]`).classList.add('active');
+	document.getElementById('tab-' + tab).classList.add('active');
+	if (map) setTimeout(() => map.resize(), 100);
+}
+window.switchTab = switchTab;
+
+/* ---- Layer toggle checkboxes ---- */
+function setupLayerToggles() {
+	document.querySelectorAll('.tog-check').forEach(cb => {
+		cb.addEventListener('change', function() {
+			const layerId = this.dataset.layer;
+			if (!map || !layerId) return;
+			try {
+				const newVis = this.checked ? 'visible' : 'none';
+				map.setLayoutProperty(layerId, 'visibility', newVis);
+				const assoc = {
+					'waterbody-fill': ['waterbody-outline'],
+					'flood-100-fill': ['flood-100-line'],
+					'flood-500-fill': ['flood-500-line'],
+					'watershed-line': ['watershed-fill'],
+					'landslide-fill': ['landslide-line'],
+				};
+				if (assoc[layerId]) {
+					assoc[layerId].forEach(id => {
+						try { map.setLayoutProperty(id, 'visibility', newVis); } catch(e) {}
+					});
+				}
+			} catch(e) {}
+		});
+	});
+	/* Wire POI load button */
+	const poiBtn = document.getElementById('loadPoiBtn');
+	if (poiBtn && !poiBtn._wired) {
+		poiBtn._wired = true;
+		poiBtn.addEventListener('click', loadPOIs);
+	}
+}
+
+/* ---- Status banner ---- */
+function showStatus(type, msg) {
+	const banner = document.getElementById('statusBanner');
+	banner.className = 'status-banner ' + type;
+	document.getElementById('statusText').textContent = msg;
+}
+function hideStatus() { document.getElementById('statusBanner').classList.add('hidden'); }
+
+/* ---- Mapbox token check ---- */
+function checkToken() {
+	if (typeof mapboxgl === 'undefined') return false;
+	if (window.MAPBOX_TOKEN && window.MAPBOX_TOKEN.length > 20) {
+		mapboxgl.accessToken = window.MAPBOX_TOKEN;
+		return true;
+	}
+	showStatus('error', 'Mapbox token not found. Upload mapbox-config.js (window.MAPBOX_TOKEN = "pk...") to GCS, or set token manually in console.');
+	return false;
+}
+
+/* ---- Geocode ---- */
+const NOMINATIM_ENDPOINTS = ['https://nominatim.openstreetmap.org', 'https://nominatim.geocoding.ai'];
+
+async function geocode(query) {
+	let lastError = null;
+	for (const base of NOMINATIM_ENDPOINTS) {
+		try {
+			const url = base + '/search?format=json&limit=5&q=' + encodeURIComponent(query);
+			const resp = await fetch(url);
+			if (!resp.ok) throw new Error('HTTP ' + resp.status);
+			return await resp.json();
+		} catch (err) { lastError = err; }
+	}
+	throw new Error('Geocoding failed: ' + (lastError ? lastError.message : 'all endpoints unreachable'));
+}
+
+async function reverseGeocode(lat, lon) {
+	for (const base of NOMINATIM_ENDPOINTS) {
+		try {
+			const url = `${base}/reverse?format=json&lat=${lat}&lon=${lon}`;
+			const resp = await fetch(url);
+			if (!resp.ok) continue;
+			return await resp.json();
+		} catch (err) {}
+	}
+	return null;
+}
+
+/* ---- Overpass API ---- */
+const OVERPASS_ENDPOINTS = [
+	'https://overpass-api.de/api/interpreter',
+	'https://overpass.kumi.systems/api/interpreter',
+	'https://maps.mail.ru/osm/tools/overpass/api/interpreter'
+];
+
+async function queryOverpass(overpassQuery) {
+	const encoded = encodeURIComponent(overpassQuery);
+	let lastError = null;
+	for (const endpoint of OVERPASS_ENDPOINTS) {
+		try {
+			const resp = await fetch(endpoint + '?data=' + encoded);
+			if (!resp.ok) throw new Error('HTTP ' + resp.status);
+			return await resp.json();
+		} catch (err) { lastError = err; }
+	}
+	throw new Error('All Overpass endpoints failed: ' + (lastError ? lastError.message : 'unknown'));
+}
+
+function buildWaterwaysQuery(lat, lon) {
+	return `[out:json][timeout:30];
+(
+  way["waterway"](around:${SEARCH_RADIUS_M},${lat},${lon});
+  way["natural"="water"](around:${SEARCH_RADIUS_M},${lat},${lon});
+  relation["natural"="water"](around:${SEARCH_RADIUS_M},${lat},${lon});
+);
+out geom;`;
+}
+
+function buildPOIsQuery(lat, lon) {
+	return `[out:json][timeout:30];
+(
+  node["amenity"](around:${SEARCH_RADIUS_M},${lat},${lon});
+  node["shop"](around:${SEARCH_RADIUS_M},${lat},${lon});
+  node["tourism"](around:${SEARCH_RADIUS_M},${lat},${lon});
+  node["historic"](around:${SEARCH_RADIUS_M},${lat},${lon});
+  node["leisure"](around:${SEARCH_RADIUS_M},${lat},${lon});
+  node["natural"="peak"](around:${SEARCH_RADIUS_M},${lat},${lon});
+  node["natural"="spring"](around:${SEARCH_RADIUS_M},${lat},${lon});
+  node["natural"="cave_entrance"](around:${SEARCH_RADIUS_M},${lat},${lon});
+  node["place"](around:${SEARCH_RADIUS_M},${lat},${lon});
+  node["railway"="station"](around:${SEARCH_RADIUS_M},${lat},${lon});
+  way["amenity"="school"](around:${SEARCH_RADIUS_M},${lat},${lon});
+  way["leisure"="park"](around:${SEARCH_RADIUS_M},${lat},${lon});
+  way["leisure"="pitch"](around:${SEARCH_RADIUS_M},${lat},${lon});
+);
+out center;`;
+}
+
+/* ---- FEMA NFHL Query ---- */
+async function queryFEMAFloodZones(lat, lon) {
+	const d = 0.035; /* ~2 miles in degrees */
+	const bbox = `${lon - d},${lat - d},${lon + d},${lat + d}`;
+	/* ESRI Living Atlas USA Flood Hazard Areas — NFHL mirror (not behind FEMA WebSEAL) */
+	const url = `https://services5.arcgis.com/7weheFjxuNkGGiZi/arcgis/rest/services/USA_Flood_Hazard_Areas_view/FeatureServer/0/query?where=1%3D1&geometry=${bbox}&geometryType=esriGeometryEnvelope&inSR=4326&outFields=FLD_ZONE%2CZONE_SUBTY%2CSFHA_TF%2CSTATIC_BFE&returnGeometry=true&outSR=4326&f=geojson`;
+
+	try {
+		const resp = await fetch(url);
+		if (!resp.ok) throw new Error('FEMA query failed');
+		const data = await resp.json();
+		return data.features || [];
+	} catch (err) {
+		console.warn('FEMA NFHL query failed:', err.message);
+		return [];
+	}
+}
+
+/* ---- JSONP helper (bypasses CORS for ArcGIS REST endpoints) ---- */
+function jsonpQuery(url) {
+	return new Promise((resolve, reject) => {
+		const cbName = 'jp_' + Math.random().toString(36).substr(2, 10);
+		const script = document.createElement('script');
+		const timeout = setTimeout(() => {
+			if (script.parentNode) script.parentNode.removeChild(script);
+			delete window[cbName];
+			reject(new Error('JSONP timeout'));
+		}, 20000);
+		window[cbName] = (data) => {
+			clearTimeout(timeout);
+			if (script.parentNode) script.parentNode.removeChild(script);
+			delete window[cbName];
+			resolve(data);
+		};
+		script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cbName;
+		script.onerror = () => {
+			clearTimeout(timeout);
+			if (script.parentNode) script.parentNode.removeChild(script);
+			delete window[cbName];
+			reject(new Error('JSONP load failed'));
+		};
+		document.head.appendChild(script);
+	});
+}
+
+/* ---- USGS WBD (Watershed) Query — direct fetch (CORS supported, no JSONP needed) ---- */
+async function queryUSGSWatershed(lat, lon) {
+	const d = 0.12; /* larger bbox for watersheds — ~13km each direction */
+	/* CRITICAL: commas in bbox MUST be URL-encoded (%2C) or the server fails */
+	const bboxEnc = `${lon - d}%2C${lat - d}%2C${lon + d}%2C${lat + d}`;
+	/* Note: 'areacres' field breaks spatial queries on this server — use name,huc12,hutype only */
+	const url = `https://hydro.nationalmap.gov/arcgis/rest/services/wbd/MapServer/6/query?where=1%3D1&geometry=${bboxEnc}&geometryType=esriGeometryEnvelope&inSR=4326&outFields=name,huc12,hutype&returnGeometry=true&maxAllowableOffset=0.0005&outSR=4326&f=json`;
+
+	try {
+		const resp = await fetch(url);
+		if (!resp.ok) throw new Error('HTTP ' + resp.status);
+		const data = await resp.json();
+		const features = (data.features || []).map(f => {
+			let geom = null;
+			if (f.geometry && f.geometry.rings) {
+				geom = { type: 'Polygon', coordinates: f.geometry.rings };
+			}
+			return { ...f, geometry: geom };
+		}).filter(f => f.geometry);
+		console.log('USGS WBD returned', features.length, 'HUC12 watersheds');
+		return features;
+	} catch (err) {
+		console.error('USGS WBD query failed:', err.message);
+		return [];
+	}
+}
+
+/* ---- Landslide Hazard — terrain-derived slope analysis ---- */
+/* NC OneMap geohazards API lacks CORS headers and has no vector data.
+   Instead, we use the Mapbox terrain DEM to highlight steep slopes (>30deg)
+   as potential landslide hazard terrain. Official NCGS maps: deq.nc.gov/ncgs */
+function setupSlopeHazardLayer() {
+	if (!map.getSource('mapbox-dem')) return;
+	if (map.getLayer('slope-hillshade')) return;
+
+	/* Add a hillshade layer tuned to highlight steep terrain.
+	   Visible on the 3D terrain surface — tilt the map (right-click+drag)
+	   to see steep slopes tinted maroon-red. */
+	map.addLayer({
+		id: 'slope-hillshade',
+		type: 'hillshade',
+		source: 'mapbox-dem',
+		paint: {
+			'hillshade-exaggeration': 0.6,
+			'hillshade-shadow-color': 'rgba(120, 15, 15, 0.95)',
+			'hillshade-highlight-color': 'rgba(255, 255, 255, 0.02)',
+			'hillshade-accent-color': 'rgba(160, 25, 25, 0.7)',
+		},
+		layout: { visibility: 'visible' },
+	}, 'waterway-unnamed'); /* Insert above satellite, below data layers */
+}
+
+async function queryLandslideHazard(lat, lon, stateCode) {
+	/* NCGS geohazards endpoint is no longer available (404).
+	   Terrain slope hillshade (>30deg) is the primary landslide indicator.
+	   For official hazard maps, see your state geological survey. */
+	const note = stateCode === 'NC' || stateCode === 'North Carolina'
+		? 'NCGS hazard data unavailable via API. Terrain slope (>30°) shown as proxy. Official maps: deq.nc.gov/ncgs'
+		: 'Landslide hazard data is state-specific. Terrain slope (>30°) shown as indicator. Check your state geological survey.';
+	return { features: [], note };
+}
+
+/* ---- USGS NWIS Streamgages — real-time streamflow + gage height ---- */
+async function queryUSGSGages(lat, lon) {
+	const d = 0.035; /* ~2 miles */
+	/* Build bbox with URL-safe formatting */
+	const w = (lon - d).toFixed(6), s = (lat - d).toFixed(6), e = (lon + d).toFixed(6), n = (lat + d).toFixed(6);
+	const url = `https://waterservices.usgs.gov/nwis/iv/?format=json&bBox=${w},${s},${e},${n}&parameterCd=00060,00065&siteStatus=all`;
+	console.log('USGS NWIS query URL:', url);
+
+	try {
+		const resp = await fetch(url);
+		console.log('USGS NWIS response status:', resp.status);
+		if (!resp.ok) throw new Error('HTTP ' + resp.status);
+		const data = await resp.json();
+		console.log('USGS NWIS raw data keys:', Object.keys(data));
+		const tsList = (data && data.value && data.value.timeSeries) ? data.value.timeSeries : [];
+		console.log('USGS NWIS timeSeries count:', tsList.length);
+
+		/* Group by site code — each site may have 2 timeSeries (discharge + stage) */
+		const siteMap = {};
+		tsList.forEach((ts, idx) => {
+			const src = ts.sourceInfo;
+			if (!src) { console.log('TS', idx, 'missing sourceInfo'); return; }
+			const scArr = src.siteCode;
+			if (!scArr || !scArr[0]) { console.log('TS', idx, 'missing siteCode'); return; }
+			const siteCode = scArr[0].value;
+			if (!siteCode) return;
+
+			if (!siteMap[siteCode]) {
+				const gl = src.geoLocation;
+				const gg = gl ? gl.geogLocation : null;
+				const sp = src.siteProperty || [];
+				let huc = '';
+				for (let i = 0; i < sp.length; i++) {
+					if (sp[i].name === 'hucCd') { huc = sp[i].value; break; }
+				}
+				siteMap[siteCode] = {
+					siteCode,
+					siteName: src.siteName || '',
+					lat: gg ? gg.latitude : 0,
+					lon: gg ? gg.longitude : 0,
+					huc: huc,
+					discharge: null, dischargeUnit: '', dischargeTime: '', dischargeQual: '',
+					stage: null, stageUnit: '', stageTime: '', stageQual: ''
+				};
+			}
+			const g = siteMap[siteCode];
+			const v = ts.variable;
+			const valsArr = ts.values;
+			if (!valsArr || !valsArr[0]) return;
+			const valObj = valsArr[0].value;
+			if (!valObj || !valObj[0]) return;
+			const val = valObj[0];
+
+			const vcArr = v ? v.variableCode : null;
+			const code = (vcArr && vcArr[0]) ? vcArr[0].value : '';
+			if (code === '00060') {
+				g.discharge = parseFloat(val.value);
+				g.dischargeUnit = (v && v.unit) ? v.unit.unitCode : '';
+				g.dischargeTime = val.dateTime || '';
+				g.dischargeQual = (val.qualifiers && val.qualifiers[0]) ? val.qualifiers[0] : '';
+			} else if (code === '00065') {
+				g.stage = parseFloat(val.value);
+				g.stageUnit = (v && v.unit) ? v.unit.unitCode : '';
+				g.stageTime = val.dateTime || '';
+				g.stageQual = (val.qualifiers && val.qualifiers[0]) ? val.qualifiers[0] : '';
+			}
+		});
+
+		const gages = Object.values(siteMap).filter(function(g) {
+			return typeof g.lat === 'number' && typeof g.lon === 'number' && g.lat !== 0 && g.lon !== 0;
+		});
+		/* Sort by discharge descending (biggest rivers first) */
+		gages.sort(function(a, b) { return (b.discharge || 0) - (a.discharge || 0); });
+		console.log('USGS NWIS returned', gages.length, 'streamgages:', gages.map(function(g) { return g.siteName; }));
+		return gages;
+	} catch (err) {
+		console.error('USGS NWIS query FAILED:', err.message, err.stack);
+		return [];
+	}
+}
+
+/* ---- Haversine ---- */
+function haversine(lat1, lon1, lat2, lon2) {
+	const R = 6371000;
+	const dLat = (lat2 - lat1) * Math.PI / 180;
+	const dLon = (lon2 - lon1) * Math.PI / 180;
+	const a = Math.sin(dLat/2) ** 2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2) ** 2;
+	return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function formatDistance(m) {
+	if (m < 10) return Math.round(m) + ' m';
+	if (m < 1000) return Math.round(m / 10) * 10 + ' m';
+	return (m / 1000).toFixed(2) + ' km';
+}
+
+/* ---- POI Category ---- */
+function poiCategory(tags) {
+	if (tags.amenity) {
+		const map = { school:'School', university:'University', restaurant:'Restaurant', cafe:'Cafe', fast_food:'Fast Food', pub:'Pub', bar:'Bar', place_of_worship:'Place of Worship', hospital:'Hospital', clinic:'Clinic', pharmacy:'Pharmacy', bank:'Bank', post_office:'Post Office', library:'Library', townhall:'Town Hall', police:'Police', fire_station:'Fire Station', parking:'Parking', fuel:'Fuel Station', community_centre:'Community Center', marketplace:'Market', grave_yard:'Cemetery' };
+		if (map[tags.amenity]) return map[tags.amenity];
+		return tags.amenity.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+	}
+	if (tags.shop) return 'Shop: ' + tags.shop.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+	if (tags.tourism) {
+		const tmap = { attraction:'Attraction', museum:'Museum', viewpoint:'Viewpoint', hotel:'Hotel', camp_site:'Campground', picnic_site:'Picnic Area', artwork:'Artwork' };
+		if (tmap[tags.tourism]) return tmap[tags.tourism];
+		return 'Tourism: ' + tags.tourism;
+	}
+	if (tags.historic) {
+		const hmap = { monument:'Monument', memorial:'Memorial', castle:'Castle', ruins:'Ruins', archaeological_site:'Archaeological Site' };
+		if (hmap[tags.historic]) return hmap[tags.historic];
+		return 'Historic: ' + tags.historic;
+	}
+	if (tags.leisure) {
+		const lmap = { park:'Park', pitch:'Sports Field', playground:'Playground', garden:'Garden', sports_centre:'Sports Center', nature_reserve:'Nature Reserve' };
+		if (lmap[tags.leisure]) return lmap[tags.leisure];
+		return tags.leisure.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+	}
+	if (tags.natural === 'peak') return 'Peak';
+	if (tags.natural === 'spring') return 'Spring';
+	if (tags.place) return 'Place: ' + (tags.place || '');
+	if (tags.railway === 'station') return 'Train Station';
+	return 'Feature';
+}
+
+function poiColor(tags) {
+	if (tags.amenity === 'school' || tags.amenity === 'library') return '#7b1fa2';
+	if (tags.amenity === 'place_of_worship') return '#5d4037';
+	if (tags.amenity === 'hospital' || tags.amenity === 'clinic') return '#c62828';
+	if (tags.tourism) return '#2e7d32';
+	if (tags.historic) return '#bf360c';
+	if (tags.leisure === 'park' || tags.leisure === 'nature_reserve') return '#2e7d32';
+	if (tags.leisure) return '#f57c00';
+	if (tags.shop) return '#e65100';
+	if (tags.place) return '#4527a0';
+	return '#b88842';
+}
+
+/* ---- Process Overpass waterways ---- */
+function processWaterways(data) {
+	const named = [], unnamed = [], waterBodies = [];
+	data.elements.forEach(el => {
+		const tags = el.tags || {};
+		if (el.type === 'way') {
+			if (tags.waterway) {
+				const seg = { id: el.id, name: tags.name || null, type: tags.waterway, coords: el.geometry.map(p => [p.lat, p.lon]) };
+				if (seg.name) named.push(seg); else unnamed.push(seg);
+			} else if (tags.natural === 'water' || tags.water) {
+				waterBodies.push({ id: el.id, name: tags.name || null, waterType: tags.water || 'water', coords: el.geometry.map(p => [p.lat, p.lon]) });
+			}
+		} else if (el.type === 'relation') {
+			if ((tags.natural === 'water') && el.geometry && el.geometry.length > 0) {
+				waterBodies.push({ id: el.id, name: tags.name || null, waterType: tags.water || 'water', coords: el.geometry.map(p => [p.lat, p.lon]) });
+			}
+		}
+	});
+
+	function distToFeature(feature) {
+		let minDist = Infinity;
+		feature.coords.forEach(([lat, lng]) => { const d = haversine(searchPoint[0], searchPoint[1], lat, lng); if (d < minDist) minDist = d; });
+		return minDist;
+	}
+	named.forEach(f => { f.distance = distToFeature(f); });
+	unnamed.forEach(f => { f.distance = distToFeature(f); });
+	waterBodies.forEach(f => { if (f.coords) f.distance = distToFeature(f); else f.distance = null; });
+	named.sort((a, b) => a.distance - b.distance);
+	unnamed.sort((a, b) => a.distance - b.distance);
+	return { named, unnamed, waterBodies };
+}
+
+function processPOIs(data) {
+	const pois = [];
+	const seen = new Set();
+	data.elements.forEach(el => {
+		const tags = el.tags || {};
+		const lat = el.type === 'node' ? el.lat : el.center.lat;
+		const lon = el.type === 'node' ? el.lon : el.center.lon;
+		const key = (tags.name || '') + '|' + lat.toFixed(5) + ',' + lon.toFixed(5);
+		if (seen.has(key)) return;
+		seen.add(key);
+		const name = tags.name || null;
+		const cat = poiCategory(tags);
+		if (!name && ['Bench', 'Parking', 'Restroom', 'Waste Disposal', 'Recycling', 'Shelter', 'ATM'].includes(cat)) return;
+		pois.push({ id: el.id, name: name || 'Unnamed ' + cat, category: cat, lat, lon, distance: haversine(searchPoint[0], searchPoint[1], lat, lon), color: poiColor(tags) });
+	});
+	pois.sort((a, b) => a.distance - b.distance);
+	return pois;
+}
+
+/* ---- Process FEMA flood zones ---- */
+function processFloodZones(features) {
+	return features.map(f => {
+		const p = f.properties || {};
+		return {
+			zone: p.FLD_ZONE || 'Unknown',
+			subtype: p.ZONE_SUBTY || '',
+			floodway: p.FLOODWAY || '',
+			sfha: p.SFHA_TF || '',
+			bfe: p.STATIC_BFE || null,
+			geometry: f.geometry
+		};
+	});
+}
+
+/* ---- Process HUC12 watersheds ---- */
+function processHUC12(features) {
+	return features.map(f => {
+		/* f=json format: attributes; f=geojson format: properties. Handle both. */
+		const p = f.attributes || f.properties || {};
+		return {
+			name: p.name || 'Unnamed',
+			huc12: p.huc12 || '',
+			type: p.hutype || '',
+			acres: p.areaacres || null,
+			geometry: f.geometry
+		};
+	});
+}
+
+/* ---- Map rendering ---- */
+let waybackLayerInsertPos = null; /* Layer ID to insert wayback before */
+
+function clearMapDataLayers() {
+	const layersToRemove = [
+		'waterway-named', 'waterway-unnamed', 'closest-highlight',
+		'waterbody-fill', 'waterbody-outline',
+		'flood-100-fill', 'flood-100-line',
+		'flood-500-fill', 'flood-500-line',
+		'flood-A-fill', 'flood-A-line',
+		'flood-V-fill', 'flood-V-line',
+		'watershed-fill', 'watershed-line',
+		'landslide-fill', 'landslide-line',
+		'gage-circle', 'gage-label',
+		'poi-circle', 'radius-circle',
+		'search-marker-layer'
+	];
+	layersToRemove.forEach(id => { try { if (map.getLayer(id)) map.removeLayer(id); } catch(e) {} });
+
+	const sourcesToRemove = [
+		'waterway-named-src', 'waterway-unnamed-src', 'closest-src',
+		'waterbody-src', 'flood-100-src', 'flood-500-src',
+		'flood-A-src', 'flood-V-src', 'watershed-src',
+		'landslide-src', 'gage-src', 'poi-src', 'radius-src', 'search-marker-src'
+	];
+	sourcesToRemove.forEach(id => { try { if (map.getSource(id)) map.removeSource(id); } catch(e) {} });
+}
+
+function ensureSourcesAndLayers() {
+	/* Add empty placeholder sources so layers can reference them before data arrives */
+	const defs = [
+		{ src: 'waterway-named-src', layer: 'waterway-named', type: 'line', paint: { 'line-color': '#1565c0', 'line-width': 3, 'line-opacity': 0.9 }, geomType: 'LineString' },
+		{ src: 'waterway-unnamed-src', layer: 'waterway-unnamed', type: 'line', paint: { 'line-color': '#42a5f5', 'line-width': 2, 'line-opacity': 0.75 }, geomType: 'LineString' },
+		{ src: 'closest-src', layer: 'closest-highlight', type: 'line', paint: { 'line-color': '#d84315', 'line-width': 4, 'line-opacity': 1 }, geomType: 'LineString' },
+		{ src: 'waterbody-src', layer: 'waterbody-fill', type: 'fill', paint: { 'fill-color': '#1565c0', 'fill-opacity': 0.3 }, geomType: 'Polygon' },
+		{ src: 'waterbody-src', layer: 'waterbody-outline', type: 'line', paint: { 'line-color': '#0d47a1', 'line-width': 1.5, 'line-opacity': 0.7 }, geomType: 'Polygon' },
+		{ src: 'flood-100-src', layer: 'flood-100-fill', type: 'fill', paint: { 'fill-color': '#e6a020', 'fill-opacity': 0.35 }, geomType: 'Polygon' },
+		{ src: 'flood-100-src', layer: 'flood-100-line', type: 'line', paint: { 'line-color': '#e6a020', 'line-width': 2, 'line-opacity': 0.7, 'line-dasharray': [4, 3] }, geomType: 'Polygon' },
+		{ src: 'flood-500-src', layer: 'flood-500-fill', type: 'fill', paint: { 'fill-color': '#c0392b', 'fill-opacity': 0.25 }, geomType: 'Polygon' },
+		{ src: 'flood-500-src', layer: 'flood-500-line', type: 'line', paint: { 'line-color': '#c0392b', 'line-width': 1.8, 'line-opacity': 0.6, 'line-dasharray': [1, 4] }, geomType: 'Polygon' },
+		{ src: 'watershed-src', layer: 'watershed-fill', type: 'fill', paint: { 'fill-color': '#2e7d32', 'fill-opacity': 0 }, geomType: 'Polygon' },
+		{ src: 'watershed-src', layer: 'watershed-line', type: 'line', paint: { 'line-color': '#1b5e20', 'line-width': 4.5, 'line-opacity': 0.9, 'line-dasharray': [12, 6] }, geomType: 'Polygon' },
+		{ src: 'landslide-src', layer: 'landslide-fill', type: 'fill', paint: { 'fill-color': '#8b1a1a', 'fill-opacity': 0.22 }, geomType: 'Polygon' },
+		{ src: 'landslide-src', layer: 'landslide-line', type: 'line', paint: { 'line-color': '#8b1a1a', 'line-width': 1.5, 'line-opacity': 0.6, 'line-dasharray': [2, 5] }, geomType: 'Polygon' },
+	];
+
+	/* Gage source + circle layer */
+	if (!map.getSource('gage-src')) {
+		map.addSource('gage-src', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+	}
+	if (!map.getLayer('gage-circle')) {
+		map.addLayer({
+			id: 'gage-circle', type: 'circle', source: 'gage-src',
+			paint: {
+				'circle-radius': ['interpolate', ['linear'], ['zoom'],
+					10, 3, 14, 8, 18, 14
+				],
+				'circle-color': '#0277bd',
+				'circle-opacity': 0.85,
+				'circle-stroke-color': '#ffffff',
+				'circle-stroke-width': 2,
+				'circle-stroke-opacity': 0.9
+			},
+			layout: { visibility: 'visible' }
+		});
+	}
+
+	defs.forEach(d => {
+		if (!map.getSource(d.src)) {
+			let emptyGeom;
+			if (d.geomType === 'LineString') emptyGeom = { type: 'FeatureCollection', features: [] };
+			else emptyGeom = { type: 'FeatureCollection', features: [] };
+			map.addSource(d.src, { type: 'geojson', data: emptyGeom });
+		}
+		if (!map.getLayer(d.layer)) {
+			map.addLayer({ id: d.layer, type: d.type, source: d.src, paint: d.paint, layout: { visibility: 'visible' } });
+		}
+	});
+
+	/* POI layer */
+	if (!map.getSource('poi-src')) {
+		map.addSource('poi-src', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+	}
+	if (!map.getLayer('poi-circle')) {
+		map.addLayer({
+			id: 'poi-circle',
+			type: 'circle',
+			source: 'poi-src',
+			paint: {
+				'circle-radius': 5,
+				'circle-color': ['get', 'color'],
+				'circle-stroke-color': '#fff',
+				'circle-stroke-width': 1.5,
+			},
+			layout: { visibility: 'none' }
+		});
+	}
+
+	/* Radius circle */
+	if (!map.getSource('radius-src')) {
+		map.addSource('radius-src', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+	}
+	if (!map.getLayer('radius-circle')) {
+		map.addLayer({
+			id: 'radius-circle',
+			type: 'line',
+			source: 'radius-src',
+			paint: { 'line-color': '#9e9e9e', 'line-width': 1.5, 'line-opacity': 0.5, 'line-dasharray': [8, 6] },
+			layout: { visibility: 'visible' }
+		});
+	}
+
+	/* Search marker */
+	if (!map.getSource('search-marker-src')) {
+		map.addSource('search-marker-src', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+	}
+	if (!map.getLayer('search-marker-layer')) {
+		map.addLayer({
+			id: 'search-marker-layer',
+			type: 'circle',
+			source: 'search-marker-src',
+			paint: {
+				'circle-radius': 9,
+				'circle-color': '#d84315',
+				'circle-stroke-color': '#fff',
+				'circle-stroke-width': 3,
+			},
+			layout: { visibility: 'visible' }
+		});
+	}
+}
+
+function renderOnMap(named, unnamed, waterBodies, pois, floodZones, huc12, landslideFeatures, gageData) {
+	ensureSourcesAndLayers();
+
+	/* Waterways named */
+	const namedFC = { type: 'FeatureCollection', features: named.map(w => ({
+		type: 'Feature', properties: { id: w.id, name: w.name, type: w.type, distance: w.distance },
+		geometry: { type: 'LineString', coordinates: w.coords.map(c => [c[1], c[0]]) }
+	})) };
+	map.getSource('waterway-named-src').setData(namedFC);
+
+	/* Waterways unnamed */
+	const unnamedFC = { type: 'FeatureCollection', features: unnamed.map(w => ({
+		type: 'Feature', properties: { id: w.id, name: w.name || 'Unnamed', type: w.type, distance: w.distance },
+		geometry: { type: 'LineString', coordinates: w.coords.map(c => [c[1], c[0]]) }
+	})) };
+	map.getSource('waterway-unnamed-src').setData(unnamedFC);
+
+	/* Closest waterway highlight */
+	const allWaterways = [...named, ...unnamed].filter(w => w.distance != null).sort((a, b) => a.distance - b.distance);
+	const closest = allWaterways[0];
+	const closestFC = { type: 'FeatureCollection', features: closest ? [{
+		type: 'Feature', properties: { id: closest.id, name: closest.name || 'Unnamed', type: closest.type, distance: closest.distance },
+		geometry: { type: 'LineString', coordinates: closest.coords.map(c => [c[1], c[0]]) }
+	}] : [] };
+	map.getSource('closest-src').setData(closestFC);
+
+	/* Water bodies */
+	const wbFC = { type: 'FeatureCollection', features: waterBodies.filter(wb => wb.coords).map(wb => ({
+		type: 'Feature', properties: { id: wb.id, name: wb.name || 'Unnamed Water Body' },
+		geometry: { type: 'Polygon', coordinates: [wb.coords.map(c => [c[1], c[0]])] }
+	})) };
+	map.getSource('waterbody-src').setData(wbFC);
+
+	/* POIs */
+	const poiFC = { type: 'FeatureCollection', features: pois.slice(0, 200).map(p => ({
+		type: 'Feature', properties: { name: p.name, category: p.category, distance: p.distance, color: p.color },
+		geometry: { type: 'Point', coordinates: [p.lon, p.lat] }
+	})) };
+	map.getSource('poi-src').setData(poiFC);
+
+	/* Radius circle */
+	const radiusFC = { type: 'FeatureCollection', features: [{
+		type: 'Feature',
+		properties: { radius_m: SEARCH_RADIUS_M },
+		geometry: circleGeoJSON(searchPoint[1], searchPoint[0], SEARCH_RADIUS_M)
+	}] };
+	map.getSource('radius-src').setData(radiusFC);
+
+	/* Search marker */
+	const markerFC = { type: 'FeatureCollection', features: [{
+		type: 'Feature', properties: { title: 'Search Location' },
+		geometry: { type: 'Point', coordinates: [searchPoint[1], searchPoint[0]] }
+	}] };
+	map.getSource('search-marker-src').setData(markerFC);
+
+	/* FEMA Flood Zones — split by zone type */
+	const zone100 = floodZones.filter(z => ['A', 'AE', 'AH', 'AO'].includes(z.zone));
+	const zone500 = floodZones.filter(z => z.zone === 'X' && z.sfha === 'T');
+	const zoneV   = floodZones.filter(z => ['V', 'VE'].includes(z.zone));
+
+	const toFC = (zones) => ({ type: 'FeatureCollection', features: zones.filter(z => z.geometry).map(z => ({
+		type: 'Feature', properties: { zone: z.zone, subtype: z.subtype, bfe: z.bfe },
+		geometry: z.geometry
+	})) });
+
+	if (map.getSource('flood-100-src')) map.getSource('flood-100-src').setData(toFC(zone100));
+	if (map.getSource('flood-500-src')) map.getSource('flood-500-src').setData(toFC(zone500));
+
+	/* Coastal high-hazard zones (separate style) */
+	if (!map.getSource('flood-V-src')) {
+		map.addSource('flood-V-src', { type: 'geojson', data: toFC(zoneV) });
+	} else {
+		map.getSource('flood-V-src').setData(toFC(zoneV));
+	}
+	if (!map.getLayer('flood-V-fill') && zoneV.length > 0) {
+		map.addLayer({ id: 'flood-V-fill', type: 'fill', source: 'flood-V-src', paint: { 'fill-color': '#d84315', 'fill-opacity': 0.3 } });
+		map.addLayer({ id: 'flood-V-line', type: 'line', source: 'flood-V-src', paint: { 'line-color': '#d84315', 'line-width': 1.8, 'line-opacity': 0.6 } });
+	}
+
+	/* HUC12 Watersheds */
+	console.log('Rendering', huc12.length, 'HUC12 watersheds');
+	if (huc12.length > 0) {
+		const wsFC = { type: 'FeatureCollection', features: huc12.filter(h => h.geometry).map(h => ({
+			type: 'Feature', properties: { name: h.name, huc12: h.huc12, acres: h.acres },
+			geometry: h.geometry
+		})) };
+		console.log('Watershed FC features:', wsFC.features.length);
+		if (map.getSource('watershed-src')) {
+			map.getSource('watershed-src').setData(wsFC);
+			map.setLayoutProperty('watershed-line', 'visibility', 'visible');
+			map.setLayoutProperty('watershed-fill', 'visibility', 'visible');
+		}
+	} else {
+		console.log('No HUC12 watersheds to render');
+		if (map.getSource('watershed-src')) {
+			map.getSource('watershed-src').setData({ type: 'FeatureCollection', features: [] });
+		}
+	}
+
+	/* Landslide hazard */
+	if (landslideFeatures && landslideFeatures.length > 0) {
+		const lsFC = { type: 'FeatureCollection', features: landslideFeatures.filter(f => f.geometry).map(f => ({
+			type: 'Feature', properties: f.properties || {},
+			geometry: f.geometry
+		})) };
+		map.getSource('landslide-src').setData(lsFC);
+		map.setLayoutProperty('landslide-fill', 'visibility', 'visible');
+		map.setLayoutProperty('landslide-line', 'visibility', 'visible');
+	} else {
+		map.getSource('landslide-src').setData({ type: 'FeatureCollection', features: [] });
+		map.setLayoutProperty('landslide-fill', 'visibility', 'none');
+		map.setLayoutProperty('landslide-line', 'visibility', 'none');
+	}
+
+	/* USGS Streamgages */
+	const gages = gageData || allResults?.gages || [];
+	if (gages.length > 0) {
+		const gageFC = { type: 'FeatureCollection', features: gages.map(g => ({
+			type: 'Feature',
+			properties: {
+				siteCode: g.siteCode, siteName: g.siteName,
+				discharge: g.discharge, dischargeUnit: g.dischargeUnit,
+				stage: g.stage, stageUnit: g.stageUnit,
+				dischargeTime: g.dischargeTime, huc: g.huc
+			},
+			geometry: { type: 'Point', coordinates: [g.lon, g.lat] }
+		})) };
+		if (map.getSource('gage-src')) {
+			map.getSource('gage-src').setData(gageFC);
+			map.setLayoutProperty('gage-circle', 'visibility', 'visible');
+		}
+	} else {
+		if (map.getSource('gage-src')) {
+			map.getSource('gage-src').setData({ type: 'FeatureCollection', features: [] });
+		}
+	}
+}
+
+/* Circle polygon helper */
+function circleGeoJSON(centerLng, centerLat, radiusM) {
+	const points = 64;
+	const coords = [];
+	for (let i = 0; i <= points; i++) {
+		const angle = (i / points) * 2 * Math.PI;
+		const lat = centerLat + (radiusM / 111320) * Math.cos(angle);
+		const lng = centerLng + (radiusM / (111320 * Math.cos(centerLat * Math.PI / 180))) * Math.sin(angle);
+		coords.push([lng, lat]);
+	}
+	coords.push(coords[0]);
+	return { type: 'Polygon', coordinates: [coords] };
+}
+
+/* ---- UI Update ---- */
+function updateUI(named, unnamed, waterBodies, pois, floodZones, huc12, landslideCount, locationName) {
+	const infoRow = document.getElementById('infoRow');
+	infoRow.classList.remove('hidden');
+
+	/* Closest waterway */
+	const allSorted = [...named, ...unnamed].filter(w => w.distance != null).sort((a, b) => a.distance - b.distance);
+	const closestWaterway = allSorted[0];
+	const cardClosest = document.getElementById('cardClosest');
+	if (closestWaterway) {
+		cardClosest.querySelector('.val').textContent = closestWaterway.name || 'Unnamed ' + (closestWaterway.type || 'stream');
+		cardClosest.querySelector('.note').textContent = formatDistance(closestWaterway.distance) + ' from search point · OSM Way ' + closestWaterway.id;
+	} else {
+		cardClosest.querySelector('.val').textContent = 'None found';
+		cardClosest.querySelector('.note').textContent = 'No waterways within 2-mile radius';
+	}
+
+	document.getElementById('cardWaterways').querySelector('.val').textContent = named.length + unnamed.length;
+	document.getElementById('cardWaterways').querySelector('.note').textContent = named.length + ' named, ' + unnamed.length + ' unnamed';
+
+	document.getElementById('cardFlood').querySelector('.val').textContent = floodZones.length;
+	document.getElementById('cardFlood').querySelector('.note').textContent = floodZones.length > 0 ? 'FEMA flood hazard zones found' : 'No FEMA flood zones in area';
+
+	const huc12Names = huc12.map(h => h.name).filter(Boolean);
+	document.getElementById('cardWatershed').querySelector('.val').textContent = huc12.length > 0 ? (huc12Names[0] || 'HUC12 ' + huc12[0]?.huc12) : '—';
+	document.getElementById('cardWatershed').querySelector('.note').textContent = huc12.length > 0 ? 'USGS WBD subwatershed' : 'No HUC12 data available';
+
+	document.getElementById('cardLandslide').querySelector('.val').textContent = landslideCount > 0 ? landslideCount + ' zones' : 'See state GS';
+	document.getElementById('cardLandslide').querySelector('.note').textContent = landslideCount > 0 ? 'NCGS landslide hazard areas' : 'Check state geological survey';
+
+	/* Gages */
+	const gages = allResults?.gages || [];
+	document.getElementById('cardGages').querySelector('.val').textContent = gages.length > 0 ? gages.length + ' active' : '—';
+	const biggestGage = gages[0];
+	document.getElementById('cardGages').querySelector('.note').textContent = biggestGage
+		? `${biggestGage.siteName}: ${biggestGage.discharge || '—'} ${biggestGage.dischargeUnit || ''}`
+		: 'Real-time streamflow monitoring stations';
+
+	/* Stats row */
+	const statRow = document.getElementById('statRow');
+	statRow.classList.remove('hidden');
+	document.getElementById('statRivers').textContent = named.filter(w => w.type === 'river').length;
+	document.getElementById('statStreams').textContent = unnamed.length + named.filter(w => w.type !== 'river').length;
+	document.getElementById('statWaterBodies').textContent = waterBodies.length;
+	document.getElementById('statFloodZones').textContent = floodZones.length;
+	document.getElementById('statPOIs').textContent = Math.min(pois.length, 200);
+	document.getElementById('statHUC12').textContent = huc12.length > 0 ? huc12[0]?.huc12 || '—' : '—';
+	document.getElementById('statGages').textContent = gages.length;
+
+	/* Map description */
+	document.getElementById('mapDescription').textContent = locationName
+		? `Showing waterways, FEMA flood zones, USGS watershed boundaries, landslide hazard areas, and points of interest within 2 miles of ${locationName}. Use year buttons for historical imagery. Tilt/rotate for 3D terrain.`
+		: 'Showing results within approximately 2 miles (3.2 km). Tilt/rotate for 3D terrain.';
+
+	document.getElementById('mapCaption').textContent = locationName
+		? `Search: ${locationName} · ${searchPoint[0].toFixed(4)}° N, ${Math.abs(searchPoint[1]).toFixed(4)}° ${searchPoint[1] < 0 ? 'W' : 'E'} · Satellite basemap`
+		: `Search: ${searchPoint[0].toFixed(4)}° N, ${Math.abs(searchPoint[1]).toFixed(4)}° ${searchPoint[1] < 0 ? 'W' : 'E'}`;
+
+	/* Tab 2 tables */
+	buildStreamTable(named, unnamed);
+	buildFloodTable(floodZones);
+	buildPOIGrid(pois);
+
+	/* Show toggle panel */
+	const tp = document.getElementById('togglePanel');
+	if (tp) tp.style.display = 'block';
+	if (!window._togglesSetup) { setupLayerToggles(); window._togglesSetup = true; }
+
+	document.getElementById('noWaterways').classList.toggle('hidden', (named.length + unnamed.length) > 0);
+	document.getElementById('noFloodZones').classList.toggle('hidden', floodZones.length > 0);
+	document.getElementById('noPOI').classList.toggle('hidden', pois.length > 0);
+}
+
+function buildStreamTable(named, unnamed) {
+	const all = [...named.map(w => ({...w, isNamed: true})), ...unnamed.map(w => ({...w, isNamed: false}))]
+		.sort((a, b) => (a.distance || Infinity) - (b.distance || Infinity));
+	if (all.length === 0) { document.getElementById('streamTableWrap').innerHTML = ''; return; }
+
+	let html = `<table class="stream-table"><thead><tr><th>Waterway</th><th>OSM ID</th><th>Type</th><th>Distance</th><th>Notes</th></tr></thead><tbody>`;
+	all.forEach((w, i) => {
+		const isClosest = i === 0;
+		const rowClass = isClosest ? ' closest' : '';
+		const tagHtml = isClosest ? ' <span class="tag-alert">CLOSEST</span>' : (w.isNamed ? ' <span class="tag-water">NAMED</span>' : '');
+		html += `<tr class="${rowClass}"><td><strong>${w.name || 'Unnamed ' + (w.type || 'waterway')}</strong>${tagHtml}</td><td class="mono">${w.id}</td><td>${w.type}</td><td>${w.distance != null ? formatDistance(w.distance) : '—'}</td><td>${w.name ? w.type + ' watercourse' : 'Local drainage network'}</td></tr>`;
+	});
+	html += '</tbody></table>';
+	document.getElementById('streamTableWrap').innerHTML = html;
+}
+
+function buildFloodTable(floodZones) {
+	if (floodZones.length === 0) { document.getElementById('floodTableWrap').innerHTML = ''; return; }
+	/* Group by zone type */
+	const groups = {};
+	floodZones.forEach(z => {
+		const key = z.zone;
+		if (!groups[key]) groups[key] = [];
+		groups[key].push(z);
+	});
+
+	let html = `<table class="flood-table"><thead><tr><th>Zone</th><th>Classification</th><th>Count</th><th>BFE (ft)</th><th>Description</th></tr></thead><tbody>`;
+	const zoneLabels = {
+		'A': '100-year (no BFE determined)', 'AE': '100-year (BFE determined)', 'AH': '100-year (shallow ponding)',
+		'AO': '100-year (sheet flow)', 'VE': 'Coastal high-hazard', 'V': 'Coastal high-hazard',
+		'X': '500-year or minimal hazard'
+	};
+	const zoneClasses = { 'A': 'zone-A', 'AE': 'zone-AE', 'AH': 'zone-A', 'AO': 'zone-A', 'VE': 'zone-V', 'V': 'zone-V' };
+	Object.entries(groups).forEach(([zone, zones]) => {
+		const bfeValues = zones.map(z => z.bfe).filter(Boolean);
+		const bfeStr = bfeValues.length > 0 ? (Math.min(...bfeValues) === Math.max(...bfeValues) ? Math.min(...bfeValues) : Math.min(...bfeValues) + '–' + Math.max(...bfeValues)) : '—';
+		html += `<tr><td class="${zoneClasses[zone] || ''}"><strong>Zone ${zone}</strong></td><td>${zoneLabels[zone] || zone}</td><td>${zones.length}</td><td>${bfeStr}</td><td>${zones[0].floodway === 'T' ? 'Includes floodway' : ''}</td></tr>`;
+	});
+	html += '</tbody></table>';
+	document.getElementById('floodTableWrap').innerHTML = html;
+}
+
+function buildPOIGrid(pois) {
+	const grid = document.getElementById('poiGrid');
+	grid.innerHTML = '';
+	grid.classList.toggle('hidden', pois.length === 0);
+	pois.slice(0, 200).forEach(poi => {
+		const card = document.createElement('div');
+		card.className = 'poi-card';
+		card.innerHTML = `<div style="display:flex;align-items:flex-start;gap:0.5rem;">
+			<div style="width:8px;height:8px;background:${poi.color};border-radius:50%;flex-shrink:0;margin-top:5px;"></div>
+			<div><div class="poi-name">${poi.name}</div><div class="poi-cat">${poi.category}</div>
+			<div class="poi-dist">${formatDistance(poi.distance)}</div>
+			<div class="poi-coords">${poi.lat.toFixed(5)}, ${poi.lon.toFixed(5)}</div></div></div>`;
+		grid.appendChild(card);
+	});
+}
+
+/* ---- Apply slope hillshade opacity (shared by slider + year switcher) ---- */
+function applyHillshadeOpacity(alpha) {
+	try {
+		if (map.getLayer('slope-hillshade')) {
+			map.setPaintProperty('slope-hillshade', 'hillshade-shadow-color',
+				`rgba(120, 15, 15, ${(0.95 * alpha).toFixed(2)})`);
+			map.setPaintProperty('slope-hillshade', 'hillshade-accent-color',
+				`rgba(160, 25, 25, ${(0.7 * alpha).toFixed(2)})`);
+		}
+	} catch(e) {}
+}
+
+/* ---- Year switcher (Wayback via Mapbox raster source) ---- */
+function setupYearSwitcher() {
+	function switchWaybackYear(rid, opacity) {
+		/* Remove old wayback layer + source */
+		if (activeWaybackLayerId) {
+			try { map.removeLayer(activeWaybackLayerId); } catch(e) {}
+			activeWaybackLayerId = null;
+		}
+		try { if (map.getSource(activeWaybackSourceId)) map.removeSource(activeWaybackSourceId); } catch(e) {}
+
+		if (rid === 'current') {
+			/* Show satellite basemap */
+			const style = map.getStyle();
+			if (style && style.layers) {
+				style.layers.forEach(l => {
+					if (l.id === 'satellite' || (l.source && l.source.includes && l.source.includes('satellite'))) {
+						try { map.setLayoutProperty(l.id, 'visibility', 'visible'); } catch(e) {}
+					}
+				});
+			}
+			satShown = true;
+			/* Hillshade follows slider when no imagery overlay */
+			applyHillshadeOpacity(parseInt(document.getElementById('opacitySlider').value, 10) / 100);
+			return;
+		}
+
+		/* Add Esri Wayback as raster source */
+		satShown = false;
+		map.addSource(activeWaybackSourceId, {
+			type: 'raster',
+			tiles: [WAYBACK_URL.replace('{rid}', rid)],
+			tileSize: 256,
+			attribution: 'Esri World Imagery Wayback · NAIP · USDA APFO · &copy; Esri',
+		});
+
+		/* Find a good insertion point — below flood/watershed layers, above terrain */
+		activeWaybackLayerId = 'wayback-raster-layer';
+		map.addLayer({
+			id: activeWaybackLayerId,
+			type: 'raster',
+			source: activeWaybackSourceId,
+			paint: { 'raster-opacity': opacity, 'raster-fade-duration': 300 },
+		}, 'waterway-unnamed'); /* Insert before the first data layer */
+	}
+
+	document.querySelectorAll('.year-btn').forEach(btn => {
+		btn.addEventListener('click', () => {
+			document.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
+			btn.classList.add('active');
+			const rid = btn.dataset.rid;
+			const note = btn.dataset.note;
+			const opacity = parseInt(document.getElementById('opacitySlider').value, 10) / 100;
+			document.getElementById('yearNote').textContent = note;
+			switchWaybackYear(rid, opacity);
+			/* Hillshade tracks slider when imagery overlay is active */
+			applyHillshadeOpacity(parseInt(document.getElementById('opacitySlider').value, 10) / 100);
+		});
+	});
+
+	document.getElementById('opacitySlider').addEventListener('input', function() {
+		const pct = parseInt(this.value, 10);
+		document.getElementById('opacityVal').textContent = pct + '%';
+		waybackOpacity = pct / 100;
+		if (activeWaybackLayerId) {
+			try { map.setPaintProperty(activeWaybackLayerId, 'raster-opacity', waybackOpacity); } catch(e) {}
+		}
+		/* Also control slope hillshade intensity via shadow/accent alpha */
+		applyHillshadeOpacity(pct / 100);
+	});
+}
+
+/* ---- Main search ---- */
+async function performSearch(lat, lon, locationName) {
+	searchPoint = [lat, lon];
+	showStatus('loading', 'Querying OSM, FEMA, and USGS data within 2 miles...');
+
+	try {
+		/* Determine state for landslide data */
+		let stateCode = '';
+		try {
+			const rev = await reverseGeocode(lat, lon);
+			if (rev && rev.address) {
+				stateCode = rev.address.state || '';
+			}
+		} catch(e) {}
+
+		/* Fire main queries in parallel */
+		const [waterData, femaFeatures, huc12Features, landslideResult] = await Promise.all([
+			queryOverpass(buildWaterwaysQuery(lat, lon)),
+			queryFEMAFloodZones(lat, lon),
+			queryUSGSWatershed(lat, lon),
+			queryLandslideHazard(lat, lon, stateCode)
+		]);
+
+		const { named, unnamed, waterBodies } = processWaterways(waterData);
+		const floodZones = processFloodZones(femaFeatures);
+		const huc12 = processHUC12(huc12Features);
+		const landslideFeatures = landslideResult.features || [];
+		const pois = allResults?.pois || []; /* Keep any previously loaded POIs */
+
+		/* Update map */
+		map.setCenter([lon, lat]);
+		map.setZoom(Math.max(map.getZoom(), 13.5));
+		map.setPitch(55);
+
+		allResults = { named, unnamed, waterBodies, pois, floodZones, huc12, landslideFeatures, gages: [] };
+		renderOnMap(named, unnamed, waterBodies, pois, floodZones, huc12, landslideFeatures, []);
+		updateUI(named, unnamed, waterBodies, pois, floodZones, huc12, landslideFeatures.length, locationName);
+
+		/* Fire gage query separately (runs async after main data renders) */
+		queryUSGSGages(lat, lon).then(function(gageData) {
+			console.log('Gages resolved:', gageData.length);
+			allResults.gages = gageData;
+			renderGages(gageData);
+			updateGageUI(gageData);
+			/* Update status banner with gage count */
+			var gages = gageData || [];
+			var gageEl = document.getElementById('statusGages');
+			if (gageEl) {
+				gageEl.textContent = ', ' + gages.length + ' streamgage' + (gages.length !== 1 ? 's' : '') + ' within 2 miles.';
+			}
+		}).catch(function(err) {
+			console.error('Gage query failed:', err.message);
+			var gageEl = document.getElementById('statusGages');
+			if (gageEl) gageEl.textContent = ', streamgages unavailable.';
+		});
+
+		const total = named.length + unnamed.length;
+		const landslideNote = landslideResult.note ? ' · ' + landslideResult.note : '';
+
+		showStatus('info',
+			`Found ${total} waterway${total !== 1 ? 's' : ''}, ${floodZones.length} FEMA flood zone${floodZones.length !== 1 ? 's' : ''}, ${huc12.length} watershed${huc12.length !== 1 ? 's' : ''}, ${landslideFeatures.length} landslide zone${landslideFeatures.length !== 1 ? 's' : ''} within 2 miles. Click 📌 Load POIs for points of interest.${landslideNote}`
+		);
+		/* Start gage status placeholder */
+		var gageEl = document.getElementById('statusGages');
+		if (gageEl) gageEl.textContent = ', loading streamgages...';
+
+		/* Update URL */
+		const url = new URL(window.location);
+		url.searchParams.set('lat', lat.toFixed(6));
+		url.searchParams.set('lon', lon.toFixed(6));
+		if (locationName) url.searchParams.set('name', locationName);
+		window.history.replaceState({}, '', url);
+
+	} catch (err) {
+		console.error(err);
+		const isFileProtocol = window.location.protocol === 'file:';
+		const hint = isFileProtocol
+			? ' Running from file:// blocks API requests. Start a local server: python -m http.server 8000 --directory Reports/'
+			: ' Check your internet connection.';
+		showStatus('error', 'Query failed: ' + err.message + '.' + hint);
+	}
+}
+
+/* ---- Load POIs on demand (separate API call, user-initiated) ---- */
+async function loadPOIs() {
+	if (!searchPoint) return;
+	const btn = document.getElementById('loadPoiBtn');
+	if (!btn) return;
+	btn.textContent = 'Loading...';
+	btn.classList.add('loading');
+	showStatus('loading', 'Loading OSM points of interest...');
+	try {
+		const poiData = await queryOverpass(buildPOIsQuery(searchPoint[0], searchPoint[1]));
+		const pois = processPOIs(poiData);
+		allResults = allResults || {};
+		allResults.pois = pois;
+		/* Update map layer */
+		const poiFC = { type: 'FeatureCollection', features: pois.slice(0, 200).map(p => ({
+			type: 'Feature', properties: { name: p.name, category: p.category, distance: p.distance, color: p.color },
+			geometry: { type: 'Point', coordinates: [p.lon, p.lat] }
+		})) };
+		if (map.getSource('poi-src')) map.getSource('poi-src').setData(poiFC);
+		map.setLayoutProperty('poi-circle', 'visibility', 'visible');
+		/* Sync checkbox */
+		const cb = document.querySelector('.tog-check[data-layer="poi-circle"]');
+		if (cb) cb.checked = true;
+		/* Update POI grid */
+		buildPOIGrid(pois);
+		document.getElementById('noPOI').classList.toggle('hidden', pois.length > 0);
+		document.getElementById('cardPOI').querySelector('.val').textContent = pois.length;
+		document.getElementById('statPOIs').textContent = Math.min(pois.length, 200);
+		btn.textContent = '📌 ' + pois.length + ' POIs loaded';
+		showStatus('info', 'Loaded ' + pois.length + ' points of interest within 2 miles.');
+	} catch (err) {
+		console.error('POI load failed:', err);
+		btn.textContent = '📌 Retry POIs';
+		showStatus('error', 'POI load failed: ' + err.message);
+	} finally {
+		btn.classList.remove('loading');
+	}
+}
+
+/* ---- Geocode and search ---- */
+async function searchByQuery(query) {
+	if (!query.trim()) return;
+	showStatus('loading', 'Geocoding...');
+	try {
+		const results = await geocode(query);
+		if (results.length === 0) { showStatus('error', 'No results for "' + query + '"'); return; }
+		const r = results[0];
+		const lat = parseFloat(r.lat), lon = parseFloat(r.lon);
+		showStatus('loading', 'Location: ' + r.display_name.split(',')[0] + '. Fetching data...');
+		await performSearch(lat, lon, r.display_name);
+	} catch (err) {
+		showStatus('error', 'Geocoding failed: ' + err.message);
+	}
+}
+
+async function searchByCoords(lat, lon) {
+	showStatus('loading', 'Fetching data at ' + lat.toFixed(5) + ', ' + lon.toFixed(5) + '...');
+	try {
+		const rev = await reverseGeocode(lat, lon);
+		const name = rev && rev.display_name ? rev.display_name : null;
+		if (name) showStatus('loading', 'Location: ' + name.split(',')[0] + '. Fetching data...');
+		await performSearch(lat, lon, name || null);
+	} catch (err) {
+		await performSearch(lat, lon, null);
+	}
+}
+
+/* ---- Parse lat,lon ---- */
+function parseLatLon(input) {
+	const cleaned = input.replace(/[°NnSsEeWw]/g, ' ').trim();
+	const parts = cleaned.split(/[,;\s]+/).filter(Boolean);
+	if (parts.length < 2) return null;
+	const lat = parseFloat(parts[0]), lon = parseFloat(parts[1]);
+	if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
+	let finalLat = lat, finalLon = lon;
+	if (/[Ss]/.test(input) && finalLat > 0) finalLat = -finalLat;
+	if (/[Ww]/.test(input) && finalLon > 0) finalLon = -finalLon;
+	return [finalLat, finalLon];
+}
+
+/* ---- Geolocation ---- */
+function useMyLocation() {
+	if (!navigator.geolocation) { showStatus('error', 'Geolocation not supported.'); return; }
+	showStatus('loading', 'Getting location...');
+	navigator.geolocation.getCurrentPosition(
+		pos => searchByCoords(pos.coords.latitude, pos.coords.longitude),
+		err => showStatus('error', 'Location error: ' + err.message),
+		{ enableHighAccuracy: true, timeout: 15000, maximumAge: 300000 }
+	);
+}
+
+/* ---- Event handlers ---- */
+document.getElementById('searchBtn').addEventListener('click', () => {
+	const q = document.getElementById('searchInput').value.trim();
+	if (!q) return;
+	const coords = parseLatLon(q);
+	if (coords) searchByCoords(coords[0], coords[1]);
+	else searchByQuery(q);
+});
+document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('searchBtn').click(); });
+document.getElementById('locBtn').addEventListener('click', useMyLocation);
+
+/* ---- Render gages separately (called async after main data) ---- */
+function renderGages(gageData) {
+	if (!map) return;
+	var gages = gageData || [];
+	if (gages.length > 0) {
+		var gageFC = { type: 'FeatureCollection', features: gages.map(function(g) {
+			return {
+				type: 'Feature',
+				properties: {
+					siteCode: g.siteCode, siteName: g.siteName,
+					discharge: g.discharge, dischargeUnit: g.dischargeUnit,
+					stage: g.stage, stageUnit: g.stageUnit,
+					dischargeTime: g.dischargeTime, huc: g.huc
+				},
+				geometry: { type: 'Point', coordinates: [g.lon, g.lat] }
+			};
+		}) };
+		if (map.getSource('gage-src')) {
+			map.getSource('gage-src').setData(gageFC);
+			try { map.setLayoutProperty('gage-circle', 'visibility', 'visible'); } catch(e) {}
+		}
+	} else {
+		if (map.getSource('gage-src')) {
+			map.getSource('gage-src').setData({ type: 'FeatureCollection', features: [] });
+		}
+	}
+}
+
+function updateGageUI(gageData) {
+	var gages = gageData || [];
+	var card = document.getElementById('cardGages');
+	if (card) {
+		card.querySelector('.val').textContent = gages.length > 0 ? gages.length + ' active' : 'No data';
+		var biggest = gages[0];
+		card.querySelector('.note').textContent = biggest
+			? biggest.siteName + ': ' + (biggest.discharge || '—') + ' ' + (biggest.dischargeUnit || '')
+			: 'Real-time streamflow monitoring stations';
+	}
+	var statEl = document.getElementById('statGages');
+	if (statEl) statEl.textContent = gages.length;
+}
+
+/* ---- Mapbox popup on click ---- */
+function setupPopups() {
+	map.on('click', 'poi-circle', (e) => {
+		if (!e.features || !e.features[0]) return;
+		const p = e.features[0].properties;
+		new mapboxgl.Popup({ offset: 12, maxWidth: '260px' })
+			.setLngLat(e.lngLat)
+			.setHTML(`<div class="pop-label">${p.category}</div><div class="pop-title">${p.name}</div><div class="pop-body">${formatDistance(p.distance || 0)} from search point<br>${e.lngLat.lat.toFixed(5)}° N, ${Math.abs(e.lngLat.lng).toFixed(5)}° ${e.lngLat.lng < 0 ? 'W' : 'E'}</div>`)
+			.addTo(map);
+	});
+
+	map.on('click', 'waterway-named', (e) => {
+		if (!e.features || !e.features[0]) return;
+		const p = e.features[0].properties;
+		new mapboxgl.Popup({ offset: 12, maxWidth: '260px' })
+			.setLngLat(e.lngLat)
+			.setHTML(`<div class="pop-label">Named Watercourse · OSM Way ${p.id}</div><div class="pop-title">${p.name}</div><div class="pop-body">Type: ${p.type} · ${formatDistance(p.distance || 0)} from search point</div>`)
+			.addTo(map);
+	});
+
+	map.on('click', 'closest-highlight', (e) => {
+		if (!e.features || !e.features[0]) return;
+		const p = e.features[0].properties;
+		new mapboxgl.Popup({ offset: 12, maxWidth: '260px' })
+			.setLngLat(e.lngLat)
+			.setHTML(`<div class="pop-label">Closest Waterway · OSM Way ${p.id}</div><div class="pop-title">${p.name}</div><div class="pop-body">Type: ${p.type} · ${formatDistance(p.distance || 0)} from search point</div>`)
+			.addTo(map);
+	});
+
+	map.on('click', 'search-marker-layer', () => {
+		new mapboxgl.Popup({ offset: 12, maxWidth: '260px' })
+			.setLngLat([searchPoint[1], searchPoint[0]])
+			.setHTML(`<div class="pop-label">Search Location</div><div class="pop-title">${searchPoint[0].toFixed(5)}° N, ${Math.abs(searchPoint[1]).toFixed(5)}° ${searchPoint[1] < 0 ? 'W' : 'E'}</div><div class="pop-body">2-mile (~3.2 km) search radius</div>`)
+			.addTo(map);
+	});
+
+	/* Gage popup */
+	map.on('click', 'gage-circle', (e) => {
+		if (!e.features || !e.features[0]) return;
+		const p = e.features[0].properties;
+		const dischargeStr = p.discharge != null ? `${p.discharge} ${p.dischargeUnit}` : 'N/A';
+		const stageStr = p.stage != null ? `${p.stage} ${p.stageUnit}` : 'N/A';
+		const timeStr = p.dischargeTime ? new Date(p.dischargeTime).toLocaleString() : 'N/A';
+		new mapboxgl.Popup({ offset: 12, maxWidth: '300px' })
+			.setLngLat(e.lngLat)
+			.setHTML(`<div class="pop-label">USGS Streamgage · ${p.siteCode}</div><div class="pop-title">${p.siteName}</div><div class="pop-body">Flow: ${dischargeStr}<br>Stage: ${stageStr}<br>HUC: ${p.huc || '—'}<br>Updated: ${timeStr}</div>`)
+			.addTo(map);
+	});
+
+	/* Cursor changes */
+	map.on('mouseenter', 'poi-circle', () => { map.getCanvas().style.cursor = 'pointer'; });
+	map.on('mouseleave', 'poi-circle', () => { map.getCanvas().style.cursor = ''; });
+	map.on('mouseenter', 'waterway-named', () => { map.getCanvas().style.cursor = 'pointer'; });
+	map.on('mouseleave', 'waterway-named', () => { map.getCanvas().style.cursor = ''; });
+	map.on('mouseenter', 'gage-circle', () => { map.getCanvas().style.cursor = 'pointer'; });
+	map.on('mouseleave', 'gage-circle', () => { map.getCanvas().style.cursor = ''; });
+}
+
+/* ---- Build base map ---- */
+function buildMap() {
+	if (!checkToken()) return;
+	if (map) return;
+
+	map = new mapboxgl.Map({
+		container: 'mapHost',
+		style: 'mapbox://styles/mapbox/satellite-streets-v12',
+		center: [-98.5, 39.8],  /* Default: continental US */
+		zoom: 4,
+		pitch: 0,
+		antialias: true,
+		attributionControl: true,
+		logoPosition: 'bottom-left',
+	});
+
+	/* Navigation control */
+	map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+	map.on('load', () => {
+		/* Terrain DEM */
+		map.addSource('mapbox-dem', {
+			type: 'raster-dem',
+			url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+			tileSize: 512,
+			maxzoom: 14,
+		});
+		map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
+
+		/* Sky layer */
+		map.addLayer({
+			id: 'sky',
+			type: 'sky',
+			paint: { 'sky-type': 'atmosphere', 'sky-atmosphere-sun': [0.0, 0.0], 'sky-atmosphere-sun-intensity': 15 },
+		});
+
+		/* Ensure data layers exist */
+		setTimeout(() => {
+			ensureSourcesAndLayers();
+			setupPopups();
+			setupSlopeHazardLayer();
+		}, 500);
+
+		setupYearSwitcher();
+	});
+
+	map.on('error', (e) => {
+		if (e.error && e.error.status === 401) {
+			showStatus('error', 'Invalid Mapbox token. Set window.MAPBOX_TOKEN = "pk..." in mapbox-config.js on GCS.');
+		}
+	});
+
+	/* Resize */
+	window.addEventListener('resize', () => { if (map) map.resize(); });
+
+	/* URL params */
+	const params = new URLSearchParams(window.location.search);
+	const urlLat = params.get('lat'), urlLon = params.get('lon'), urlName = params.get('name'), urlQ = params.get('q');
+	if (urlLat && urlLon) {
+		const lat = parseFloat(urlLat), lon = parseFloat(urlLon);
+		if (!isNaN(lat) && !isNaN(lon)) {
+			map.once('idle', () => {
+				searchPoint = [lat, lon];
+				map.setCenter([lon, lat]);
+				map.setZoom(13.5);
+				map.setPitch(55);
+				performSearch(lat, lon, urlName || null);
+			});
+		}
+	} else if (urlQ) {
+		document.getElementById('searchInput').value = urlQ;
+		map.once('idle', () => searchByQuery(urlQ));
+	}
+}
+
+/* ---- Init ---- */
+if (document.readyState === 'loading') {
+	document.addEventListener('DOMContentLoaded', buildMap);
+} else {
+	buildMap();
+}
+</script>
+
+</body>
+</html>

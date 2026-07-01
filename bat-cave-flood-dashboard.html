@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1c1814">
+    <title>Flood Impact Dashboard · Bat Cave, NC · May 2026</title>
+
+    <!-- Fonts: Fraunces (display, archival) + Inter Tight (body) — house atlas style -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=Inter+Tight:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Mapbox GL JS -->
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.4.0/mapbox-gl.js"></script>
+
+    <!-- Mapbox token — loaded from separate gitignored file; upload mapbox-config.js to GCS alongside this map -->
+    <script src="https://www.geoglypha1.org/mapbox-config.js"></script>
+
+    <!-- Chart.js for Elevation Profiles -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <style>
+        /* ============================================================
+           BAT CAVE FLOOD DASHBOARD — archival/editorial house style
+           Palette: parchment, ink, sandstone rose, deep wadi shadow,
+                    weathered copper, river blue
+           Type:    Fraunces (display) + Inter Tight (body)
+           ============================================================ */
+
+        :root {
+            /* Parchment & ink */
+            --bg:            #f1ead8;   /* parchment */
+            --bg-deep:       #e8dec5;   /* sun-bleached parchment */
+            --bg-card:       #ede4cc;   /* card surface */
+            --ink:           #1c1814;   /* warm black */
+            --ink-soft:      #3a322a;
+            --ink-mute:      #6b5d4d;
+            --rule:          #2c241d;
+            --rule-soft:     #b8a98a;
+
+            /* Accents */
+            --rose:          #b54b2f;   /* sandstone rose */
+            --rose-deep:     #7d2b18;   /* deep wadi shadow */
+            --copper:        #a87431;   /* weathered copper */
+            --river:         #2f6b8f;   /* river blue — flood layer */
+            --river-deep:    #1f4a66;
+            --moss:          #5a7048;   /* terrain green */
+
+            /* Status */
+            --danger:        #7d2b18;
+            --warning:       #a87431;
+            --success:       #5a7048;
+            --info:          #2f6b8f;
+
+            /* Glass effect tuned for parchment */
+            --glass-bg:      rgba(241, 234, 216, 0.94);
+            --glass-border:  rgba(44, 36, 29, 0.18);
+            --shadow-lg:     0 14px 40px rgba(28, 24, 20, 0.18);
+
+            --radius-lg:     4px;   /* archival = sharp corners */
+            --radius-md:     3px;
+            --radius-sm:     2px;
+            --transition-fast: 150ms ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter Tight', 'Inter', system-ui, -apple-system, sans-serif;
+            font-feature-settings: "ss01", "cv11";
+            background: var(--bg);
+            color: var(--ink);
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            display: flex;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ── Sidebar Panel ─────────────────────── */
+        #sidebar {
+            width: 400px;
+            min-width: 400px;
+            height: 100vh;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid var(--rule);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            box-shadow: var(--shadow-lg);
+            overflow-y: auto;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        #sidebar-toggle {
+            position: absolute;
+            top: 16px;
+            left: 408px;
+            z-index: 20;
+            background: var(--bg);
+            border: 1px solid var(--rule);
+            color: var(--ink);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px rgba(28, 24, 20, 0.25);
+            transition: all var(--transition-fast);
+        }
+        #sidebar-toggle:hover {
+            background: var(--rose);
+            color: var(--bg);
+            border-color: var(--rose-deep);
+        }
+        #sidebar.collapsed + #sidebar-toggle {
+            left: 16px;
+        }
+
+        /* ── Sidebar Sections ──────────────────── */
+        .sidebar-header {
+            padding: 22px 24px 18px;
+            border-bottom: 2px solid var(--rule);
+            flex-shrink: 0;
+            background:
+                linear-gradient(180deg, rgba(232,222,197,0.6) 0%, transparent 100%);
+        }
+        .sidebar-header .badge {
+            display: inline-block;
+            background: var(--rose-deep);
+            color: var(--bg);
+            font-family: 'Inter Tight', sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            padding: 4px 10px;
+            border-radius: 2px;
+            margin-bottom: 12px;
+            animation: pulse-badge 2.4s infinite;
+        }
+        @keyframes pulse-badge {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(125, 43, 24, 0.45); }
+            50%       { box-shadow: 0 0 0 10px rgba(125, 43, 24, 0); }
+        }
+        .sidebar-header h1 {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 1.55rem;
+            font-weight: 500;
+            line-height: 1.15;
+            letter-spacing: -0.015em;
+            color: var(--ink);
+            font-variation-settings: "opsz" 60;
+        }
+        .sidebar-header h1 em {
+            font-style: italic;
+            color: var(--rose-deep);
+            font-weight: 400;
+        }
+        .sidebar-header .subtitle {
+            font-family: 'Fraunces', Georgia, serif;
+            font-style: italic;
+            font-size: 0.82rem;
+            color: var(--ink-mute);
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        .sidebar-section {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--rule-soft);
+            flex-shrink: 0;
+        }
+        .sidebar-section h3 {
+            font-family: 'Inter Tight', sans-serif;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            color: var(--rose-deep);
+            margin-bottom: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sidebar-section h3::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--rule-soft);
+            margin-left: 4px;
+        }
+
+        /* Stat cards */
+        .stat-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            flex: 1;
+            min-width: 80px;
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: 12px 12px 10px;
+            text-align: center;
+            border: 1px solid var(--rule-soft);
+            border-top: 2px solid var(--ink);
+            transition: transform var(--transition-fast);
+        }
+        .stat-card:hover {
+            transform: translateY(-1px);
+        }
+        .stat-card .stat-value {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 1.55rem;
+            font-weight: 500;
+            color: var(--ink);
+            line-height: 1;
+            font-variation-settings: "opsz" 48;
+            letter-spacing: -0.02em;
+        }
+        .stat-card .stat-label {
+            font-family: 'Inter Tight', sans-serif;
+            font-size: 0.62rem;
+            color: var(--ink-mute);
+            margin-top: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 500;
+        }
+        .stat-card.danger  { border-top-color: var(--rose-deep); }
+        .stat-card.danger  .stat-value { color: var(--rose-deep); }
+        .stat-card.warning { border-top-color: var(--copper); }
+        .stat-card.warning .stat-value { color: var(--copper); }
+        .stat-card.info    { border-top-color: var(--river); }
+        .stat-card.info    .stat-value { color: var(--river-deep); }
+
+        /* Chart container */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            margin-top: 4px;
+            background: var(--bg-card);
+            border: 1px solid var(--rule-soft);
+            border-radius: var(--radius-md);
+            padding: 10px 8px 6px;
+        }
+        .chart-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        .chart-caption {
+            font-family: 'Fraunces', Georgia, serif;
+            font-style: italic;
+            font-size: 0.72rem;
+            color: var(--ink-mute);
+            margin-top: 8px;
+            text-align: center;
+        }
+
+        /* Layer toggles */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 9px 4px;
+            cursor: pointer;
+            user-select: none;
+            border-bottom: 1px dotted var(--rule-soft);
+            transition: background var(--transition-fast);
+        }
+        .toggle-row:last-child { border-bottom: none; }
+        .toggle-row:hover {
+            background: rgba(181, 75, 47, 0.06);
+        }
+        .toggle-row .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--ink-soft);
+        }
+        .toggle-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        .toggle-dot.flood-sim    { background: var(--river); box-shadow: 0 0 6px rgba(47,107,143,0.5); }
+        .toggle-dot.flood-100yr  { background: var(--copper); box-shadow: 0 0 5px rgba(168,116,49,0.5); }
+        .toggle-dot.flood-500yr  { background: var(--rose-deep); box-shadow: 0 0 5px rgba(125,43,24,0.4); }
+        .toggle-dot.highway      { background: var(--ink); box-shadow: 0 0 5px rgba(28,24,20,0.4); }
+
+        /* Custom toggle switch — archival */
+        .toggle-switch {
+            position: relative;
+            width: 38px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background: var(--rule-soft);
+            border: 1px solid var(--ink-mute);
+            border-radius: 20px;
+            transition: 0.25s;
+        }
+        .toggle-slider::before {
+            content: '';
+            position: absolute;
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            bottom: 2px;
+            background: var(--bg);
+            border-radius: 50%;
+            transition: 0.25s;
+        }
+        .toggle-switch input:checked + .toggle-slider {
+            background: var(--rose);
+            border-color: var(--rose-deep);
+        }
+        .toggle-switch input:checked + .toggle-slider::before {
+            transform: translateX(18px);
+        }
+
+        /* Legend */
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.76rem;
+            margin-bottom: 8px;
+            color: var(--ink-soft);
+            font-family: 'Fraunces', Georgia, serif;
+        }
+        .legend-swatch {
+            width: 18px;
+            height: 14px;
+            border-radius: 2px;
+            flex-shrink: 0;
+            border: 1px solid var(--rule);
+        }
+
+        /* ── Map Container ────────────────────── */
+        #map-container {
+            flex: 1;
+            position: relative;
+            height: 100vh;
+        }
+        #map { width: 100%; height: 100%; }
+
+        /* Map overlay info */
+        .map-overlay-info {
+            position: absolute;
+            bottom: 24px;
+            right: 24px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--rule);
+            border-left: 3px solid var(--rose);
+            border-radius: var(--radius-md);
+            padding: 10px 16px;
+            font-family: 'Fraunces', Georgia, serif;
+            font-style: italic;
+            font-size: 0.72rem;
+            color: var(--ink-soft);
+            pointer-events: none;
+            z-index: 5;
+            line-height: 1.55;
+            box-shadow: 0 6px 20px rgba(28,24,20,0.15);
+        }
+
+        /* Custom popup styling */
+        .mapboxgl-popup-content {
+            background: var(--bg) !important;
+            color: var(--ink) !important;
+            border: 1px solid var(--rule) !important;
+            border-radius: var(--radius-md) !important;
+            box-shadow: var(--shadow-lg) !important;
+            padding: 14px 16px !important;
+            font-family: 'Inter Tight', sans-serif !important;
+            font-size: 0.82rem !important;
+            line-height: 1.55 !important;
+        }
+        .mapboxgl-popup-tip { border-top-color: var(--bg) !important; }
+        .mapboxgl-popup-close-button {
+            color: var(--ink-mute) !important;
+            font-size: 18px !important;
+            padding: 4px 8px !important;
+        }
+        .popup-title {
+            font-family: 'Fraunces', Georgia, serif;
+            font-weight: 600;
+            font-size: 1rem;
+            margin-bottom: 6px;
+            color: var(--rose-deep);
+            border-bottom: 1px solid var(--rule-soft);
+            padding-bottom: 6px;
+        }
+        .popup-tag {
+            display: inline-block;
+            font-family: 'Inter Tight', sans-serif;
+            font-size: 0.62rem;
+            padding: 3px 9px;
+            border-radius: 2px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+        .popup-tag.danger  { background: var(--rose-deep);  color: var(--bg); }
+        .popup-tag.warning { background: var(--copper);     color: var(--bg); }
+        .popup-tag.info    { background: var(--river-deep); color: var(--bg); }
+
+        /* Footer */
+        .sidebar-footer {
+            padding: 14px 24px 22px;
+            font-family: 'Fraunces', Georgia, serif;
+            font-style: italic;
+            font-size: 0.7rem;
+            color: var(--ink-mute);
+            flex-shrink: 0;
+            line-height: 1.55;
+            border-top: 1px solid var(--rule-soft);
+        }
+        .sidebar-footer p { margin-top: 4px; }
+        .sidebar-footer .warning-note {
+            margin-top: 10px;
+            padding: 8px 10px;
+            background: rgba(168, 116, 49, 0.1);
+            border-left: 2px solid var(--copper);
+            color: var(--ink-soft);
+            font-style: normal;
+            font-family: 'Inter Tight', sans-serif;
+            font-size: 0.7rem;
+        }
+
+        /* ── Responsive ───────────────────────── */
+        @media (max-width: 768px) {
+            #sidebar {
+                width: 100vw;
+                min-width: 100vw;
+                height: 45vh;
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                border-right: none;
+                border-top: 2px solid var(--rule);
+                border-radius: 14px 14px 0 0;
+                z-index: 15;
+                transform: translateY(0);
+            }
+            #sidebar.collapsed { transform: translateY(85%); }
+            #sidebar-toggle {
+                top: auto;
+                bottom: 46vh;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 25;
+            }
+            #sidebar.collapsed + #sidebar-toggle {
+                bottom: 20px;
+                left: 50%;
+            }
+            #map-container { height: 100vh; }
+            .chart-container { height: 140px; }
+        }
+
+        @media (max-width: 480px) {
+            #sidebar { height: 50vh; }
+            .stat-card { min-width: 60px; padding: 8px 8px; }
+            .stat-card .stat-value { font-size: 1.2rem; }
+            .sidebar-header h1 { font-size: 1.2rem; }
+            .chart-container { height: 120px; }
+        }
+
+        /* Scrollbar — archival */
+        #sidebar::-webkit-scrollbar { width: 6px; }
+        #sidebar::-webkit-scrollbar-track { background: transparent; }
+        #sidebar::-webkit-scrollbar-thumb {
+            background: var(--rule-soft);
+            border-radius: 10px;
+        }
+        #sidebar::-webkit-scrollbar-thumb:hover { background: var(--copper); }
+    </style>
+</head>
+<body>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SIDEBAR PANEL -->
+    <!-- ═══════════════════════════════════════════ -->
+    <aside id="sidebar">
+        <!-- Header -->
+        <div class="sidebar-header">
+            <span class="badge"><i class="fa-solid fa-triangle-exclamation"></i> Active Flood Event</span>
+            <h1>Bat Cave, <em>North Carolina</em><br>Flood Impact Dashboard</h1>
+            <p class="subtitle">Rocky Broad River Valley · Henderson County<br>Report Date: 27 May 2026</p>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="sidebar-section">
+            <h3>Event Quick Stats</h3>
+            <div class="stat-row">
+                <div class="stat-card danger">
+                    <div class="stat-value">6–10″</div>
+                    <div class="stat-label">Rainfall</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-value">14.2′</div>
+                    <div class="stat-label">Peak Stage</div>
+                </div>
+                <div class="stat-card info">
+                    <div class="stat-value">~12′</div>
+                    <div class="stat-label">Above Normal</div>
+                </div>
+            </div>
+            <div class="stat-row" style="margin-top:8px;">
+                <div class="stat-card danger">
+                    <div class="stat-value">48″</div>
+                    <div class="stat-label">Culvert Failure</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-value">US-74A</div>
+                    <div class="stat-label">Hwy Closed</div>
+                </div>
+                <div class="stat-card info">
+                    <div class="stat-value">Multiple</div>
+                    <div class="stat-label">Swiftwater Rescues</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Watershed Profile -->
+        <div class="sidebar-section">
+            <h3>Watershed Profile</h3>
+            <table style="width:100%;border-collapse:collapse;font-size:0.8rem;color:var(--ink-soft);">
+                <tr style="border-bottom:1px solid var(--rule-soft);">
+                    <td style="padding:5px 0 5px 0;color:var(--ink-mute);">Drainage area</td>
+                    <td style="padding:5px 0;text-align:right;font-weight:600;font-family:'Fraunces',Georgia,serif;">94.4 sq mi</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--rule-soft);">
+                    <td style="padding:5px 0;color:var(--ink-mute);">HUC-8 basin</td>
+                    <td style="padding:5px 0;text-align:right;font-weight:600;font-family:'Fraunces',Georgia,serif;">03060102</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--rule-soft);">
+                    <td style="padding:5px 0;color:var(--ink-mute);">Gorge length</td>
+                    <td style="padding:5px 0;text-align:right;font-weight:600;font-family:'Fraunces',Georgia,serif;">~14 miles</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--rule-soft);">
+                    <td style="padding:5px 0;color:var(--ink-mute);">Elevation drop</td>
+                    <td style="padding:5px 0;text-align:right;font-weight:600;font-family:'Fraunces',Georgia,serif;">~1,800 ft</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--rule-soft);">
+                    <td style="padding:5px 0;color:var(--ink-mute);">Bedrock</td>
+                    <td style="padding:5px 0;text-align:right;font-weight:600;font-family:'Fraunces',Georgia,serif;">Henderson Augen Gneiss</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--rule-soft);">
+                    <td style="padding:5px 0;color:var(--ink-mute);">Record peak (1928)</td>
+                    <td style="padding:5px 0;text-align:right;font-weight:600;color:var(--rose-deep);font-family:'Fraunces',Georgia,serif;">26,000 cfs</td>
+                </tr>
+                <tr style="border-bottom:1px solid var(--rule-soft);">
+                    <td style="padding:5px 0;color:var(--ink-mute);">Helene rainfall (3-day)</td>
+                    <td style="padding:5px 0;text-align:right;font-weight:600;color:var(--rose-deep);font-family:'Fraunces',Georgia,serif;">19.99 in.</td>
+                </tr>
+                <tr>
+                    <td style="padding:5px 0;color:var(--ink-mute);">Helene landslides (region)</td>
+                    <td style="padding:5px 0;text-align:right;font-weight:600;color:var(--rose-deep);font-family:'Fraunces',Georgia,serif;">2,217</td>
+                </tr>
+            </table>
+            <div style="margin-top:10px;padding:8px;background:var(--bg-deep);border-left:3px solid var(--river);font-size:0.75rem;color:var(--ink-mute);line-height:1.5;">
+                <strong style="color:var(--ink-soft);">BCVN7 Stage Thresholds</strong><br>
+                Action: 6.0 ft &nbsp;|&nbsp; Minor: 7.5 ft<br>
+                Moderate: 8.5 ft &nbsp;|&nbsp; Major: 9.5 ft<br>
+                <span style="color:var(--rose-deep);font-weight:600;">May 2026 peak: 14.2 ft (+4.7 ft above Major)</span>
+            </div>
+        </div>
+
+        <!-- Elevation Profile Chart -->
+        <div class="sidebar-section">
+            <h3>Valley Cross-Section @ Bat Cave</h3>
+            <div class="chart-container">
+                <canvas id="elevationChart"></canvas>
+            </div>
+            <p class="chart-caption">
+                West-to-East transect · Flood stage shown as dashed line
+            </p>
+        </div>
+
+        <!-- Layer Toggles -->
+        <div class="sidebar-section">
+            <h3>Map Layers</h3>
+            <div class="toggle-row" onclick="toggleLayer('flood-sim-layer')">
+                <span class="toggle-label"><span class="toggle-dot flood-sim"></span> May 2026 Simulated Flood Extent</span>
+                <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="toggle-flood-sim" checked onchange="toggleLayer('flood-sim-layer')"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row" onclick="toggleLayer('flood-100yr-layer')">
+                <span class="toggle-label"><span class="toggle-dot flood-100yr"></span> 100-Year Floodplain (FEMA)</span>
+                <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="toggle-flood-100yr" checked onchange="toggleLayer('flood-100yr-layer')"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row" onclick="toggleLayer('flood-500yr-layer')">
+                <span class="toggle-label"><span class="toggle-dot flood-500yr"></span> 500-Year Floodplain (FEMA)</span>
+                <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="toggle-flood-500yr" onchange="toggleLayer('flood-500yr-layer')"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row" onclick="toggleLayer('highway-layer')">
+                <span class="toggle-label"><span class="toggle-dot highway"></span> US-74A Highway Corridor</span>
+                <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="toggle-highway" checked onchange="toggleLayer('highway-layer')"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row" onclick="toggleLayer('poi-markers')">
+                <span class="toggle-label"><span class="toggle-dot" style="background:var(--rose);box-shadow:0 0 5px rgba(181,75,47,0.5);"></span> Critical POI Markers</span>
+                <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="toggle-poi" checked onchange="toggleLayer('poi-markers')"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row" onclick="toggleLayer('watershed-outline')">
+                <span class="toggle-label"><span class="toggle-dot" style="background:var(--moss);"></span> Watershed Boundary (94.4 sq mi)</span>
+                <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="toggle-watershed" checked onchange="toggleLayer('watershed-outline')"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row" onclick="toggleLayer('landslide-fill')">
+                <span class="toggle-label"><span class="toggle-dot" style="background:var(--rose-deep);"></span> Landslide Hazard Zones (NCGS)</span>
+                <label class="toggle-switch" onclick="event.stopPropagation()"><input type="checkbox" id="toggle-landslide" onchange="toggleLayer('landslide-fill')"><span class="toggle-slider"></span></label>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="sidebar-section">
+            <h3>Legend</h3>
+            <div class="legend-item"><span class="legend-swatch" style="background:rgba(47,107,143,0.55);"></span> Simulated Flood Extent (May 2026)</div>
+            <div class="legend-item"><span class="legend-swatch" style="background:rgba(168,116,49,0.45);border:1px dashed var(--copper);"></span> 100-Year Floodplain</div>
+            <div class="legend-item"><span class="legend-swatch" style="background:rgba(125,43,24,0.35);border:1px dotted var(--rose-deep);"></span> 500-Year Floodplain</div>
+            <div class="legend-item"><span class="legend-swatch" style="background:var(--ink);"></span> US-74A Highway</div>
+            <div class="legend-item"><span class="legend-swatch" style="background:var(--rose-deep);border-radius:50%;width:12px;height:12px;"></span> Culvert Failure / Closure</div>
+            <div class="legend-item"><span class="legend-swatch" style="background:var(--moss);border-radius:50%;width:12px;height:12px;"></span> USGS Gauge BCVN7</div>
+            <div class="legend-item"><span class="legend-swatch" style="background:var(--copper);border-radius:50%;width:12px;height:12px;"></span> Swiftwater Rescue Locations</div>
+            <div class="legend-item"><span class="legend-swatch" style="background:var(--moss);border-radius:50%;width:12px;height:12px;"></span> Bearwallow ECONet / TNC Preserve / USGS 02148500</div>
+            <div class="legend-item"><span class="legend-swatch" style="border:2px dashed var(--moss);background:transparent;"></span> Watershed Boundary (HUC 03060102)</div>
+            <div class="legend-item"><span class="legend-swatch" style="background:rgba(125,43,24,0.3);border:1px dashed var(--rose-deep);"></span> Landslide Hazard Zones (NCGS)</div>
+        </div>
+
+        <!-- Footer -->
+        <div class="sidebar-footer">
+            <p>Hydrology: USGS NWIS gauge 02148500 · NWS BCVN7 · USGS StreamStats NC</p>
+            <p>Geomorphology: Scheip et al. 2026 (ESPaL) · Schaefer et al. 2025 (GSA Today) · Allstadt et al. 2025 (USGS OFR 2025-1028)</p>
+            <p>Landslide hazard: Wooten et al. 2011 (NCGS DDS-GHMS-5) · Wooten et al. 2016 (Springer)</p>
+            <p>Climate: Davis 2024 (NC State Climate Office) · NHC TCR AL092024</p>
+            <p>Flood mapping: NC FRIS · NC OneMap · FEMA MSC</p>
+            <p>Ecology: NC DEQ 2024 Broad River Basin Plan · TNC NC 2025</p>
+            <div class="warning-note">
+                ⚠ Flood extents and landslide zones are schematic — for visualization and planning context only. Refer to official FEMA DFIRMs (msc.fema.gov) and NCGS hazard maps (deq.nc.gov/ncgs) for regulatory and engineering use.
+            </div>
+        </div>
+    </aside>
+
+    <!-- Sidebar toggle button -->
+    <button id="sidebar-toggle" title="Toggle Dashboard Panel">
+        <i class="fa-solid fa-chevron-left" id="toggle-icon"></i>
+    </button>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- MAP CONTAINER -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div id="map-container">
+        <div id="map"></div>
+        <div class="map-overlay-info">
+            Right-click + drag to tilt &amp; rotate · Scroll to zoom<br>
+            3D Terrain active · Exaggeration: 1.5×
+        </div>
+    </div>
+
+    <script>
+        // ──────────────────────────────────────────
+        // MAPBOX ACCESS TOKEN
+        // Loaded from mapbox-config.js (gitignored, served from GCS).
+        // Restrict this token to https://www.geoglypha1.org in the Mapbox dashboard.
+        // ──────────────────────────────────────────
+        if (!window.MAPBOX_TOKEN) {
+            document.body.innerHTML = '<div style="padding:2rem;font-family:monospace;color:#7d2b18">Mapbox token not loaded. Upload mapbox-config.js to GCS or serve locally.</div>';
+            throw new Error('MAPBOX_TOKEN not defined — mapbox-config.js missing');
+        }
+
+        mapboxgl.accessToken = window.MAPBOX_TOKEN;
+
+        // ──────────────────────────────────────────
+        // INITIALIZE MAP
+        // ──────────────────────────────────────────
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/satellite-streets-v12',
+            center: [-82.2873, 35.4515], // Bat Cave, NC
+            zoom: 13.8,
+            pitch: 58,
+            bearing: -22,
+            antialias: true,
+            attributionControl: true,
+            logoPosition: 'bottom-left',
+        });
+
+        // ──────────────────────────────────────────
+        // ADD TERRAIN DEM SOURCE & SKY LAYER
+        // ──────────────────────────────────────────
+        map.on('load', () => {
+            map.addSource('mapbox-dem', {
+                type: 'raster-dem',
+                url: 'mapbox://mapbox.mapbox-terrain-dem-v1',
+                tileSize: 512,
+                maxzoom: 14,
+            });
+
+            map.setTerrain({ source: 'mapbox-dem', exaggeration: 1.5 });
+
+            map.addLayer({
+                id: 'sky',
+                type: 'sky',
+                paint: {
+                    'sky-type': 'atmosphere',
+                    'sky-atmosphere-sun': [0.0, 0.0],
+                    'sky-atmosphere-sun-intensity': 15,
+                },
+            });
+
+            // ──────────────────────────────────────────
+            // FLOOD ZONE LAYERS
+            // ──────────────────────────────────────────
+
+            // --- Simulated May 2026 Flood Extent ---
+            const floodSimGeojson = {
+                type: 'FeatureCollection',
+                features: [{
+                    type: 'Feature',
+                    properties: {
+                        name: 'May 2026 Simulated Flood Extent',
+                        event: 'Late May 2026 Flash Flood',
+                        rainfall: '6-10 inches',
+                    },
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [[
+                            [-82.3085, 35.4710], [-82.3038, 35.4655], [-82.2982, 35.4588],
+                            [-82.2935, 35.4520], [-82.2898, 35.4465], [-82.2855, 35.4408],
+                            [-82.2800, 35.4350], [-82.2755, 35.4305], [-82.2720, 35.4280],
+                            [-82.2695, 35.4295], [-82.2715, 35.4335], [-82.2750, 35.4385],
+                            [-82.2795, 35.4445], [-82.2840, 35.4500], [-82.2890, 35.4565],
+                            [-82.2940, 35.4630], [-82.2995, 35.4695], [-82.3055, 35.4760],
+                            [-82.3085, 35.4710],
+                        ]],
+                    },
+                }],
+            };
+
+            map.addSource('flood-sim-source', { type: 'geojson', data: floodSimGeojson });
+
+            map.addLayer({
+                id: 'flood-sim-layer',
+                type: 'fill',
+                source: 'flood-sim-source',
+                paint: {
+                    'fill-color': '#2f6b8f',
+                    'fill-opacity': 0.55,
+                    'fill-outline-color': '#1f4a66',
+                },
+                layout: { visibility: 'visible' },
+            });
+
+            map.addLayer({
+                id: 'flood-sim-outline-glow',
+                type: 'line',
+                source: 'flood-sim-source',
+                paint: {
+                    'line-color': '#4a8cb0',
+                    'line-width': 2.5,
+                    'line-opacity': 0.8,
+                    'line-blur': 2,
+                },
+                layout: { visibility: 'visible' },
+            });
+
+            // --- 100-Year Floodplain ---
+            const flood100yrGeojson = {
+                type: 'FeatureCollection',
+                features: [{
+                    type: 'Feature',
+                    properties: { name: '100-Year Floodplain (FEMA Zone AE/A)', source: 'NC FRIS' },
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [[
+                            [-82.3105, 35.4730], [-82.3055, 35.4675], [-82.2995, 35.4605],
+                            [-82.2945, 35.4535], [-82.2905, 35.4475], [-82.2860, 35.4415],
+                            [-82.2805, 35.4355], [-82.2750, 35.4300], [-82.2705, 35.4270],
+                            [-82.2680, 35.4285], [-82.2700, 35.4330], [-82.2735, 35.4380],
+                            [-82.2780, 35.4440], [-82.2830, 35.4495], [-82.2880, 35.4560],
+                            [-82.2935, 35.4635], [-82.2990, 35.4705], [-82.3060, 35.4775],
+                            [-82.3105, 35.4730],
+                        ]],
+                    },
+                }],
+            };
+
+            map.addSource('flood-100yr-source', { type: 'geojson', data: flood100yrGeojson });
+
+            map.addLayer({
+                id: 'flood-100yr-layer',
+                type: 'fill',
+                source: 'flood-100yr-source',
+                paint: {
+                    'fill-color': '#a87431',
+                    'fill-opacity': 0.32,
+                    'fill-outline-color': '#8b5e25',
+                },
+                layout: { visibility: 'visible' },
+            });
+
+            map.addLayer({
+                id: 'flood-100yr-dash',
+                type: 'line',
+                source: 'flood-100yr-source',
+                paint: {
+                    'line-color': '#a87431',
+                    'line-width': 2,
+                    'line-opacity': 0.75,
+                    'line-dasharray': [4, 3],
+                },
+                layout: { visibility: 'visible' },
+            });
+
+            // --- 500-Year Floodplain ---
+            const flood500yrGeojson = {
+                type: 'FeatureCollection',
+                features: [{
+                    type: 'Feature',
+                    properties: { name: '500-Year Floodplain (FEMA Zone X shaded)', source: 'NC FRIS' },
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [[
+                            [-82.3130, 35.4755], [-82.3075, 35.4695], [-82.3010, 35.4620],
+                            [-82.2955, 35.4545], [-82.2910, 35.4480], [-82.2865, 35.4420],
+                            [-82.2808, 35.4358], [-82.2745, 35.4295], [-82.2690, 35.4255],
+                            [-82.2655, 35.4270], [-82.2680, 35.4320], [-82.2720, 35.4375],
+                            [-82.2765, 35.4435], [-82.2820, 35.4490], [-82.2870, 35.4555],
+                            [-82.2930, 35.4630], [-82.2990, 35.4705], [-82.3065, 35.4785],
+                            [-82.3130, 35.4755],
+                        ]],
+                    },
+                }],
+            };
+
+            map.addSource('flood-500yr-source', { type: 'geojson', data: flood500yrGeojson });
+
+            map.addLayer({
+                id: 'flood-500yr-layer',
+                type: 'fill',
+                source: 'flood-500yr-source',
+                paint: {
+                    'fill-color': '#7d2b18',
+                    'fill-opacity': 0.25,
+                    'fill-outline-color': '#5c1f10',
+                },
+                layout: { visibility: 'none' },
+            });
+
+            map.addLayer({
+                id: 'flood-500yr-dot',
+                type: 'line',
+                source: 'flood-500yr-source',
+                paint: {
+                    'line-color': '#7d2b18',
+                    'line-width': 1.8,
+                    'line-opacity': 0.6,
+                    'line-dasharray': [1, 4],
+                },
+                layout: { visibility: 'none' },
+            });
+
+            // --- US-74A Highway Corridor ---
+            const highwayGeojson = {
+                type: 'FeatureCollection',
+                features: [{
+                    type: 'Feature',
+                    properties: { name: 'US-74A Charlotte Highway', status: 'Closed near county line' },
+                    geometry: {
+                        type: 'LineString',
+                        coordinates: [
+                            [-82.3100, 35.4780], [-82.3050, 35.4700], [-82.2990, 35.4625],
+                            [-82.2940, 35.4555], [-82.2900, 35.4490], [-82.2860, 35.4425],
+                            [-82.2815, 35.4365], [-82.2765, 35.4305], [-82.2720, 35.4260],
+                        ],
+                    },
+                }],
+            };
+
+            map.addSource('highway-source', { type: 'geojson', data: highwayGeojson });
+
+            map.addLayer({
+                id: 'highway-layer',
+                type: 'line',
+                source: 'highway-source',
+                paint: {
+                    'line-color': '#1c1814',
+                    'line-width': 3.5,
+                    'line-opacity': 0.95,
+                    'line-dasharray': [6, 2],
+                },
+                layout: { visibility: 'visible', 'line-cap': 'round', 'line-join': 'round' },
+            });
+
+            map.addLayer({
+                id: 'highway-glow',
+                type: 'line',
+                source: 'highway-source',
+                paint: {
+                    'line-color': '#f1ead8',
+                    'line-width': 7,
+                    'line-opacity': 0.35,
+                    'line-blur': 4,
+                },
+                layout: { visibility: 'visible', 'line-cap': 'round', 'line-join': 'round' },
+            });
+
+            // ──────────────────────────────────────────
+            // POI MARKERS
+            // ──────────────────────────────────────────
+
+            const culvertMarker = new mapboxgl.Marker({ color: '#7d2b18', scale: 1.3 })
+                .setLngLat([-82.2975, 35.4620])
+                .setPopup(new mapboxgl.Popup({ offset: 25, maxWidth: '280px' }).setHTML(
+                    `<div class="popup-title">48″ Culvert Failure — US-74A</div>
+                     <p style="margin:4px 0;"><strong>Charlotte Highway emergency closure</strong> near the Buncombe-Henderson county line. A 48-inch culvert failed during the May 2026 event, severing the primary surface transport link through Hickory Nut Gorge.</p>
+                     <p style="margin:4px 0;font-size:0.8em;color:#6b5d4d;">Compound risk: channel conveyance reduced by Helene-deposited debris fans from 2,217 regional landslides (Sept 2024).</p>
+                     <span class="popup-tag danger">Highway Closed</span>`
+                ))
+                .addTo(map);
+
+            const batCaveMarker = new mapboxgl.Marker({ color: '#b54b2f', scale: 1.1 })
+                .setLngLat([-82.2873, 35.4515])
+                .setPopup(new mapboxgl.Popup({ offset: 25, maxWidth: '260px' }).setHTML(
+                    `<div class="popup-title">Bat Cave Community</div>
+                     <p style="margin:4px 0;">Population center in the Rocky Broad River Valley. Highly susceptible to flash flooding due to steep surrounding terrain.</p>
+                     <span class="popup-tag warning">Flood Impact Zone</span>`
+                ))
+                .addTo(map);
+
+            const gaugeMarker = new mapboxgl.Marker({ color: '#5a7048', scale: 1.15 })
+                .setLngLat([-82.2895, 35.4490])
+                .setPopup(new mapboxgl.Popup({ offset: 25, maxWidth: '280px' }).setHTML(
+                    `<div class="popup-title">NWS Gauge BCVN7 — Rocky Broad at Bat Cave</div>
+                     <p style="margin:4px 0;"><strong>Peak Stage (May 2026): 14.2 ft</strong> — 4.7 ft above Major Flood threshold.</p>
+                     <p style="margin:4px 0;font-size:0.8em;color:#6b5d4d;">
+                        Action: 6.0 ft &nbsp;|&nbsp; Minor: 7.5 ft &nbsp;|&nbsp; Moderate: 8.5 ft &nbsp;|&nbsp; Major: 9.5 ft<br>
+                        Gauge out of service since Hurricane Helene (Sept 2024). No discharge rating published for this site.
+                     </p>
+                     <span class="popup-tag info">Out of Service — Damage from Helene</span>`
+                ))
+                .addTo(map);
+
+            const rescueMarker1 = new mapboxgl.Marker({ color: '#a87431', scale: 1.0 })
+                .setLngLat([-82.2835, 35.4415])
+                .setPopup(new mapboxgl.Popup({ offset: 25, maxWidth: '250px' }).setHTML(
+                    `<div class="popup-title">Swiftwater Rescue</div>
+                     <p style="margin:4px 0;">Low-lying campground area along Rocky Broad River. Multiple rescues executed by Gerton Fire &amp; Rescue.</p>
+                     <span class="popup-tag danger">Rescue Zone</span>`
+                ))
+                .addTo(map);
+
+            const rescueMarker2 = new mapboxgl.Marker({ color: '#a87431', scale: 1.0 })
+                .setLngLat([-82.2930, 35.4568])
+                .setPopup(new mapboxgl.Popup({ offset: 25, maxWidth: '250px' }).setHTML(
+                    `<div class="popup-title">Swiftwater Rescue</div>
+                     <p style="margin:4px 0;">Roadway inundation along low-lying section of US-74A. Henderson County emergency crews deployed.</p>
+                     <span class="popup-tag danger">Rescue Zone</span>`
+                ))
+                .addTo(map);
+
+            const gertonMarker = new mapboxgl.Marker({ color: '#6b5d4d', scale: 0.95 })
+                .setLngLat([-82.3480, 35.4790])
+                .setPopup(new mapboxgl.Popup({ offset: 25, maxWidth: '240px' }).setHTML(
+                    `<div class="popup-title">Gerton Community</div>
+                     <p style="margin:4px 0;">Upper watershed community at the head of Hickory Nut Gorge (~14-mile gorge, 1,800 ft elevation drop to Lake Lure). Gerton Fire &amp; Rescue coordinates upstream emergency response. Gorge carved along the Hickory Nut Gorge lineament through Henderson augen gneiss bedrock.</p>
+                     <span class="popup-tag info">Emergency Staging / Gorge Head</span>`
+                ))
+                .addTo(map);
+
+            // ──────────────────────────────────────────
+            // WATERSHED BOUNDARY
+            // Approximate HUC subwatershed for Rocky Broad above BCVN7 (94.4 sq mi).
+            // Boundary traces the topographic divide on the Blue Ridge escarpment.
+            // Source: derived from USGS NHD / StreamStats; schematic accuracy.
+            // ──────────────────────────────────────────
+            const watershedGeojson = {
+                type: 'FeatureCollection',
+                features: [{
+                    type: 'Feature',
+                    properties: { name: 'Rocky Broad Watershed above BCVN7', area_sqmi: 94.4, huc8: '03060102' },
+                    geometry: {
+                        type: 'Polygon',
+                        coordinates: [[
+                            [-82.278, 35.455], [-82.282, 35.472], [-82.290, 35.488],
+                            [-82.308, 35.499], [-82.330, 35.504], [-82.355, 35.500],
+                            [-82.372, 35.490], [-82.388, 35.472], [-82.395, 35.452],
+                            [-82.385, 35.432], [-82.365, 35.418], [-82.340, 35.412],
+                            [-82.315, 35.418], [-82.295, 35.430], [-82.278, 35.455],
+                        ]],
+                    },
+                }],
+            };
+
+            map.addSource('watershed-source', { type: 'geojson', data: watershedGeojson });
+
+            map.addLayer({
+                id: 'watershed-fill',
+                type: 'fill',
+                source: 'watershed-source',
+                paint: { 'fill-color': '#5a7048', 'fill-opacity': 0.07 },
+                layout: { visibility: 'visible' },
+            });
+
+            map.addLayer({
+                id: 'watershed-outline',
+                type: 'line',
+                source: 'watershed-source',
+                paint: {
+                    'line-color': '#5a7048',
+                    'line-width': 2.2,
+                    'line-opacity': 0.75,
+                    'line-dasharray': [8, 4],
+                },
+                layout: { visibility: 'visible' },
+            });
+
+            // ──────────────────────────────────────────
+            // LANDSLIDE HAZARD ZONES
+            // Schematic high-hazard corridors on gorge walls (slopes >30°).
+            // Based on NCGS Henderson County Slope Movement Hazard Maps
+            // (Wooten et al. 2011, DDS-GHMS-5). Not a substitute for
+            // official NCGS layers — see deq.nc.gov/ncgs for authoritative data.
+            // ──────────────────────────────────────────
+            const landslideGeojson = {
+                type: 'FeatureCollection',
+                features: [
+                    {
+                        type: 'Feature',
+                        properties: { name: 'Gorge North Wall — High Landslide Hazard', slope: '>30°', source: 'NCGS DDS-GHMS-5' },
+                        geometry: {
+                            type: 'Polygon',
+                            coordinates: [[
+                                [-82.310, 35.462], [-82.300, 35.470], [-82.290, 35.475],
+                                [-82.280, 35.472], [-82.270, 35.468], [-82.268, 35.462],
+                                [-82.275, 35.458], [-82.285, 35.457], [-82.296, 35.456],
+                                [-82.305, 35.458], [-82.310, 35.462],
+                            ]],
+                        },
+                    },
+                    {
+                        type: 'Feature',
+                        properties: { name: 'Gorge South Wall — High Landslide Hazard', slope: '>30°', source: 'NCGS DDS-GHMS-5' },
+                        geometry: {
+                            type: 'Polygon',
+                            coordinates: [[
+                                [-82.310, 35.446], [-82.300, 35.442], [-82.288, 35.438],
+                                [-82.275, 35.437], [-82.268, 35.440], [-82.267, 35.446],
+                                [-82.274, 35.450], [-82.285, 35.452], [-82.298, 35.451],
+                                [-82.308, 35.449], [-82.310, 35.446],
+                            ]],
+                        },
+                    },
+                ],
+            };
+
+            map.addSource('landslide-source', { type: 'geojson', data: landslideGeojson });
+
+            map.addLayer({
+                id: 'landslide-fill',
+                type: 'fill',
+                source: 'landslide-source',
+                paint: { 'fill-color': '#7d2b18', 'fill-opacity': 0.22 },
+                layout: { visibility: 'none' },
+            });
+
+            map.addLayer({
+                id: 'landslide-hatch',
+                type: 'line',
+                source: 'landslide-source',
+                paint: {
+                    'line-color': '#7d2b18',
+                    'line-width': 1.5,
+                    'line-opacity': 0.6,
+                    'line-dasharray': [2, 5],
+                },
+                layout: { visibility: 'none' },
+            });
+
+            const bearwallowMarker = new mapboxgl.Marker({ color: '#2f6b8f', scale: 1.05 })
+                .setLngLat([-82.3270, 35.4370])
+                .setPopup(new mapboxgl.Popup({ offset: 25, maxWidth: '290px' }).setHTML(
+                    `<div class="popup-title">Bearwallow Mountain ECONet Station</div>
+                     <p style="margin:4px 0;">Henderson County automated weather station. Recorded <strong>19.99 inches</strong> of rainfall over Sept 25-27, 2024 (Hurricane Helene) — the primary reference station for the study area.</p>
+                     <p style="margin:4px 0;font-size:0.8em;color:#6b5d4d;">Source: NC State Climate Office rapid post-event analysis (Davis, 2024).</p>
+                     <span class="popup-tag info">Climate Monitoring</span>`
+                ))
+                .addTo(map);
+
+            const tncPreserveMarker = new mapboxgl.Marker({ color: '#5a7048', scale: 1.05 })
+                .setLngLat([-82.2800, 35.4592])
+                .setPopup(new mapboxgl.Popup({ offset: 25, maxWidth: '290px' }).setHTML(
+                    `<div class="popup-title">TNC Bat Cave Preserve</div>
+                     <p style="margin:4px 0;">The Nature Conservancy property protecting the gorge cave system and surrounding old-growth forest. The pedestrian bridge crossing the Rocky Broad was <strong>destroyed during Hurricane Helene (Sept 2024)</strong>, curtailing ongoing ecological monitoring.</p>
+                     <p style="margin:4px 0;font-size:0.8em;color:#6b5d4d;">Habitat: Hickory Nut Gorge green salamander (<em>Aneides caryaensis</em>), hellbender, native brook trout.</p>
+                     <span class="popup-tag success">Conservation Area</span>`
+                ))
+                .addTo(map);
+
+            const chimneyRockGaugeMarker = new mapboxgl.Marker({ color: '#5a7048', scale: 0.9 })
+                .setLngLat([-82.2460, 35.4430])
+                .setPopup(new mapboxgl.Popup({ offset: 25, maxWidth: '290px' }).setHTML(
+                    `<div class="popup-title">USGS Gauge 02148500</div>
+                     <p style="margin:4px 0;">Broad River Near Chimney Rock, NC. Drainage area: <strong>94.4 sq mi</strong>. Period of record 1928-present. Period-of-record peak: <strong>26,000 cfs</strong> (August 15, 1928 — probable tropical remnant). Primary continuous-record gauge for the lower gorge corridor.</p>
+                     <p style="margin:4px 0;font-size:0.8em;color:#6b5d4d;">Source: USGS NWIS, Site 02148500.</p>
+                     <span class="popup-tag info">USGS Stream Gauge</span>`
+                ))
+                .addTo(map);
+
+            window._poiMarkers = [culvertMarker, batCaveMarker, gaugeMarker, rescueMarker1, rescueMarker2, gertonMarker, bearwallowMarker, tncPreserveMarker, chimneyRockGaugeMarker];
+            window._mapInstance = map;
+
+            // Fit bounds
+            const bounds = new mapboxgl.LngLatBounds();
+            floodSimGeojson.features[0].geometry.coordinates[0].forEach(c => bounds.extend(c));
+            bounds.extend([-82.315, 35.480]);
+            bounds.extend([-82.264, 35.424]);
+            map.fitBounds(bounds, { padding: 60, maxZoom: 15, duration: 1500 });
+
+            console.log('✓ Bat Cave Flood Dashboard initialized.');
+        });
+
+        // ──────────────────────────────────────────
+        // LAYER TOGGLE FUNCTION
+        // ──────────────────────────────────────────
+        function toggleLayer(layerId) {
+            const map = window._mapInstance;
+            if (!map || !map.isStyleLoaded()) return;
+
+            if (layerId === 'poi-markers') {
+                const markers = window._poiMarkers || [];
+                const checkbox = document.getElementById('toggle-poi');
+                const isVisible = checkbox ? checkbox.checked : true;
+                markers.forEach(marker => {
+                    if (isVisible) marker.addTo(map);
+                    else marker.remove();
+                });
+                return;
+            }
+
+            try {
+                const visibility = map.getLayoutProperty(layerId, 'visibility');
+                const newVisibility = visibility === 'visible' ? 'none' : 'visible';
+                map.setLayoutProperty(layerId, 'visibility', newVisibility);
+
+                const associatedLayers = {
+                    'flood-sim-layer':   ['flood-sim-outline-glow'],
+                    'flood-100yr-layer': ['flood-100yr-dash'],
+                    'flood-500yr-layer': ['flood-500yr-dot'],
+                    'highway-layer':     ['highway-glow'],
+                    'watershed-outline': ['watershed-fill'],
+                    'landslide-fill':    ['landslide-hatch'],
+                };
+
+                if (associatedLayers[layerId]) {
+                    associatedLayers[layerId].forEach(assocId => {
+                        try { map.setLayoutProperty(assocId, 'visibility', newVisibility); }
+                        catch (e) {}
+                    });
+                }
+
+                const checkboxMap = {
+                    'flood-sim-layer':   'toggle-flood-sim',
+                    'flood-100yr-layer': 'toggle-flood-100yr',
+                    'flood-500yr-layer': 'toggle-flood-500yr',
+                    'highway-layer':     'toggle-highway',
+                    'watershed-outline': 'toggle-watershed',
+                    'landslide-fill':    'toggle-landslide',
+                };
+                const checkboxId = checkboxMap[layerId];
+                if (checkboxId) {
+                    const cb = document.getElementById(checkboxId);
+                    if (cb) cb.checked = (newVisibility === 'visible');
+                }
+            } catch (e) {
+                console.warn('Layer toggle error:', e.message);
+            }
+        }
+
+        window.toggleLayer = toggleLayer;
+
+        // ──────────────────────────────────────────
+        // SIDEBAR TOGGLE
+        // ──────────────────────────────────────────
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('sidebar-toggle');
+        const toggleIcon = document.getElementById('toggle-icon');
+
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            toggleIcon.className = isCollapsed
+                ? 'fa-solid fa-chevron-right'
+                : 'fa-solid fa-chevron-left';
+            setTimeout(() => { window._mapInstance?.resize(); }, 400);
+        });
+
+        // ──────────────────────────────────────────
+        // ELEVATION PROFILE CHART
+        // ──────────────────────────────────────────
+        function initElevationChart() {
+            const ctx = document.getElementById('elevationChart').getContext('2d');
+
+            const distances = [];
+            const elevations = [];
+            const numPoints = 60;
+            const totalDistance = 3800;
+
+            for (let i = 0; i < numPoints; i++) {
+                const dist = (i / (numPoints - 1)) * totalDistance;
+                distances.push(dist.toFixed(0));
+
+                let elevation;
+                const riverCenter = 1800;
+                const riverElevation = 1470;
+                const westRidgeElev = 3500;
+                const eastRidgeElev = 2800;
+
+                if (dist < riverCenter) {
+                    const frac = dist / riverCenter;
+                    const shapedFrac = Math.pow(frac, 0.55);
+                    elevation = westRidgeElev - (westRidgeElev - riverElevation) * shapedFrac;
+                } else {
+                    const frac = (dist - riverCenter) / (totalDistance - riverCenter);
+                    const shapedFrac = Math.pow(frac, 0.65);
+                    elevation = riverElevation + (eastRidgeElev - riverElevation) * shapedFrac;
+                }
+
+                const noise = (Math.sin(dist * 0.015) * 25 + Math.sin(dist * 0.04) * 15) *
+                              (1 - Math.abs(dist - riverCenter) / (totalDistance * 0.6));
+                elevation += Math.max(-30, Math.min(30, noise));
+                elevations.push(elevation.toFixed(1));
+            }
+
+            // BCVN7 gauge datum ~ 1,470 ft NAVD88 (channel invert at gauge location)
+            // Stage thresholds converted to NAVD88 elevation:
+            //   Channel invert + stage value = elevation
+            const gaugeInvert  = 1470;
+            const majorStage   = new Array(numPoints).fill(gaugeInvert + 9.5);   // 1479.5 ft — Major Flood
+            const mayPeakStage = new Array(numPoints).fill(gaugeInvert + 14.2);  // 1484.2 ft — May 2026 peak
+
+            window._elevationChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: distances,
+                    datasets: [
+                        {
+                            label: 'Terrain Elevation (ft)',
+                            data: elevations,
+                            borderColor: '#3a322a',
+                            backgroundColor: 'rgba(168, 116, 49, 0.18)',
+                            borderWidth: 1.8,
+                            fill: true,
+                            tension: 0.35,
+                            pointRadius: 0,
+                            pointHoverRadius: 4,
+                            pointHoverBackgroundColor: '#7d2b18',
+                            order: 3,
+                        },
+                        {
+                            label: 'Major Flood Stage (9.5 ft / ~1,480 ft)',
+                            data: majorStage,
+                            borderColor: '#a87431',
+                            borderWidth: 1.5,
+                            borderDash: [5, 5],
+                            fill: false,
+                            tension: 0,
+                            pointRadius: 0,
+                            pointHoverRadius: 0,
+                            order: 2,
+                        },
+                        {
+                            label: 'May 2026 Peak (14.2 ft / ~1,484 ft)',
+                            data: mayPeakStage,
+                            borderColor: '#7d2b18',
+                            borderWidth: 2,
+                            borderDash: [8, 4],
+                            fill: false,
+                            tension: 0,
+                            pointRadius: 0,
+                            pointHoverRadius: 0,
+                            order: 1,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { intersect: false, mode: 'index' },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                color: '#6b5d4d',
+                                boxWidth: 14,
+                                boxHeight: 3,
+                                padding: 12,
+                                font: { size: 10, family: "'Inter Tight', sans-serif" },
+                                usePointStyle: true,
+                                pointStyleWidth: 14,
+                            },
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(28, 24, 20, 0.95)',
+                            titleColor: '#f1ead8',
+                            bodyColor: '#e8dec5',
+                            borderColor: '#7d2b18',
+                            borderWidth: 1,
+                            padding: 10,
+                            titleFont: { family: "'Fraunces', Georgia, serif", weight: '600' },
+                            bodyFont:  { family: "'Inter Tight', sans-serif" },
+                            callbacks: {
+                                title: (items) => `Distance: ${items[0].label} m`,
+                                label: (item) => ` ${item.dataset.label}: ${parseFloat(item.raw).toLocaleString()} ft`,
+                            },
+                        },
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Distance (meters) — West to East',
+                                color: '#6b5d4d',
+                                font: { size: 10, family: "'Fraunces', Georgia, serif", style: 'italic' },
+                            },
+                            ticks: {
+                                color: '#6b5d4d',
+                                font: { size: 9, family: "'Inter Tight', sans-serif" },
+                                maxTicksLimit: 8,
+                                callback: (val) => distances[val] + 'm',
+                            },
+                            grid: { color: 'rgba(107, 93, 77, 0.15)' },
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Elevation (ft)',
+                                color: '#6b5d4d',
+                                font: { size: 10, family: "'Fraunces', Georgia, serif", style: 'italic' },
+                            },
+                            min: 1300,
+                            max: 3800,
+                            ticks: {
+                                color: '#6b5d4d',
+                                font: { size: 9, family: "'Inter Tight', sans-serif" },
+                                callback: (val) => val.toLocaleString() + ' ft',
+                                stepSize: 400,
+                            },
+                            grid: { color: 'rgba(107, 93, 77, 0.15)' },
+                        },
+                    },
+                },
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initElevationChart();
+        });
+
+        // ──────────────────────────────────────────
+        // ERROR HANDLING
+        // ──────────────────────────────────────────
+        map.on('error', (e) => {
+            if (e.error && e.error.status === 401) {
+                console.error('Invalid Mapbox token.');
+                const mapEl = document.getElementById('map');
+                const errorOverlay = document.createElement('div');
+                errorOverlay.style.cssText = `
+                    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+                    background:#f1ead8;color:#1c1814;padding:24px 32px;
+                    border-radius:4px;text-align:center;z-index:100;max-width:420px;
+                    border:1px solid #7d2b18;border-left:4px solid #7d2b18;
+                    font-family:'Inter Tight', sans-serif;
+                    box-shadow:0 14px 40px rgba(28,24,20,0.25);
+                `;
+                errorOverlay.innerHTML = `
+                    <h3 style="color:#7d2b18;margin-bottom:10px;font-family:'Fraunces',Georgia,serif;font-weight:600;">Mapbox Token Required</h3>
+                    <p style="font-size:0.85rem;line-height:1.5;color:#3a322a;">
+                        Please replace <code style="background:#e8dec5;padding:2px 6px;border-radius:2px;">MAPBOX_TOKEN</code>
+                        with a valid token from
+                        <a href="https://account.mapbox.com/" target="_blank" style="color:#7d2b18;">account.mapbox.com</a>.
+                    </p>
+                `;
+                mapEl.appendChild(errorOverlay);
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            if (window._mapInstance) window._mapInstance.resize();
+        });
+
+        console.log('Bat Cave Flood Impact Dashboard · archival edition');
+    </script>
+</body>
+</html>

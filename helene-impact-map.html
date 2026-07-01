@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.0/css/bootstrap-glyphicons.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.2.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Leaflet.awesome-markers/2.0.2/leaflet.awesome-markers.css"/>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/python-visualization/folium/folium/templates/leaflet.awesome.rotate.min.css"/>
+    
+            <meta name="viewport" content="width=device-width,
+                initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <style>
+                #map_7be6cddd8e86631b21f8f6c59b2c30d2 {
+                    position: relative;
+                    width: 100.0%;
+                    height: 560.0px;
+                    left: 0.0%;
+                    top: 0.0%;
+                }
+                .leaflet-container { font-size: 1rem; }
+            </style>
+
+            <style>html, body {
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+            }
+            </style>
+
+            <style>#map {
+                position:absolute;
+                top:0;
+                bottom:0;
+                right:0;
+                left:0;
+                }
+            </style>
+
+            <script>
+                L_NO_TOUCH = false;
+                L_DISABLE_3D = false;
+            </script>
+
+        
+    
+            
+                <style>
+                    .leaflet-image-layer {
+                        /* old android/safari*/
+                        image-rendering: -webkit-optimize-contrast;
+                        image-rendering: crisp-edges; /* safari */
+                        image-rendering: pixelated; /* chrome */
+                        image-rendering: -moz-crisp-edges; /* firefox */
+                        image-rendering: -o-crisp-edges; /* opera */
+                        -ms-interpolation-mode: nearest-neighbor; /* ie */
+                    }
+                </style>
+            
+        
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@3.0.0/Control.FullScreen.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.fullscreen@3.0.0/Control.FullScreen.css"/>
+</head>
+<body>
+    
+    
+            <div class="folium-map" id="map_7be6cddd8e86631b21f8f6c59b2c30d2" ></div>
+        
+</body>
+<script>
+    
+    
+            var map_7be6cddd8e86631b21f8f6c59b2c30d2 = L.map(
+                "map_7be6cddd8e86631b21f8f6c59b2c30d2",
+                {
+                    center: [35.55, -82.5],
+                    crs: L.CRS.EPSG3857,
+                    ...{
+  "zoom": 8,
+  "zoomControl": true,
+  "preferCanvas": false,
+}
+
+                }
+            );
+
+            
+
+        
+    
+            var tile_layer_a7ab1a78b1f34f4a427af0195e86d5c7 = L.tileLayer(
+                "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+                {
+  "minZoom": 0,
+  "maxZoom": 19,
+  "maxNativeZoom": 19,
+  "noWrap": false,
+  "attribution": "CartoDB",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_a7ab1a78b1f34f4a427af0195e86d5c7.addTo(map_7be6cddd8e86631b21f8f6c59b2c30d2);
+        
+    
+            var tile_layer_4873261bc2ff2715cf6632af4467f095 = L.tileLayer(
+                "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                {
+  "minZoom": 0,
+  "maxZoom": 18,
+  "maxNativeZoom": 18,
+  "noWrap": false,
+  "attribution": "Esri",
+  "subdomains": "abc",
+  "detectRetina": false,
+  "tms": false,
+  "opacity": 1,
+}
+
+            );
+        
+    
+            tile_layer_4873261bc2ff2715cf6632af4467f095.addTo(map_7be6cddd8e86631b21f8f6c59b2c30d2);
+        
+    
+            var feature_group_6964e4b1890c49620676454885487d99 = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var circle_4873f0abe4afb1fc9937ff2e1f38d564 = L.circle(
+                [35.59, -82.55],
+                {"bubblingMouseEvents": true, "color": "#22c55e", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#22c55e", "fillOpacity": 0.12, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 18000, "stroke": true, "weight": 1.5}
+            ).addTo(feature_group_6964e4b1890c49620676454885487d99);
+        
+    
+        var popup_6db248ef4cda9a62f10e0cf72e93b86e = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_dfc56fc8e7e76ceb23c81a98c2da38ac = $(`<div id="html_dfc56fc8e7e76ceb23c81a98c2da38ac" style="width: 100.0%; height: 100.0%;">Buncombe County (Asheville)</div>`)[0];
+                popup_6db248ef4cda9a62f10e0cf72e93b86e.setContent(html_dfc56fc8e7e76ceb23c81a98c2da38ac);
+            
+        
+
+        circle_4873f0abe4afb1fc9937ff2e1f38d564.bindPopup(popup_6db248ef4cda9a62f10e0cf72e93b86e)
+        ;
+
+        
+    
+    
+            var circle_610f23ca8448b4a5aafc0753e3fe64c4 = L.circle(
+                [35.55, -83.0],
+                {"bubblingMouseEvents": true, "color": "#22c55e", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#22c55e", "fillOpacity": 0.12, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 16000, "stroke": true, "weight": 1.5}
+            ).addTo(feature_group_6964e4b1890c49620676454885487d99);
+        
+    
+        var popup_cf45a6dbe9cad147840af4c3d6f105aa = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_17a10ce65d9cc9d40ac7235b301798bd = $(`<div id="html_17a10ce65d9cc9d40ac7235b301798bd" style="width: 100.0%; height: 100.0%;">Haywood County</div>`)[0];
+                popup_cf45a6dbe9cad147840af4c3d6f105aa.setContent(html_17a10ce65d9cc9d40ac7235b301798bd);
+            
+        
+
+        circle_610f23ca8448b4a5aafc0753e3fe64c4.bindPopup(popup_cf45a6dbe9cad147840af4c3d6f105aa)
+        ;
+
+        
+    
+    
+            var circle_492446c0547c3ba99a60742b86fb4cd6 = L.circle(
+                [35.9, -82.3],
+                {"bubblingMouseEvents": true, "color": "#22c55e", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#22c55e", "fillOpacity": 0.12, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 12000, "stroke": true, "weight": 1.5}
+            ).addTo(feature_group_6964e4b1890c49620676454885487d99);
+        
+    
+        var popup_f500ec40bed259c256055cbea747a01e = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_44933b3da5066ac6315d6529b8f374e1 = $(`<div id="html_44933b3da5066ac6315d6529b8f374e1" style="width: 100.0%; height: 100.0%;">Yancey County</div>`)[0];
+                popup_f500ec40bed259c256055cbea747a01e.setContent(html_44933b3da5066ac6315d6529b8f374e1);
+            
+        
+
+        circle_492446c0547c3ba99a60742b86fb4cd6.bindPopup(popup_f500ec40bed259c256055cbea747a01e)
+        ;
+
+        
+    
+    
+            var circle_febe46d837a80e73f4a02f7555839baa = L.circle(
+                [35.9, -82.1],
+                {"bubblingMouseEvents": true, "color": "#22c55e", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#22c55e", "fillOpacity": 0.12, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10000, "stroke": true, "weight": 1.5}
+            ).addTo(feature_group_6964e4b1890c49620676454885487d99);
+        
+    
+        var popup_93e9514f28d3ddb42e332011e3ac783d = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_99ec8eedfe29706a5352639114b6c638 = $(`<div id="html_99ec8eedfe29706a5352639114b6c638" style="width: 100.0%; height: 100.0%;">Mitchell County</div>`)[0];
+                popup_93e9514f28d3ddb42e332011e3ac783d.setContent(html_99ec8eedfe29706a5352639114b6c638);
+            
+        
+
+        circle_febe46d837a80e73f4a02f7555839baa.bindPopup(popup_93e9514f28d3ddb42e332011e3ac783d)
+        ;
+
+        
+    
+    
+            var circle_fef08972f0438323c43c586797b891f6 = L.circle(
+                [35.68, -82.0],
+                {"bubblingMouseEvents": true, "color": "#22c55e", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#22c55e", "fillOpacity": 0.12, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 12000, "stroke": true, "weight": 1.5}
+            ).addTo(feature_group_6964e4b1890c49620676454885487d99);
+        
+    
+        var popup_9c02398d6d134423a88360f844b488d1 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_8729c88a6766953f3713e5b76a6bb76e = $(`<div id="html_8729c88a6766953f3713e5b76a6bb76e" style="width: 100.0%; height: 100.0%;">McDowell County</div>`)[0];
+                popup_9c02398d6d134423a88360f844b488d1.setContent(html_8729c88a6766953f3713e5b76a6bb76e);
+            
+        
+
+        circle_fef08972f0438323c43c586797b891f6.bindPopup(popup_9c02398d6d134423a88360f844b488d1)
+        ;
+
+        
+    
+    
+            var circle_20698c1b913a1735047a8a47e77ad7d9 = L.circle(
+                [36.08, -81.9],
+                {"bubblingMouseEvents": true, "color": "#22c55e", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#22c55e", "fillOpacity": 0.12, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 10000, "stroke": true, "weight": 1.5}
+            ).addTo(feature_group_6964e4b1890c49620676454885487d99);
+        
+    
+        var popup_becde75e79755b23234209daf80f9b57 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_3df9f31d2e6ab5884b98f5998065b52a = $(`<div id="html_3df9f31d2e6ab5884b98f5998065b52a" style="width: 100.0%; height: 100.0%;">Avery County</div>`)[0];
+                popup_becde75e79755b23234209daf80f9b57.setContent(html_3df9f31d2e6ab5884b98f5998065b52a);
+            
+        
+
+        circle_20698c1b913a1735047a8a47e77ad7d9.bindPopup(popup_becde75e79755b23234209daf80f9b57)
+        ;
+
+        
+    
+    
+            var circle_f31abf3ec68dc1291612fd00d88e4642 = L.circle(
+                [35.85, -82.7],
+                {"bubblingMouseEvents": true, "color": "#22c55e", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#22c55e", "fillOpacity": 0.12, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 12000, "stroke": true, "weight": 1.5}
+            ).addTo(feature_group_6964e4b1890c49620676454885487d99);
+        
+    
+        var popup_0c0d9d2d82b6133db79d4e23c6973dc1 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_92605922b503aff83ca0c964ee58da0d = $(`<div id="html_92605922b503aff83ca0c964ee58da0d" style="width: 100.0%; height: 100.0%;">Madison County</div>`)[0];
+                popup_0c0d9d2d82b6133db79d4e23c6973dc1.setContent(html_92605922b503aff83ca0c964ee58da0d);
+            
+        
+
+        circle_f31abf3ec68dc1291612fd00d88e4642.bindPopup(popup_0c0d9d2d82b6133db79d4e23c6973dc1)
+        ;
+
+        
+    
+    
+            var circle_22d67b49db00323e241cb24f9c0f1900 = L.circle(
+                [35.38, -81.95],
+                {"bubblingMouseEvents": true, "color": "#22c55e", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#22c55e", "fillOpacity": 0.12, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 11000, "stroke": true, "weight": 1.5}
+            ).addTo(feature_group_6964e4b1890c49620676454885487d99);
+        
+    
+        var popup_0b67f5abf2bd7d8c204f4a6a8fe1f2a6 = L.popup({
+  "maxWidth": 200,
+});
+
+        
+            
+                var html_d2397453cfa6b03ce0b917ccfd8aa10c = $(`<div id="html_d2397453cfa6b03ce0b917ccfd8aa10c" style="width: 100.0%; height: 100.0%;">Rutherford County</div>`)[0];
+                popup_0b67f5abf2bd7d8c204f4a6a8fe1f2a6.setContent(html_d2397453cfa6b03ce0b917ccfd8aa10c);
+            
+        
+
+        circle_22d67b49db00323e241cb24f9c0f1900.bindPopup(popup_0b67f5abf2bd7d8c204f4a6a8fe1f2a6)
+        ;
+
+        
+    
+    
+            feature_group_6964e4b1890c49620676454885487d99.addTo(map_7be6cddd8e86631b21f8f6c59b2c30d2);
+        
+    
+            var feature_group_115dd870294a118e944e8fe4e6c24f0d = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var poly_line_f754db67fdd887c070c4c48676104e4b = L.polyline(
+                [[30.35, -84.98], [31.8, -84.2], [33.1, -83.6], [34.5, -83.1], [35.6, -82.55], [36.4, -81.8], [37.2, -81.1]],
+                {"bubblingMouseEvents": true, "color": "#f97316", "dashArray": "8 4", "dashOffset": null, "fill": false, "fillColor": "#f97316", "fillOpacity": 0.2, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "noClip": false, "opacity": 0.7, "smoothFactor": 1.0, "stroke": true, "weight": 3}
+            ).addTo(feature_group_115dd870294a118e944e8fe4e6c24f0d);
+        
+    
+            poly_line_f754db67fdd887c070c4c48676104e4b.bindTooltip(
+                `<div>
+                     Hurricane Helene track (approx.)
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            feature_group_115dd870294a118e944e8fe4e6c24f0d.addTo(map_7be6cddd8e86631b21f8f6c59b2c30d2);
+        
+    
+            var feature_group_9f3b2ea41818c04d8fbc9a3d4a26a40f = L.featureGroup(
+                {
+}
+            );
+        
+    
+            var circle_marker_f103775869a65e1a3a78704026f874b7 = L.circleMarker(
+                [35.5951, -82.5515],
+                {"bubblingMouseEvents": true, "color": "#f97316", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f97316", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 3}
+            ).addTo(feature_group_9f3b2ea41818c04d8fbc9a3d4a26a40f);
+        
+    
+        var popup_09595b495323e2b8a1d6794161abe366 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_b1d90084cf37c935be29a909b339b563 = $(`<div id="html_b1d90084cf37c935be29a909b339b563" style="width: 100.0%; height: 100.0%;"><b>Asheville, NC</b><br>Regional hub; French Broad River flood</div>`)[0];
+                popup_09595b495323e2b8a1d6794161abe366.setContent(html_b1d90084cf37c935be29a909b339b563);
+            
+        
+
+        circle_marker_f103775869a65e1a3a78704026f874b7.bindPopup(popup_09595b495323e2b8a1d6794161abe366)
+        ;
+
+        
+    
+    
+            circle_marker_f103775869a65e1a3a78704026f874b7.bindTooltip(
+                `<div>
+                     Asheville, NC
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_8727a155f7ad5ab8ada9272d68c5fb85 = L.circleMarker(
+                [35.4432, -82.2467],
+                {"bubblingMouseEvents": true, "color": "#f97316", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f97316", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 3}
+            ).addTo(feature_group_9f3b2ea41818c04d8fbc9a3d4a26a40f);
+        
+    
+        var popup_67b56b74b5bf31e9b74a11489a4fe352 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_ba12a3acb8720bb691e5ead3c2de158f = $(`<div id="html_ba12a3acb8720bb691e5ead3c2de158f" style="width: 100.0%; height: 100.0%;"><b>Chimney Rock</b><br>Catastrophic flooding; village largely destroyed</div>`)[0];
+                popup_67b56b74b5bf31e9b74a11489a4fe352.setContent(html_ba12a3acb8720bb691e5ead3c2de158f);
+            
+        
+
+        circle_marker_8727a155f7ad5ab8ada9272d68c5fb85.bindPopup(popup_67b56b74b5bf31e9b74a11489a4fe352)
+        ;
+
+        
+    
+    
+            circle_marker_8727a155f7ad5ab8ada9272d68c5fb85.bindTooltip(
+                `<div>
+                     Chimney Rock
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_4b910dc03b12bfef837a1df722e4bedc = L.circleMarker(
+                [35.6179, -82.3243],
+                {"bubblingMouseEvents": true, "color": "#f97316", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f97316", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 3}
+            ).addTo(feature_group_9f3b2ea41818c04d8fbc9a3d4a26a40f);
+        
+    
+        var popup_55917d5d9356aab312c74c7fbe966dfc = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_0fcdfbf55535ab5d11a4d7b119c55b9b = $(`<div id="html_0fcdfbf55535ab5d11a4d7b119c55b9b" style="width: 100.0%; height: 100.0%;"><b>Black Mountain</b><br>Major treefall zone; Swannanoa corridor</div>`)[0];
+                popup_55917d5d9356aab312c74c7fbe966dfc.setContent(html_0fcdfbf55535ab5d11a4d7b119c55b9b);
+            
+        
+
+        circle_marker_4b910dc03b12bfef837a1df722e4bedc.bindPopup(popup_55917d5d9356aab312c74c7fbe966dfc)
+        ;
+
+        
+    
+    
+            circle_marker_4b910dc03b12bfef837a1df722e4bedc.bindTooltip(
+                `<div>
+                     Black Mountain
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            var circle_marker_1e9f64c2d6a001f6f554872b829782c2 = L.circleMarker(
+                [35.8943, -82.8318],
+                {"bubblingMouseEvents": true, "color": "#f97316", "dashArray": null, "dashOffset": null, "fill": true, "fillColor": "#f97316", "fillOpacity": 0.9, "fillRule": "evenodd", "lineCap": "round", "lineJoin": "round", "opacity": 1.0, "radius": 6, "stroke": true, "weight": 3}
+            ).addTo(feature_group_9f3b2ea41818c04d8fbc9a3d4a26a40f);
+        
+    
+        var popup_8fc65bf7e242cec23e8b6e9445a505d3 = L.popup({
+  "maxWidth": 240,
+});
+
+        
+            
+                var html_7fe87e945c0ce95aab89a0b7468ed514 = $(`<div id="html_7fe87e945c0ce95aab89a0b7468ed514" style="width: 100.0%; height: 100.0%;"><b>Hot Springs</b><br>French Broad River catastrophic flooding</div>`)[0];
+                popup_8fc65bf7e242cec23e8b6e9445a505d3.setContent(html_7fe87e945c0ce95aab89a0b7468ed514);
+            
+        
+
+        circle_marker_1e9f64c2d6a001f6f554872b829782c2.bindPopup(popup_8fc65bf7e242cec23e8b6e9445a505d3)
+        ;
+
+        
+    
+    
+            circle_marker_1e9f64c2d6a001f6f554872b829782c2.bindTooltip(
+                `<div>
+                     Hot Springs
+                 </div>`,
+                {
+  "sticky": true,
+}
+            );
+        
+    
+            feature_group_9f3b2ea41818c04d8fbc9a3d4a26a40f.addTo(map_7be6cddd8e86631b21f8f6c59b2c30d2);
+        
+    
+            var image_overlay_8082521e8f1d2f61fecd412358dd00ef = L.imageOverlay(
+                "https://storage.googleapis.com/www.geoglypha1.org/gee/helene-damage-overlay.png",
+                [[35.34987423997253, -82.75019885876638], [35.70021720077914, -82.34999939969113]],
+                {
+  "opacity": 0.75,
+  "crossOrigin": true,
+  "zindex": 2,
+}
+            );
+        
+    
+            image_overlay_8082521e8f1d2f61fecd412358dd00ef.addTo(map_7be6cddd8e86631b21f8f6c59b2c30d2);
+        
+    
+            var layer_control_8660cbc5bb7e4aa7c93895c1c8b0f99e_layers = {
+                base_layers : {
+                    "Dark Matter" : tile_layer_a7ab1a78b1f34f4a427af0195e86d5c7,
+                    "Satellite" : tile_layer_4873261bc2ff2715cf6632af4467f095,
+                },
+                overlays :  {
+                    "High-Impact Counties" : feature_group_6964e4b1890c49620676454885487d99,
+                    "Helene Track (approx.)" : feature_group_115dd870294a118e944e8fe4e6c24f0d,
+                    "Key Sites" : feature_group_9f3b2ea41818c04d8fbc9a3d4a26a40f,
+                    "GEE Canopy Damage (NDVI + SAR)" : image_overlay_8082521e8f1d2f61fecd412358dd00ef,
+                },
+            };
+            let layer_control_8660cbc5bb7e4aa7c93895c1c8b0f99e = L.control.layers(
+                layer_control_8660cbc5bb7e4aa7c93895c1c8b0f99e_layers.base_layers,
+                layer_control_8660cbc5bb7e4aa7c93895c1c8b0f99e_layers.overlays,
+                {
+  "position": "topright",
+  "collapsed": false,
+  "autoZIndex": true,
+}
+            ).addTo(map_7be6cddd8e86631b21f8f6c59b2c30d2);
+
+        
+    
+            L.control.fullscreen(
+                {
+  "position": "topleft",
+  "title": "Full Screen",
+  "titleCancel": "Exit Full Screen",
+  "forceSeparateButton": false,
+}
+            ).addTo(map_7be6cddd8e86631b21f8f6c59b2c30d2);
+        
+</script>
+</html>

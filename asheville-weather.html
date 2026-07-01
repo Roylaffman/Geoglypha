@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Asheville Weather + River + Flood Monitor</title>
+<meta name="author" content="Ryan Lafferty">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root { --blueprint: #0050FF; --orange: #F38020; --ink: #1a1a2e; --ink-mute: #6b7280; --rule: #e5e7eb; --rule-strong: #d1d5db; --blue-light: #f0f4ff; --water: #0088cc; --surface: #f8f9fb; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body { font-family: 'Inter', system-ui, sans-serif; background: var(--surface); color: var(--ink); line-height: 1.6; min-height: 100vh; }
+.masthead { padding: 2rem; text-align: center; border-bottom: 1px solid var(--rule); background: #fff; }
+.masthead h1 { font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; letter-spacing: 0.06em; color: var(--blueprint); margin-bottom: 0.5rem; }
+.updated { font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: var(--ink-mute); }
+.container { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+.stats-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.stats-row .card { flex: 1; min-width: 150px; }
+.stat-value { font-family: 'JetBrains Mono', monospace; font-size: 2.2rem; font-weight: 600; color: var(--blueprint); }
+.stat-value.water { color: var(--water); }
+.stat-unit { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--ink-mute); }
+.stat-detail { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--ink-mute); margin-top: 0.25rem; }
+.card { background: #fff; border-radius: 8px; padding: 1.2rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 1rem; }
+.card.full { width: 100%; }
+.card-label { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); margin-bottom: 0.8rem; }
+.chart-wrap { position: relative; height: 300px; }
+#map { height: 400px; width: 100%; border-radius: 6px; }
+.legend-item { display: inline-flex; align-items: center; gap: 0.3rem; margin-right: 1rem; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.data-table th { text-align: left; padding: 0.5rem 0.75rem; font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-mute); border-bottom: 1px solid var(--rule-strong); font-weight: 500; }
+.data-table td { padding: 0.45rem 0.75rem; border-bottom: 1px solid var(--rule); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; }
+.data-table tr:hover td { background: var(--blue-light); }
+.data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.fema-popup { font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; line-height: 1.5; color: var(--ink); }
+.footer { text-align: center; padding: 2rem; font-size: 0.72rem; color: var(--ink-mute); }
+.footer .mono { font-family: 'JetBrains Mono', monospace; color: var(--blueprint); }
+</style>
+</head>
+<body>
+<div class="masthead"><h1>Asheville Weather + River + Flood Monitor</h1><div class="updated" id="updateTime">Loading data...</div></div>
+<div class="container">
+<div class="stats-row">
+<div class="card"><div class="card-label">Temperature</div><div class="stat-value" id="statTemp">--°</div><div class="stat-unit">°C</div></div>
+<div class="card"><div class="card-label">Humidity</div><div class="stat-value" id="statHum">--%</div><div class="stat-unit">relative</div></div>
+<div class="card"><div class="card-label">Wind</div><div class="stat-value" id="statWind">--</div><div class="stat-unit">km/h</div></div>
+<div class="card"><div class="card-label">Precip</div><div class="stat-value" id="statPrecip">--</div><div class="stat-unit">mm</div></div>
+<div class="card"><div class="card-label">French Broad River</div><div class="stat-value water" id="statRiverFt">-- ft</div><div class="stat-unit">USGS 03451500</div><div class="stat-detail" id="statRiverDetail"></div></div>
+</div>
+<div class="card full"><div class="card-label">Temperature + River Level (7 days)</div><div class="chart-wrap"><canvas id="chartTempRiver"></canvas></div></div>
+<div class="card full"><div class="card-label">Precipitation (7 days)</div><div class="chart-wrap"><canvas id="chartPrecip"></canvas></div></div>
+<div class="card full"><div class="card-label">River Flow · French Broad at Asheville (7 days)</div><div class="chart-wrap"><canvas id="chartFlow"></canvas></div></div>
+<div class="card full"><div class="card-label">Asheville · Esri Satellite + USGS Hillshade + FEMA Flood Zones</div><div id="map"></div><div style="margin-top:0.5rem;font-size:0.7rem"><span class="legend-item"><span class="legend-dot" style="background:var(--water)"></span>USGS Gauge</span><span class="legend-item"><span class="legend-dot" style="background:var(--blueprint)"></span>Weather Station</span><span class="legend-item"><span style="display:inline-block;width:12px;border-bottom:2px dashed #e6a020;margin-bottom:3px"></span>FEMA Flood Zone AE</span></div></div>
+<div class="card full"><div class="card-label">Recent Readings</div><table class="data-table"><thead><tr><th>Time</th><th>Temp</th><th>Hum%</th><th>Wind</th><th>Precip</th><th class="num">River ft</th><th class="num">Flow cfs</th></tr></thead><tbody id="readingsBody"><tr><td colspan="7">Loading...</td></tr></tbody></table></div>
+</div>
+<div class="footer"><p>Data: Open-Meteo (CC-BY 4.0) · USGS NWIS 03451500 · FEMA NFHL via ESRI Living Atlas</p><p>Author: Ryan Lafferty · <span id="footerDate"></span></p><p><span class="mono">Auto-refreshed 3x daily</span></p></div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+Promise.all([
+  fetch('asheville-weather-data.json').then(function(r){return r.json()}),
+  fetch('asheville-fema-flood.geojson').then(function(r){return r.json()})
+]).then(function(results){
+  var d = results[0], femaData = results[1];
+  document.getElementById('updateTime').textContent = 'updated ' + d.generated;
+  document.getElementById('statTemp').textContent = d.latest.temp_c.toFixed(1) + '°';
+  document.getElementById('statHum').textContent = d.latest.humidity_pct + '%';
+  document.getElementById('statWind').textContent = d.latest.wind_kmh.toFixed(1);
+  document.getElementById('statPrecip').textContent = d.latest.precip_mm.toFixed(1);
+  document.getElementById('statRiverFt').textContent = d.river.latest_ft.toFixed(2) + ' ft';
+  document.getElementById('statRiverDetail').textContent = d.river.latest_cfs.toFixed(0) + ' cfs' + (d.river.water_temp_c ? ' · water ' + d.river.water_temp_c.toFixed(1) + '°C' : '');
+  document.getElementById('footerDate').textContent = d.generated;
+
+  var wL=d.weather.labels,tD=d.weather.temp_c,pD=d.weather.precip_mm;
+  var rL=d.river.labels,htD=d.river.height_ft,flD=d.river.flow_cfs;
+
+  new Chart(document.getElementById('chartTempRiver'),{
+    type:'line',
+    data:{labels:wL,datasets:[
+      {label:'Temp °C',data:tD,borderColor:'#0050FF',backgroundColor:'rgba(0,80,255,0.04)',fill:true,tension:0.3,pointRadius:0,borderWidth:1.5,yAxisID:'y'},
+      {label:'River ft',data:htD.slice(-Math.min(htD.length,wL.length)),borderColor:'#F38020',fill:false,tension:0.3,pointRadius:0,borderWidth:1.5,borderDash:[4,2],yAxisID:'y1'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{position:'top',labels:{usePointStyle:true,boxWidth:8,font:{family:'JetBrains Mono',size:10}}}},scales:{x:{ticks:{font:{family:'JetBrains Mono',size:8},maxTicksLimit:12,maxRotation:45}},y:{position:'left',title:{display:true,text:'°C',font:{family:'JetBrains Mono',size:9}},ticks:{font:{family:'JetBrains Mono',size:8}}},y1:{position:'right',title:{display:true,text:'ft',font:{family:'JetBrains Mono',size:9}},grid:{drawOnChartArea:false},ticks:{font:{family:'JetBrains Mono',size:8}}}}}
+  });
+
+  new Chart(document.getElementById('chartPrecip'),{
+    type:'bar',data:{labels:wL,datasets:[{label:'mm',data:pD,backgroundColor:'rgba(0,80,255,0.3)',borderColor:'#0050FF',borderWidth:0,borderRadius:1}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{family:'JetBrains Mono',size:8},maxTicksLimit:12,maxRotation:45}},y:{title:{display:true,text:'mm',font:{family:'JetBrains Mono',size:9}},ticks:{font:{family:'JetBrains Mono',size:8}}}}}
+  });
+
+  new Chart(document.getElementById('chartFlow'),{
+    type:'line',data:{labels:rL,datasets:[{label:'cfs',data:flD,borderColor:'#0088cc',backgroundColor:'rgba(0,136,204,0.06)',fill:true,tension:0.2,pointRadius:0,borderWidth:1.5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{font:{family:'JetBrains Mono',size:8},maxTicksLimit:14,maxRotation:45}},y:{title:{display:true,text:'cfs',font:{family:'JetBrains Mono',size:9}},ticks:{font:{family:'JetBrains Mono',size:8}}}}}
+  });
+
+  var b=document.getElementById('readingsBody');b.innerHTML='';var N=12;
+  for(var i=Math.max(0,wL.length-N);i<wL.length;i++){
+    var ri=rL.findIndex(function(rl){return rl&&wL[i]&&rl.startsWith(wL[i].substring(0,13))});
+    var tr=document.createElement('tr');
+    tr.innerHTML='<td>'+wL[i]+'</td><td>'+(tD[i]!=null?tD[i].toFixed(1)+'°':'—')+'</td><td>'+(d.weather.humidity_pct[i]!=null?d.weather.humidity_pct[i]+'%':'—')+'</td><td>'+(d.weather.wind_kmh[i]!=null?d.weather.wind_kmh[i].toFixed(1):'—')+'</td><td>'+(pD[i]!=null?pD[i].toFixed(1):'—')+'</td><td class="num">'+(ri>=0&&htD[ri]!=null?htD[ri].toFixed(2):'—')+'</td><td class="num">'+(ri>=0&&flD[ri]!=null?flD[ri]:'—')+'</td>';
+    b.appendChild(tr);
+  }
+
+  var map=L.map('map',{scrollWheelZoom:false}).setView([35.585,-82.555],12);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri',maxZoom:18}).addTo(map);
+  L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/tile/{z}/{y}/{x}',{attribution:'USGS',opacity:0.35}).addTo(map);
+
+  var floodLayer=L.geoJSON(femaData,{
+    style:function(){return{color:'#e6a020',weight:1,opacity:0.7,fillColor:'#e6a020',fillOpacity:0.25,dashArray:'4 2'}},
+    onEachFeature:function(f,layer){var p=f.properties;layer.bindPopup('<div class="fema-popup"><b>FEMA Flood Zone '+p.zone+'</b><br>'+(p.bfe?'BFE: '+p.bfe+' ft<br>':'')+'100-year floodplain</div>')}
+  }).addTo(map);
+
+  var si=L.divIcon({className:'',html:'<svg width="20" height="20"><circle cx="10" cy="10" r="8" fill="#0050FF" stroke="#fff" stroke-width="2"/><circle cx="10" cy="10" r="3" fill="#fff"/></svg>',iconSize:[20,20],iconAnchor:[10,10]});
+  L.marker([35.595,-82.552],{icon:si}).bindPopup('<b>Weather Station</b><br>'+d.latest.temp_c.toFixed(1)+'°C · '+d.latest.humidity_pct+'% humidity').addTo(map);
+  var gi=L.divIcon({className:'',html:'<svg width="20" height="20"><rect x="2" y="2" width="16" height="16" rx="2" fill="#0088cc" stroke="#fff" stroke-width="2"/><text x="10" y="14" text-anchor="middle" fill="#fff" font-size="10" font-family="JetBrains Mono">G</text></svg>',iconSize:[20,20],iconAnchor:[10,10]});
+  L.marker([35.6091,-82.5799],{icon:gi}).bindPopup('<b>USGS Gauge '+d.river.gauge+'</b><br>French Broad River<br>Stage: '+d.river.latest_ft.toFixed(2)+'ft · Flow: '+d.river.latest_cfs.toFixed(0)+'cfs').addTo(map);
+  L.control.layers(null,{'FEMA Flood Zones (100yr)':floodLayer},{collapsed:false}).addTo(map);
+  setTimeout(function(){map.invalidateSize()},250);
+}).catch(function(e){
+  document.getElementById('updateTime').textContent = 'Error: ' + e.message;
+  console.error(e);
+});
+</script>
+</body></html>

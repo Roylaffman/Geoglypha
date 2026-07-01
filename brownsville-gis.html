@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brownsville Area — Full GIS Report</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="trails_data.js"></script>
+  <!-- Leaflet fullscreen -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/2.4.0/Control.FullScreen.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/2.4.0/Control.FullScreen.min.js"></script>
+  <!-- GeoRaster — renders DEM directly in browser, no server needed -->
+  <script src="https://unpkg.com/georaster"></script>
+  <script src="https://unpkg.com/georaster-layer-for-leaflet"></script>
+
+  <!-- Match geoglypha1.org design system -->
+  <link href="https://fonts.googleapis.com/css2?family=Georgia:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── geoglypha1.org design tokens ──────────────────────────────── */
+    :root {
+      /* Site palette */
+      --primary:   #3a6351;   /* forest green — header/footer */
+      --primary-dk:#2d4e3f;   /* darker green for hover */
+      --secondary: #f2edd7;   /* warm beige — section bg */
+      --accent:    #a0937d;   /* muted taupe — buttons/highlights */
+      --accent-dk: #8a7b69;
+      --text:      #333;
+      --light-text:#f5f5f5;
+      --map-bg:    #111;      /* site's dark map section */
+      --body-bg:   #f9f9f9;
+
+      /* Derived surfaces */
+      --surface:   #fff;
+      --surface2:  #ede8d8;   /* slightly darker beige */
+      --border:    #d4ccb8;
+      --dim:       #7a6e5f;
+
+      /* Map layer colours — kept vivid so they read on the beige report */
+      --trail:  #c05c1a;
+      --water:  #2b7abf;
+      --peak:   #b83232;
+      --hike:   #2a7a3e;
+      --place:  #b8860b;
+      --building:#6b6b9a;
+      --forest: #3a6351;
+      --road:   #888;
+      --inat:   #7c3aed;
+      --eco:    #3a6351;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Arial', sans-serif;
+      background: var(--body-bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ── Site header bar (matches geoglypha1.org nav) ─────────────── */
+    #site-header {
+      background: var(--primary);
+      color: var(--light-text);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    #site-header .logo {
+      font-family: 'Georgia', serif;
+      font-size: 1.4rem;
+      font-weight: bold;
+      letter-spacing: 0.04em;
+      color: var(--light-text);
+      text-decoration: none;
+    }
+    #site-header .back-link {
+      font-size: 0.85rem;
+      color: var(--secondary);
+      text-decoration: none;
+      opacity: 0.85;
+      transition: opacity 0.15s;
+    }
+    #site-header .back-link:hover { opacity: 1; }
+
+    /* ── Map section (matches site's dark #111 map cards) ─────────── */
+    #map-section { background: var(--map-bg); }
+    #map { width:100%; height:65vh; min-height:480px; }
+    .leaflet-tile { filter: brightness(0.88) saturate(0.85); }
+    body.satellite .leaflet-tile { filter: none; }
+
+    /* ── Layer panel ──────────────────────────────────────────────── */
+    #layer-panel {
+      position:absolute; top:70px; right:12px; z-index:1000;
+      background: rgba(58,99,81,0.93);  /* primary green, semi-transparent */
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 14px 16px;
+      min-width: 195px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.5);
+      max-height: calc(65vh - 90px);
+      overflow-y: auto;
+    }
+    #layer-panel h3 {
+      font-family: 'Georgia', serif;
+      font-size: 0.75rem; font-weight: bold;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--secondary); margin-bottom: 10px;
+    }
+    .group-label {
+      font-size: 0.65rem; text-transform: uppercase;
+      letter-spacing: 0.1em; color: rgba(242,237,215,0.65);
+      margin-bottom: 5px; border-top: 1px solid rgba(255,255,255,0.15);
+      padding-top: 8px;
+    }
+    .group-label:first-of-type { border-top: none; padding-top: 0; }
+    .layer-row { display:flex; align-items:center; gap:9px; margin-bottom:6px; }
+    .layer-row label { font-size:0.8rem; color:var(--light-text); cursor:pointer; user-select:none; }
+    .swatch { width:22px; height:4px; border-radius:2px; flex-shrink:0; }
+    .dot    { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .poly   { width:16px; height:12px; border-radius:3px; flex-shrink:0; opacity:0.75; }
+
+    /* ── Leaflet popups — site beige palette ──────────────────────── */
+    .leaflet-popup-content-wrapper {
+      background: var(--secondary) !important;
+      color: var(--text) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 8px !important;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.25) !important;
+      min-width: 210px;
+    }
+    .leaflet-popup-tip { background: var(--secondary) !important; }
+    .leaflet-popup-content { margin: 12px 14px !important; }
+    .pop-title { font-family:'Georgia',serif; font-size:0.92rem; font-weight:bold; color:var(--primary); margin-bottom:5px; }
+    .pop-cat   { display:inline-block; font-size:0.68rem; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; padding:2px 8px; border-radius:4px; background:rgba(58,99,81,0.12); color:var(--primary); margin-bottom:7px; }
+    .pop-row   { display:flex; gap:6px; margin-bottom:3px; font-size:0.8rem; }
+    .pop-key   { color:var(--dim); min-width:55px; flex-shrink:0; }
+    .pop-link  { font-size:0.77rem; margin-top:5px; word-break:break-all; }
+    .pop-link a { color:var(--primary); }
+    .pop-snip  { margin-top:8px; padding-top:8px; border-top:1px solid var(--border); color:var(--dim); font-style:italic; font-size:0.76rem; line-height:1.45; }
+
+    /* ── Report section — matches site's beige/white sections ─────── */
+    #report { background: var(--body-bg); }
+    #report-inner { max-width: 980px; margin: 0 auto; padding: 52px 24px 80px; }
+
+    .rh { text-align:center; margin-bottom:48px; padding-bottom:36px; border-bottom: 2px solid var(--primary); }
+    .rh h1 {
+      font-family: 'Georgia', serif;
+      font-size: clamp(1.6rem, 3vw, 2.5rem);
+      font-weight: bold;
+      color: var(--primary);
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+    .rh-sub { font-size: 0.95rem; color: var(--dim); font-style: italic; }
+    .chips  { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:16px; }
+    .chip   {
+      font-size: 0.72rem; font-weight: 600; letter-spacing: 0.07em;
+      text-transform: uppercase; color: var(--light-text);
+      background: var(--accent); border-radius: 20px; padding: 4px 13px;
+    }
+
+    .sec   { margin-bottom: 44px; }
+    .sec-h { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+    .sec-i {
+      width:36px; height:36px; border-radius:8px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1rem; flex-shrink:0;
+      background: rgba(58,99,81,0.1);
+    }
+    .sec h2 {
+      font-family: 'Georgia', serif;
+      font-size: 1.25rem; font-weight: bold;
+      color: var(--primary);
+    }
+    .sec p { color: var(--text); margin-bottom: 10px; font-size: 0.93rem; }
+
+    .stat-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:12px; margin:16px 0; }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .stat-card:hover { transform: translateY(-4px); box-shadow: 0 6px 16px rgba(0,0,0,0.1); }
+    .stat-v { font-family:'Georgia',serif; font-size:1.55rem; font-weight:bold; line-height:1; margin-bottom:4px; }
+    .stat-l { font-size:0.72rem; color:var(--dim); text-transform:uppercase; letter-spacing:0.08em; }
+
+    .place-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:10px; margin:14px 0; }
+    .place-card {
+      background: var(--surface); border:1px solid var(--border);
+      border-radius:8px; padding:12px 14px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      transition: transform 0.15s;
+    }
+    .place-card:hover { transform: translateY(-3px); }
+    .pc-name { font-size:0.87rem; font-weight:600; color:var(--text); margin-bottom:3px; }
+    .pc-cat  { font-size:0.71rem; color:var(--dim); text-transform:uppercase; letter-spacing:0.06em; }
+
+    .ds-table { width:100%; border-collapse:collapse; font-size:0.84rem; margin-top:10px; }
+    .ds-table th { text-align:left; padding:8px 12px; background:var(--surface2); border:1px solid var(--border); color:var(--dim); font-size:0.7rem; letter-spacing:0.08em; text-transform:uppercase; }
+    .ds-table td { padding:9px 12px; border:1px solid var(--border); color:var(--text); background:var(--surface); }
+    .ds-table tr:nth-child(even) td { background:var(--body-bg); }
+    .tag { display:inline-block; font-size:0.7rem; font-weight:600; padding:2px 8px; border-radius:4px; letter-spacing:0.05em; text-transform:uppercase; }
+    .tag-osm { background:rgba(192,92,26,0.15); color:var(--trail); }
+    .tag-ov  { background:rgba(160,147,125,0.2); color:var(--accent-dk); }
+    .tag-dem { background:rgba(43,122,191,0.15); color:var(--water); }
+    .tag-api { background:rgba(42,122,62,0.15); color:var(--hike); }
+
+    .divider { height:2px; background: linear-gradient(to right, var(--primary), transparent); margin:38px 0; opacity:0.3; }
+
+    /* ── Footer — matches site footer ────────────────────────────── */
+    #site-footer {
+      background: var(--primary);
+      color: var(--light-text);
+      text-align: center;
+      padding: 24px;
+      font-size: 0.8rem;
+      opacity: 0.92;
+    }
+    #site-footer a { color: var(--secondary); text-decoration: none; }
+    #site-footer a:hover { text-decoration: underline; }
+
+    @media (max-width:600px) {
+      #layer-panel { top:60px; right:8px; }
+      #report-inner { padding:28px 14px 52px; }
+      #site-header { padding: 0.8rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Site header — matches geoglypha1.org nav -->
+<header id="site-header">
+  <a class="logo" href="https://www.geoglypha1.org/">Geoglypha</a>
+  <a class="back-link" href="https://www.geoglypha1.org/">← Back to Maps</a>
+</header>
+
+<div id="map-section" style="position:relative">
+  <div id="map"></div>
+  <div id="layer-panel">
+    <h3>Map Layers</h3>
+
+    <div class="group-label">Base Layer</div>
+    <div class="layer-row"><input type="checkbox" id="cb-satellite" /><span class="poly" style="background:#555;border:1px solid #888"></span><label for="cb-satellite">Satellite (swaps OSM)</label></div>
+    <div class="layer-row"><input type="checkbox" id="cb-dem" /><span class="poly" style="background:linear-gradient(to right,#5c3d11,#4a7c40,#d0cfc4);border-radius:2px"></span><label for="cb-dem">Elevation DEM</label></div>
+
+    <div class="group-label">Ecology</div>
+    <div class="layer-row"><input type="checkbox" id="cb-eco" checked /><span class="poly" style="background:var(--eco);opacity:0.5"></span><label for="cb-eco">Sierra Nevada Ecoregion</label></div>
+    <div class="layer-row"><input type="checkbox" id="cb-inat" checked /><span class="dot" style="background:var(--inat)"></span><label for="cb-inat">Wildlife Obs. (100)</label></div>
+
+    <div class="group-label">Places & POIs</div>
+    <div class="layer-row"><input type="checkbox" id="cb-places" checked /><span class="dot" style="background:var(--place)"></span><label for="cb-places">Local Places (105)</label></div>
+    <div class="layer-row"><input type="checkbox" id="cb-airport" checked /><span class="dot" style="background:#e84141"></span><label for="cb-airport">Airport</label></div>
+
+    <div class="group-label">Trails & Water</div>
+    <div class="layer-row"><input type="checkbox" id="cb-trail" checked /><span class="swatch" style="background:var(--trail)"></span><label for="cb-trail">Trails / Paths</label></div>
+    <div class="layer-row"><input type="checkbox" id="cb-water" checked /><span class="swatch" style="background:var(--water)"></span><label for="cb-water">Waterways</label></div>
+    <div class="layer-row"><input type="checkbox" id="cb-hike" checked /><span class="swatch" style="background:var(--hike);height:5px"></span><label for="cb-hike">Hiking Routes</label></div>
+    <div class="layer-row"><input type="checkbox" id="cb-peak" checked /><span class="dot" style="background:var(--peak)"></span><label for="cb-peak">Peaks / Summits</label></div>
+
+    <div class="group-label">Land & Buildings</div>
+    <div class="layer-row"><input type="checkbox" id="cb-landuse" checked /><span class="poly" style="background:var(--forest)"></span><label for="cb-landuse">Land Use / Forest</label></div>
+    <div class="layer-row"><input type="checkbox" id="cb-roads" /><span class="swatch" style="background:var(--road)"></span><label for="cb-roads">Road Network</label></div>
+    <div class="layer-row"><input type="checkbox" id="cb-buildings" /><span class="poly" style="background:var(--building)"></span><label for="cb-buildings">Buildings (4,780)</label></div>
+  </div>
+</div>
+
+<div id="report">
+<div id="report-inner">
+  <div class="rh">
+    <h1>Brownsville Area — Full GIS Report</h1>
+    <div class="rh-sub">Yuba County Foothills, CA &mdash; Brownsville · Rackerby · Challenge · Forbestown · Clipper Mills</div>
+    <div class="chips">
+      <span class="chip">Yuba County CA</span>
+      <span class="chip">Elev 700–1,400 m</span>
+      <span class="chip">105 Local Places</span>
+      <span class="chip">4,780 Buildings</span>
+      <span class="chip">1,839 Trail Features</span>
+      <span class="chip">April 2026</span>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h"><div class="sec-i" style="background:rgba(74,158,255,0.15);color:var(--accent)">▲</div><h2>Overview</h2></div>
+    <p>The Brownsville study area spans five communities in the lower Sierra Nevada foothills of Yuba County — Brownsville, Rackerby, Challenge, Forbestown, and Clipper Mills. The region sits at the convergence of the North Yuba River watershed and the Plumas National Forest, creating a rare mix of working rural landscape, recreational terrain, and intact forest ecology.</p>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-v" style="color:var(--place)">105</div><div class="stat-l">Local Places</div></div>
+      <div class="stat-card"><div class="stat-v" style="color:var(--building)">4,780</div><div class="stat-l">Buildings</div></div>
+      <div class="stat-card"><div class="stat-v" style="color:var(--trail)">1,839</div><div class="stat-l">Trail Features</div></div>
+      <div class="stat-card"><div class="stat-v" style="color:var(--forest)">82</div><div class="stat-l">Land Use Parcels</div></div>
+      <div class="stat-card"><div class="stat-v" style="color:var(--road)">1,865</div><div class="stat-l">Road Segments</div></div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="sec">
+    <div class="sec-h"><div class="sec-i" style="background:rgba(245,200,66,0.15);color:var(--place)">📍</div><h2>Local Places &amp; Community</h2></div>
+    <p>Overture Maps reveals a surprisingly rich local economy and community fabric across these five small communities. Brownsville itself is the commercial hub with a full-service downtown including a grocery store, hardware store, café, medical clinic, and farmers market.</p>
+    <div class="place-grid">
+      <div class="place-card"><div class="pc-name">Brownsville Station Cafe</div><div class="pc-cat">Café · Brownsville</div></div>
+      <div class="place-card"><div class="pc-name">Gold Eagle Market</div><div class="pc-cat">Grocery Store · Brownsville</div></div>
+      <div class="place-card"><div class="pc-name">Ray's General Hardware</div><div class="pc-cat">Hardware Store · Brownsville</div></div>
+      <div class="place-card"><div class="pc-name">Mountains Top Coffee Shop</div><div class="pc-cat">Coffee · Brownsville</div></div>
+      <div class="place-card"><div class="pc-name">Mountain Fair</div><div class="pc-cat">Community Event · Brownsville</div></div>
+      <div class="place-card"><div class="pc-name">Brownsville Farmers Market</div><div class="pc-cat">Farmers Market · Brownsville</div></div>
+      <div class="place-card"><div class="pc-name">Yuba Feather Historical Assoc.</div><div class="pc-cat">Museum · Forbestown</div></div>
+      <div class="place-card"><div class="pc-name">One Eyed Jacks Market &amp; Grill</div><div class="pc-cat">Restaurant · Clipper Mills</div></div>
+      <div class="place-card"><div class="pc-name">Cobble Ridge Distillery</div><div class="pc-cat">Distillery · Oroville</div></div>
+      <div class="place-card"><div class="pc-name">Forbestown General Store</div><div class="pc-cat">Grocery · Forbestown</div></div>
+      <div class="place-card"><div class="pc-name">Brownsville Airport (2CL1)</div><div class="pc-cat">Airport · Brownsville</div></div>
+      <div class="place-card"><div class="pc-name">Sutter North Medical Foundation</div><div class="pc-cat">Medical · Brownsville</div></div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="sec">
+    <div class="sec-h"><div class="sec-i" style="background:rgba(74,222,128,0.15);color:#4ade80">🗺</div><h2>Ecoregion Classification</h2></div>
+    <div class="stat-grid" style="margin-bottom:16px">
+      <div class="stat-card"><div class="stat-v" style="color:#4ade80;font-size:1rem">Sierra Nevada</div><div class="stat-l">EPA Level III (Code 78)</div></div>
+      <div class="stat-card"><div class="stat-v" style="color:#4ade80;font-size:0.95rem">Sierra Nevada Foothills</div><div class="stat-l">Level IV Subregion</div></div>
+      <div class="stat-card"><div class="stat-v" style="color:var(--dim);font-size:0.85rem">Western Cordillera</div><div class="stat-l">NA Level II</div></div>
+      <div class="stat-card"><div class="stat-v" style="color:var(--dim);font-size:0.85rem">CA Floristic Province</div><div class="stat-l">Biodiversity Hotspot</div></div>
+    </div>
+    <p>The Sierra Nevada foothills around Brownsville fall within EPA Level III ecoregion 78 — the Western Foothills transition zone between drier valley grasslands and the wetter mixed-conifer Sierra. The area exhibits steep slopes, canyons, and ridges that drive sharp microclimatic gradients across short distances.</p>
+    <p>Dominant plant communities shift with elevation: blue oak woodland (<em>Quercus douglasii</em>) prevails below 900 m, transitioning to mixed conifer above — ponderosa pine, sugar pine, and Douglas fir. Riparian corridors along the North Yuba tributaries support willows, alders, and cottonwoods providing critical aquatic and bird habitat.</p>
+    <p>The watershed supports black bear, mountain lion, Pacific fisher, and golden eagle. iNaturalist research-grade observations below confirm active populations across all major taxa — 100 verified sightings including mammals, birds, reptiles, amphibians, and rare fungi.</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="sec">
+    <div class="sec-h"><div class="sec-i" style="background:rgba(192,132,252,0.15);color:#c084fc">🔬</div><h2>Wildlife Observations (iNaturalist)</h2></div>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-v" style="color:#4ade80">32</div><div class="stat-l">Plants</div></div>
+      <div class="stat-card"><div class="stat-v" style="color:#facc15">30</div><div class="stat-l">Insects</div></div>
+      <div class="stat-card"><div class="stat-v" style="color:#f97316">14</div><div class="stat-l">Fungi</div></div>
+      <div class="stat-card"><div class="stat-v" style="color:#34d399">6</div><div class="stat-l">Amphibians</div></div>
+      <div class="stat-card"><div class="stat-v" style="color:#f87171">4</div><div class="stat-l">Mammals</div></div>
+      <div class="stat-card"><div class="stat-v" style="color:#60a5fa">3</div><div class="stat-l">Birds</div></div>
+    </div>
+    <p style="margin-top:14px">All 100 observations are research-grade verified sightings from iNaturalist, including American Black Bear, Mountain Lion, Gray Catbird, Pacific tree frogs, and Fimbriate Rain Beetle. Click any purple marker on the map to see the species photo, name, and date of observation. Toggle <strong>Wildlife Obs.</strong> in the layer panel to show/hide.</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="sec">
+    <div class="sec-h"><div class="sec-i" style="background:rgba(62,207,116,0.15);color:var(--hike)">🌿</div><h2>Ecology &amp; Land Cover</h2></div>
+    <p>The Overture land use layer reveals 82 classified parcels dominated by residential (40), agriculture (19), and protected/recreation land (9 combined). The northern edge of the study area transitions into Plumas National Forest — one of the largest in California — with dense mixed-conifer forest supporting cold-water streams, Pacific fisher habitat, and raptor nesting ridgelines.</p>
+    <p>The North Yuba watershed drains this entire study area, with perennial and seasonal streams mapped throughout. These waterways support critical riparian habitat and feed Sly Creek Reservoir to the northeast (Sly Creek Lake, Challenge).</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="sec">
+    <div class="sec-h"><div class="sec-i" style="background:rgba(232,65,65,0.15);color:var(--peak)">✈</div><h2>Brownsville Airport (2CL1)</h2></div>
+    <p>The Brownsville Airport (FAA identifier 2CL1, also known as O60) is a private-use general aviation airstrip located in Brownsville. At approximately 2,300 ft elevation, it serves as a key transportation link for residents of this remote foothill community, supporting air ambulance access and small aircraft operations across the Yuba foothills. The airport is mapped as a named place in Overture and as an OSM aeroway node.</p>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="sec">
+    <div class="sec-h"><div class="sec-i" style="background:rgba(74,158,255,0.1);color:var(--accent)">⚙</div><h2>Data Sources</h2></div>
+    <table class="ds-table">
+      <thead><tr><th>Source</th><th>Dataset</th><th>Records</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr><td><strong>OpenStreetMap</strong></td><td>Trails, waterways, peaks, routes</td><td>1,839</td><td><span class="tag tag-osm">Vector</span></td></tr>
+        <tr><td><strong>Overture Maps</strong></td><td>Places / POIs</td><td>105</td><td><span class="tag tag-ov">Places</span></td></tr>
+        <tr><td><strong>Overture Maps</strong></td><td>Building footprints</td><td>4,780</td><td><span class="tag tag-ov">Buildings</span></td></tr>
+        <tr><td><strong>Overture Maps</strong></td><td>Land use parcels</td><td>82</td><td><span class="tag tag-ov">Land Use</span></td></tr>
+        <tr><td><strong>Overture Maps</strong></td><td>Road segments</td><td>1,865</td><td><span class="tag tag-ov">Roads</span></td></tr>
+        <tr><td><strong>OpenTopography</strong></td><td>SRTMGL1 30 m DEM</td><td>—</td><td><span class="tag tag-dem">Raster</span></td></tr>
+        <tr><td><strong>SerpAPI</strong></td><td>Local business &amp; ecology metadata</td><td>60</td><td><span class="tag tag-api">Web API</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  </div><!-- /#report-inner -->
+</div><!-- /#report -->
+
+<footer id="site-footer">
+  Generated April 2026 &mdash; Brownsville, Yuba County CA &mdash;
+  OpenStreetMap contributors · Overture Maps Foundation · OpenTopography SRTMGL1 · SerpAPI<br/>
+  <a href="https://www.geoglypha1.org/">geoglypha1.org</a>
+</footer>
+
+<script>
+(function() {
+  const map = L.map('map', { fullscreenControl: true, fullscreenControlOptions: { position: 'topleft' } })
+    .setView([39.475, -121.285], 12);
+
+  // ── Base tiles ────────────────────────────────────────────────────
+  const osmTile = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19
+  }).addTo(map);
+
+  const satelliteTile = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles © Esri — Source: Esri, Maxar, GeoEye, Earthstar Geographics',
+    maxZoom: 19
+  }); // not added yet — toggled on/off
+
+  // ── Layer groups ──────────────────────────────────────────────────
+  const LG = {
+    places:    L.layerGroup().addTo(map),
+    airport:   L.layerGroup().addTo(map),
+    trail:     L.layerGroup().addTo(map),
+    water:     L.layerGroup().addTo(map),
+    hike:      L.layerGroup().addTo(map),
+    peak:      L.layerGroup().addTo(map),
+    landuse:   L.layerGroup().addTo(map),
+    roads:     L.layerGroup(),   // off by default
+    buildings: L.layerGroup(),   // off by default
+    inat:      L.layerGroup().addTo(map),
+    eco:       L.layerGroup().addTo(map),
+  };
+
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // ── DEM elevation layer ───────────────────────────────────────────
+  // Hypsometric color ramp: 95m (valley brown) → 634m (mid green) → 1195m (ridge grey)
+  const DEM_MIN = 95, DEM_MAX = 1195;
+  let demLayer = null;
+
+  function elevColor(val) {
+    if (val === null || val <= -9999) return null;
+    const t = Math.max(0, Math.min(1, (val - DEM_MIN) / (DEM_MAX - DEM_MIN)));
+    // low: #5c3d11 (dark brown) → mid: #7ab648 (green) → high: #d0cfc4 (grey-white)
+    let r, g, b;
+    if (t < 0.5) {
+      const s = t * 2;
+      r = Math.round(92  + s * (122 - 92));
+      g = Math.round(61  + s * (182 - 61));
+      b = Math.round(17  + s * (72  - 17));
+    } else {
+      const s = (t - 0.5) * 2;
+      r = Math.round(122 + s * (208 - 122));
+      g = Math.round(182 + s * (207 - 182));
+      b = Math.round(72  + s * (196 - 72));
+    }
+    return `rgba(${r},${g},${b},0.72)`;
+  }
+
+  function loadDEM() {
+    if (demLayer) { map.addLayer(demLayer); return; }
+    fetch('./dem_brownsville.tif')
+      .then(r => r.arrayBuffer())
+      .then(buf => parseGeoraster(buf))
+      .then(georaster => {
+        demLayer = new GeoRasterLayer({
+          georaster,
+          opacity: 0.75,
+          resolution: 128,
+          pixelValuesToColorFn: function(values) {
+            return elevColor(values[0]);
+          }
+        });
+        demLayer.addTo(map);
+        demLayer.bringToBack();
+        // push other base layers on top
+        if (map.hasLayer(satelliteTile)) satelliteTile.bringToFront();
+        if (map.hasLayer(osmTile))       osmTile.bringToFront();
+      })
+      .catch(err => console.error('DEM load failed:', err));
+  }
+
+  // ── Ecoregion polygon (draw first, underneath everything) ────────
+  if (typeof ECOREGION_DATA !== 'undefined') {
+    ECOREGION_DATA.features.forEach(function(f) {
+      const p = f.properties;
+      L.geoJSON(f, {
+        style: { color:'#4ade80', weight:2.5, fillColor:'#4ade80', fillOpacity:0.06, opacity:0.7, dashArray:'8 5' }
+      }).bindPopup(
+        `<div class="pop-title">Sierra Nevada Ecoregion</div>` +
+        `<div class="pop-cat">EPA Level III · Code ${esc(p.L3_CODE)}</div>` +
+        `<div class="pop-row"><span class="pop-key">L3</span><span>${esc(p.L3_NAME)}</span></div>` +
+        `<div class="pop-row"><span class="pop-key">L4</span><span>${esc(p.L4_NAME)}</span></div>` +
+        `<div class="pop-row"><span class="pop-key">Elev.</span><span>${esc(p.elev_range)}</span></div>` +
+        `<div class="pop-row"><span class="pop-key">Veg.</span><span>${esc(p.dominant_veg)}</span></div>` +
+        `<div class="pop-snip">Western Cordillera · California Floristic Province</div>`
+      ).addTo(LG.eco);
+    });
+  }
+
+  // ── iNaturalist wildlife observations ────────────────────────────
+  const ICONIC_EMOJI = {
+    Plantae:'🌿', Fungi:'🍄', Insecta:'🐛', Mammalia:'🐾',
+    Aves:'🐦', Reptilia:'🦎', Amphibia:'🐸', Arachnida:'🕷',
+    Mollusca:'🐌', Animalia:'🐾',
+  };
+  const ICONIC_COLOR = {
+    Plantae:'#4ade80', Fungi:'#f97316', Insecta:'#facc15', Mammalia:'#f87171',
+    Aves:'#60a5fa', Reptilia:'#a3e635', Amphibia:'#34d399', Arachnida:'#e879f9',
+    Mollusca:'#94a3b8', Animalia:'#f87171',
+  };
+
+  if (typeof INATURALIST_DATA !== 'undefined') {
+    INATURALIST_DATA.features.forEach(function(f) {
+      const p = f.properties;
+      const coords = f.geometry.coordinates;
+      const color = ICONIC_COLOR[p.iconic] || '#c084fc';
+      const emoji = ICONIC_EMOJI[p.iconic] || '🔬';
+
+      const icon = L.divIcon({
+        html: `<div style="background:${color};border:2px solid rgba(0,0,0,0.4);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:11px;box-shadow:0 1px 4px rgba(0,0,0,0.4)">${emoji}</div>`,
+        iconSize:[22,22], iconAnchor:[11,11], className:''
+      });
+
+      let popup = `<div class="pop-title">${esc(p.common || p.name)}</div>`;
+      if (p.common && p.name !== p.common) popup += `<div class="pop-cat">${esc(p.name)}</div>`;
+      popup += `<div class="pop-row"><span class="pop-key">Group</span><span>${esc(p.iconic||'Unknown')}</span></div>`;
+      popup += `<div class="pop-row"><span class="pop-key">Date</span><span>${esc(p.date)}</span></div>`;
+      popup += `<div class="pop-row"><span class="pop-key">Grade</span><span>${esc(p.quality)}</span></div>`;
+      if (p.photo) popup += `<div style="margin-top:8px"><img src="${esc(p.photo)}" style="width:100%;border-radius:5px;max-height:120px;object-fit:cover" /></div>`;
+      if (p.url)   popup += `<div class="pop-link"><a href="${esc(p.url)}" target="_blank" style="color:#c084fc">View on iNaturalist ↗</a></div>`;
+
+      L.marker([coords[1], coords[0]], { icon })
+        .bindPopup(popup, { maxWidth: 280 })
+        .addTo(LG.inat);
+    });
+  }
+
+  // ── Land use (polygons, draw first so under everything) ───────────
+  const LANDUSE_COLORS = {
+    residential:'#8b8fc4', agriculture:'#c9a84c', recreation:'#3ecf74',
+    protected:'#2d7a3a', forest:'#2d7a3a', park:'#3ecf74',
+    cemetery:'#7a8599', horticulture:'#c9a84c', campground:'#ff7b2e',
+    religious:'#e84141', developed:'#8b8fc4', education:'#4a9eff', managed:'#2d7a3a',
+  };
+
+  if (typeof LANDUSE_DATA !== 'undefined') {
+    LANDUSE_DATA.features.forEach(function(f) {
+      const sub = f.properties.subtype || 'unknown';
+      const col = LANDUSE_COLORS[sub] || '#555';
+      if (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon') {
+        const layer = L.geoJSON(f, {
+          style: { color: col, weight: 1, fillColor: col, fillOpacity: 0.25, opacity: 0.5 }
+        });
+        layer.bindPopup(`<div class="pop-title">${esc(sub)}</div><div class="pop-row"><span class="pop-key">Type</span><span>Land Use</span></div>`);
+        layer.addTo(LG.landuse);
+      }
+    });
+  }
+
+  // ── Buildings ──────────────────────────────────────────────────────
+  if (typeof BUILDINGS_DATA !== 'undefined') {
+    BUILDINGS_DATA.features.forEach(function(f) {
+      if (f.geometry.type === 'Polygon' || f.geometry.type === 'MultiPolygon') {
+        L.geoJSON(f, {
+          style: { color:'#8b8fc4', weight:0.8, fillColor:'#8b8fc4', fillOpacity:0.35, opacity:0.6 }
+        }).addTo(LG.buildings);
+      }
+    });
+  }
+
+  // ── Road segments ─────────────────────────────────────────────────
+  if (typeof SEGMENTS_DATA !== 'undefined') {
+    SEGMENTS_DATA.features.forEach(function(f) {
+      const cls = f.properties.class || '';
+      const weight = cls === 'secondary' ? 2.5 : cls === 'tertiary' ? 2 : 1.2;
+      L.geoJSON(f, {
+        style: { color:'#9ca3af', weight: weight, opacity: 0.6 }
+      }).addTo(LG.roads);
+    });
+  }
+
+  // ── OSM trails ────────────────────────────────────────────────────
+  if (typeof TRAILS_DATA !== 'undefined') {
+    TRAILS_DATA.features.forEach(function(f) {
+      const p  = f.properties;
+      const hw = p.highway  || '';
+      const ww = p.waterway || '';
+      const rt = p.route    || '';
+      const nt = p.natural  || '';
+
+      function trailPopup() {
+        let h = `<div class="pop-title">${esc(p.name||'Unnamed')}</div>`;
+        h += `<div class="pop-row"><span class="pop-key">Type</span><span>${esc(hw||ww||nt||rt)}</span></div>`;
+        if (p.surface) h += `<div class="pop-row"><span class="pop-key">Surface</span><span>${esc(p.surface)}</span></div>`;
+        if (p.ele)     h += `<div class="pop-row"><span class="pop-key">Elev.</span><span>${esc(p.ele)} m</span></div>`;
+        return h;
+      }
+
+      let layer = null, group = null;
+
+      if (rt === 'hiking') {
+        layer = L.polyline(f.geometry.coordinates.map(c=>[c[1],c[0]]), {color:'#3ecf74',weight:3,opacity:0.9});
+        group = LG.hike;
+      } else if (ww === 'river' || ww === 'stream' || ww === 'creek') {
+        layer = L.polyline(f.geometry.coordinates.map(c=>[c[1],c[0]]), {color:'#3b9eff',weight:2,opacity:0.85});
+        group = LG.water;
+      } else if (hw === 'footway' || hw === 'path' || hw === 'track') {
+        layer = L.polyline(f.geometry.coordinates.map(c=>[c[1],c[0]]), {color:'#ff7b2e',weight:2,opacity:0.85,dashArray:'6 4'});
+        group = LG.trail;
+      } else if (nt === 'peak' || nt === 'saddle') {
+        const c = f.geometry.coordinates;
+        layer = L.circleMarker([c[1],c[0]], {radius:5,fillColor:'#e84141',color:'#fff',weight:2,fillOpacity:1});
+        group = LG.peak;
+      }
+
+      if (layer && group) { layer.bindPopup(trailPopup); layer.addTo(group); }
+    });
+  }
+
+  // ── Overture places ───────────────────────────────────────────────
+  const CAT_ICONS = {
+    airport:'✈', church_cathedral:'⛪', grocery_store:'🛒', cafe:'☕',
+    coffee_shop:'☕', restaurant:'🍽', hardware_store:'🔧', post_office:'📬',
+    farmers_market:'🌽', park:'🌳', elementary_school:'🏫', museum:'🏛',
+    winery:'🍷', distillery:'🥃', fire_department:'🚒', medical_center:'🏥',
+    family_practice:'⚕', doctor:'⚕', community_center:'🏘', campground:'⛺',
+    beauty_salon:'💇', grocery:'🛒', lake:'💧', pet_boarding:'🐾',
+    bookstore:'📚', bakery:'🥐', motel:'🛏', barber:'💈',
+  };
+
+  function placeIcon(cat) {
+    const emoji = CAT_ICONS[cat] || '📍';
+    return L.divIcon({
+      html: `<div style="background:#f5c842;border:2px solid #c8a000;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 2px 6px rgba(0,0,0,0.4)">${emoji}</div>`,
+      iconSize:[26,26], iconAnchor:[13,13], className:''
+    });
+  }
+
+  function airportIcon() {
+    return L.divIcon({
+      html: `<div style="background:#e84141;border:2px solid #fff;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,0.5)">✈</div>`,
+      iconSize:[32,32], iconAnchor:[16,16], className:''
+    });
+  }
+
+  if (typeof PLACES_DATA !== 'undefined') {
+    PLACES_DATA.features.forEach(function(f) {
+      const p   = f.properties;
+      const cat = p._category || '';
+      const name= p._name || 'Unnamed';
+      const coords = f.geometry.coordinates;
+
+      let popup = `<div class="pop-title">${esc(name)}</div>`;
+      if (cat) popup += `<div class="pop-cat">${esc(cat.replace(/_/g,' '))}</div>`;
+      if (p._address)  popup += `<div class="pop-row"><span class="pop-key">Address</span><span>${esc(p._address)}</span></div>`;
+      if (p._locality) popup += `<div class="pop-row"><span class="pop-key">Town</span><span>${esc(p._locality)}</span></div>`;
+      if (p._phone)    popup += `<div class="pop-row"><span class="pop-key">Phone</span><span>${esc(p._phone)}</span></div>`;
+      if (p._website)  popup += `<div class="pop-link"><a href="${esc(p._website)}" target="_blank" style="color:#4a9eff">${esc(p._website.replace(/^https?:\/\//,'').slice(0,40))}</a></div>`;
+
+      const isAirport = cat === 'airport' || name.toLowerCase().includes('airport');
+      const marker = L.marker([coords[1], coords[0]], {
+        icon: isAirport ? airportIcon() : placeIcon(cat)
+      }).bindPopup(popup, {maxWidth:300});
+
+      marker.addTo(isAirport ? LG.airport : LG.places);
+    });
+  }
+
+  // ── Checkbox toggles ──────────────────────────────────────────────
+  // ── DEM toggle ────────────────────────────────────────────────────
+  document.getElementById('cb-dem').addEventListener('change', function() {
+    if (this.checked) {
+      loadDEM();
+    } else {
+      if (demLayer && map.hasLayer(demLayer)) map.removeLayer(demLayer);
+    }
+  });
+
+  // ── Satellite tile toggle — swaps base layers, never stacked ─────
+  document.getElementById('cb-satellite').addEventListener('change', function() {
+    if (this.checked) {
+      map.removeLayer(osmTile);
+      map.addLayer(satelliteTile);
+      satelliteTile.bringToBack();
+      document.body.classList.add('satellite');
+    } else {
+      map.removeLayer(satelliteTile);
+      map.addLayer(osmTile);
+      osmTile.bringToBack();
+      document.body.classList.remove('satellite');
+    }
+  });
+
+  const CB_MAP = {
+    'cb-eco':       LG.eco,
+    'cb-inat':      LG.inat,
+    'cb-places':    LG.places,
+    'cb-airport':   LG.airport,
+    'cb-trail':     LG.trail,
+    'cb-water':     LG.water,
+    'cb-hike':      LG.hike,
+    'cb-peak':      LG.peak,
+    'cb-landuse':   LG.landuse,
+    'cb-roads':     LG.roads,
+    'cb-buildings': LG.buildings,
+  };
+
+  Object.keys(CB_MAP).forEach(function(id) {
+    document.getElementById(id).addEventListener('change', function() {
+      this.checked ? map.addLayer(CB_MAP[id]) : map.removeLayer(CB_MAP[id]);
+    });
+  });
+
+  // Log layer counts
+  console.log('Places:', LG.places.getLayers().length,
+    '| Trails:', LG.trail.getLayers().length,
+    '| Water:', LG.water.getLayers().length,
+    '| Buildings:', LG.buildings.getLayers().length);
+})();
+</script>
+</body>
+</html>

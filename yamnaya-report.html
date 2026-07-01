@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Yamnaya & The Spread of Indo-European</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&family=Cinzel:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1612;
+    --paper: #f1ead9;
+    --paper-deep: #e7dec7;
+    --ochre: #b8651a;
+    --ochre-deep: #8a4a13;
+    --moss: #4a5234;
+    --rust: #6e2a14;
+    --shadow: rgba(26, 22, 18, 0.15);
+    --rule: rgba(26, 22, 18, 0.2);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Cormorant Garamond', 'Garamond', serif;
+    font-size: 19px;
+    line-height: 1.65;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(184, 101, 26, 0.06) 0%, transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(74, 82, 52, 0.05) 0%, transparent 50%),
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.1 0 0 0 0 0.08 0 0 0 0 0.05 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ────────── HEADER / HERO ────────── */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr;
+    align-content: center;
+    padding: 60px 8vw;
+    position: relative;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: 40px; left: 8vw; right: 8vw;
+    height: 1px;
+    background: var(--ink);
+    opacity: 0.4;
+  }
+
+  .hero::after {
+    content: "";
+    position: absolute;
+    bottom: 40px; left: 8vw; right: 8vw;
+    height: 1px;
+    background: var(--ink);
+    opacity: 0.4;
+  }
+
+  .masthead {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 80px;
+    opacity: 0.7;
+  }
+
+  .masthead .vol { font-weight: 500; }
+
+  h1.title {
+    font-family: 'Cinzel', serif;
+    font-weight: 500;
+    font-size: clamp(56px, 9vw, 140px);
+    line-height: 0.92;
+    letter-spacing: -0.01em;
+    margin-bottom: 40px;
+    max-width: 14ch;
+  }
+
+  h1.title .em {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 400;
+    color: var(--ochre-deep);
+    display: block;
+    font-size: 0.7em;
+    margin-top: 0.1em;
+  }
+
+  .deck {
+    font-size: clamp(20px, 2vw, 26px);
+    line-height: 1.45;
+    max-width: 60ch;
+    font-style: italic;
+    color: var(--ink);
+    opacity: 0.85;
+    margin-bottom: 50px;
+    font-weight: 400;
+  }
+
+  .meta-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 40px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  .meta-strip > div { display: flex; flex-direction: column; gap: 4px; }
+  .meta-strip .lbl { opacity: 0.5; font-size: 10px; }
+  .meta-strip .val { font-weight: 500; }
+
+  /* ────────── ORNAMENT ────────── */
+  .ornament {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin: 80px auto;
+    color: var(--ochre-deep);
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 0.3em;
+  }
+  .ornament::before, .ornament::after {
+    content: "";
+    flex: 0 0 80px;
+    height: 1px;
+    background: currentColor;
+  }
+  .ornament .glyph { font-size: 16px; }
+
+  /* ────────── CONTENT ────────── */
+  .content {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0 24px 100px;
+  }
+
+  section { margin-bottom: 80px; }
+
+  .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    color: var(--ochre-deep);
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  h2 {
+    font-family: 'Cinzel', serif;
+    font-weight: 500;
+    font-size: clamp(30px, 4vw, 44px);
+    line-height: 1.1;
+    margin-bottom: 32px;
+    letter-spacing: -0.01em;
+  }
+
+  h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 24px;
+    margin-top: 36px;
+    margin-bottom: 16px;
+    color: var(--rust);
+  }
+
+  p {
+    margin-bottom: 22px;
+    text-align: justify;
+    hyphens: auto;
+  }
+
+  p.lead::first-letter {
+    font-family: 'Cinzel', serif;
+    font-size: 5em;
+    float: left;
+    line-height: 0.85;
+    margin: 6px 10px -4px 0;
+    color: var(--ochre-deep);
+    font-weight: 600;
+  }
+
+  p.lead { text-align: left; }
+
+  em.term { color: var(--rust); font-style: italic; }
+
+  blockquote {
+    margin: 36px 0;
+    padding: 0 0 0 32px;
+    border-left: 3px solid var(--ochre);
+    font-style: italic;
+    font-size: 22px;
+    line-height: 1.5;
+    color: var(--ink);
+    position: relative;
+  }
+
+  blockquote .attrib {
+    display: block;
+    margin-top: 14px;
+    font-style: normal;
+    font-size: 13px;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.7;
+    color: var(--ochre-deep);
+  }
+
+  /* ────────── BOOK FEATURE ────────── */
+  .book-feature {
+    background: var(--paper-deep);
+    padding: 60px 50px;
+    margin: 60px -30px;
+    border: 1px solid var(--rule);
+    position: relative;
+  }
+
+  .book-feature::before {
+    content: "";
+    position: absolute;
+    top: 12px; left: 12px; right: 12px; bottom: 12px;
+    border: 1px solid var(--rule);
+    pointer-events: none;
+  }
+
+  .book-feature .stamp {
+    display: inline-block;
+    border: 2px solid var(--rust);
+    color: var(--rust);
+    padding: 6px 14px;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    margin-bottom: 24px;
+    transform: rotate(-2deg);
+  }
+
+  .book-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 20px;
+  }
+  .book-meta .lbl { opacity: 0.5; display: block; margin-bottom: 4px; }
+
+  /* ────────── FACTS GRID ────────── */
+  .facts {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 100px 24px;
+    margin: 80px -8vw 0;
+  }
+
+  .facts-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .facts h2 {
+    color: var(--paper);
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .facts .sub {
+    text-align: center;
+    font-style: italic;
+    opacity: 0.6;
+    margin-bottom: 60px;
+    font-size: 18px;
+  }
+
+  .facts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1px;
+    background: rgba(241, 234, 217, 0.15);
+    border: 1px solid rgba(241, 234, 217, 0.15);
+  }
+
+  .fact {
+    background: var(--ink);
+    padding: 36px 28px;
+    transition: background 0.4s;
+  }
+  .fact:hover { background: #2a221a; }
+
+  .fact .num {
+    font-family: 'Cinzel', serif;
+    font-size: 38px;
+    color: var(--ochre);
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  .fact .num small {
+    font-size: 0.5em;
+    letter-spacing: 0.1em;
+    opacity: 0.7;
+  }
+  .fact h4 {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    color: var(--paper);
+  }
+  .fact p {
+    font-size: 16px;
+    line-height: 1.55;
+    margin: 0;
+    text-align: left;
+    opacity: 0.85;
+  }
+
+  /* ────────── TIMELINE ────────── */
+  .timeline {
+    margin: 50px 0;
+    padding-left: 0;
+    list-style: none;
+  }
+  .timeline li {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 24px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--rule);
+    align-items: baseline;
+  }
+  .timeline li:last-child { border-bottom: none; }
+  .timeline .when {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    color: var(--ochre-deep);
+    font-weight: 500;
+  }
+  .timeline .what { font-size: 17px; line-height: 1.45; }
+  .timeline .what strong { color: var(--rust); font-weight: 600; }
+
+  /* ────────── READING LIST ────────── */
+  .reading {
+    background: var(--paper-deep);
+    padding: 80px 24px;
+    margin: 80px -8vw 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .reading-inner { max-width: 720px; margin: 0 auto; }
+  .reading h2 { margin-bottom: 40px; }
+  .reading .item {
+    padding: 24px 0;
+    border-top: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 50px 1fr;
+    gap: 16px;
+  }
+  .reading .item:last-child { border-bottom: 1px solid var(--rule); }
+  .reading .num-r {
+    font-family: 'Cinzel', serif;
+    font-size: 22px;
+    color: var(--ochre-deep);
+    line-height: 1;
+    padding-top: 4px;
+  }
+  .reading .ref-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 19px;
+    margin-bottom: 4px;
+    color: var(--ink);
+  }
+  .reading .ref-title em { font-style: italic; }
+  .reading .ref-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ochre-deep);
+    opacity: 0.85;
+  }
+  .reading .ref-note {
+    margin-top: 8px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--ink);
+    opacity: 0.85;
+    font-style: italic;
+  }
+  .reading .ref-note a {
+    color: var(--rust);
+    text-decoration: none;
+    border-bottom: 1px solid var(--ochre);
+  }
+  .reading .ref-note a:hover { background: rgba(184, 101, 26, 0.15); }
+
+  /* ────────── COLOPHON ────────── */
+  .colophon {
+    text-align: center;
+    padding: 60px 24px 80px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.55;
+  }
+  .colophon .glyphs {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    color: var(--ochre-deep);
+    margin-bottom: 16px;
+    letter-spacing: 0.4em;
+    opacity: 1;
+  }
+
+  /* ────────── RESPONSIVE ────────── */
+  @media (max-width: 700px) {
+    .hero { padding: 50px 24px; }
+    .hero::before, .hero::after { left: 24px; right: 24px; }
+    .masthead { font-size: 10px; gap: 16px; flex-wrap: wrap; margin-bottom: 60px; }
+    .meta-strip { gap: 24px; }
+    .timeline li { grid-template-columns: 1fr; gap: 4px; }
+    .timeline .when { font-size: 11px; }
+    .book-feature { padding: 40px 28px; margin: 40px 0; }
+    .reading { margin: 60px -24px 0; }
+    .facts { margin: 60px -24px 0; padding: 60px 20px; }
+    .reading .item { grid-template-columns: 36px 1fr; gap: 10px; }
+    body { font-size: 17px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="masthead">
+    <span class="vol">Vol. I &nbsp;·&nbsp; № 04</span>
+    <span>Field Report</span>
+    <span>MMXXVI</span>
+  </div>
+
+  <h1 class="title">
+    The Yamnaya
+    <span class="em">&amp; the Mother Tongue of Half the World</span>
+  </h1>
+
+  <p class="deck">
+    How a small community of horse-herding pastoralists on the Pontic-Caspian steppe became one of the most consequential populations in human history — and how archaeology, linguistics, and ancient DNA finally converged to tell their story.
+  </p>
+
+  <div class="meta-strip">
+    <div><span class="lbl">Subject</span><span class="val">Indo-European Origins</span></div>
+    <div><span class="lbl">Region</span><span class="val">Pontic-Caspian Steppe</span></div>
+    <div><span class="lbl">Period</span><span class="val">3300 — 2500 BCE</span></div>
+    <div><span class="lbl">Filed</span><span class="val">26 April 2026</span></div>
+  </div>
+</header>
+
+<div class="ornament">
+  <span class="glyph">✦</span>
+  <span>I</span>
+  <span class="glyph">✦</span>
+</div>
+
+<main class="content">
+
+  <section>
+    <span class="section-num">§ 01 — Premise</span>
+    <h2>The Question That Lasted Two Centuries</h2>
+
+    <p class="lead">In the late eighteenth century, the British orientalist Sir William Jones noticed something extraordinary: Sanskrit, the ancient language of India, shared deep structural and lexical similarities with Greek, Latin, Gothic, and Celtic. They could not, he concluded, have arisen independently. They must descend from a common ancestor — a language that no one had spoken for thousands of years, that had left no written trace, and whose homeland was unknown.</p>
+
+    <p>That hypothesised mother tongue is what we now call <em class="term">Proto-Indo-European</em>. Today, languages descended from it — English, Spanish, Russian, Hindi, Persian, German, Italian, Bengali, Greek — are spoken by roughly half of the world's population. But for two and a half centuries, the question of <em>who</em> first spoke Proto-Indo-European, <em>where</em> they lived, and <em>how</em> their tongue spread across a continent and a subcontinent remained one of the great unsolved puzzles of historical scholarship.</p>
+
+    <p>By the second decade of the twenty-first century, that puzzle has, in large part, been solved. The answer comes from an unlikely convergence of three disciplines — archaeology, comparative linguistics, and ancient DNA — and points to a people called the Yamnaya.</p>
+  </section>
+
+  <div class="ornament">
+    <span class="glyph">⊹</span>
+    <span>II</span>
+    <span class="glyph">⊹</span>
+  </div>
+
+  <section>
+    <span class="section-num">§ 02 — The People</span>
+    <h2>Who Were the Yamnaya?</h2>
+
+    <p>The Yamnaya archaeological complex emerged on the Pontic-Caspian steppe — the vast grassland stretching from present-day Ukraine through southern Russia and into Kazakhstan — around 3300 BCE. By 3000 BCE they had spread, with extraordinary speed, from Hungary in the west to the Ural Mountains in the east. Their name comes from the Russian <em class="term">yámnaya</em>, meaning "pit" or "of the pit," after their characteristic burial practice: dead were laid out, often coated in red ochre, in flexed positions inside pit chambers covered by earthen mounds called <em class="term">kurgans</em>.</p>
+
+    <p>They were not city-builders. They built almost no permanent settlements. They were nomadic and semi-nomadic pastoralists who managed enormous herds of cattle, sheep, and goats across a treeless sea of grass. They were physically unusually tall for their era. They used four-wheeled wagons drawn by oxen, and there is now bioanthropological evidence — from skeletal pathologies in hips, femurs, and vertebrae — that some of them rode horses, making them among the earliest documented riders in human history.</p>
+
+    <p>What made them historically significant was the combination. Slow, bulk transport in ox-drawn wagons, paired with rapid mounted travel on horseback, allowed them to live deep in the open steppe — territory that earlier farming peoples could not exploit. They could carry their tents, their fuel, their stored food. They could control vast herds. And their wealth — counted in animals — was movable, divisible, and useful for political ends: feasts, gifts, bride-price, the extension of loans, the binding of clients to patrons.</p>
+
+    <h3>A Small Founding Population</h3>
+
+    <p>One of the more striking findings of recent ancient-DNA work is just how few Yamnaya there originally were. On the eve of their explosive expansion, after surviving what may have been a climate shift or a plague outbreak that collapsed neighbouring settlements, the Yamnaya numbered only a few thousand individuals. From this tiny population came one of the most consequential migrations in the human story.</p>
+  </section>
+
+  <div class="ornament">
+    <span class="glyph">✦</span>
+    <span>III</span>
+    <span class="glyph">✦</span>
+  </div>
+
+  <section>
+    <span class="section-num">§ 03 — The Argument</span>
+    <h2>David Anthony &amp; <em style="font-style:italic">The Horse, the Wheel, and Language</em></h2>
+
+    <div class="book-feature">
+      <span class="stamp">Foundational Text</span>
+      <h3 style="margin-top:0; color: var(--ink); font-family: 'Cinzel', serif; font-size: 22px;">The Horse, the Wheel, and Language</h3>
+      <p style="font-style: italic; margin-bottom: 16px; opacity: 0.85;">How Bronze-Age Riders from the Eurasian Steppes Shaped the Modern World</p>
+      <p style="margin-bottom: 0;">A monumental synthesis published in 2007 by anthropologist David W. Anthony of Hartwick College, drawing on three decades of his own fieldwork on the Eurasian steppe and an unusually deep familiarity with Russian-language scholarship that had been largely inaccessible to Western readers.</p>
+      <div class="book-meta">
+        <div><span class="lbl">Author</span>David W. Anthony</div>
+        <div><span class="lbl">Publisher</span>Princeton Univ. Press</div>
+        <div><span class="lbl">Year</span>2007</div>
+        <div><span class="lbl">Award</span>SAA Book Award, 2010</div>
+      </div>
+    </div>
+
+    <p>Anthony's central thesis was, at the time of publication, controversial. The dominant rival theory — championed by the British archaeologist Sir Colin Renfrew — held that Indo-European languages had been carried into Europe around 7000 BCE by Anatolian farmers from what is now Turkey, riding the gentle wave of agriculture as it spread west. It was a tidy hypothesis. It was also, Anthony argued at length, wrong.</p>
+
+    <p>Drawing on archaeology, linguistics, and Russian climate science, Anthony made the case that Proto-Indo-European had instead been spoken some four thousand years later, by people of the Pontic-Caspian steppe — most particularly by the Yamnaya. The dispersal occurred not through the slow seepage of farming villages but through the rapid expansion of mobile pastoralists who had three transformative things at their disposal: the domesticated horse, the wheeled wagon, and a social technology of patron-client relationships that could absorb and transform the peoples they encountered.</p>
+
+    <h3>The Linguistic Method</h3>
+
+    <p>One of the elegant moves in Anthony's argument is the use of <em class="term">linguistic palaeontology</em>. Comparative linguists have reconstructed roughly 1,500 words of Proto-Indo-European vocabulary by working backward from the daughter languages. Among these reconstructed words are terms for <em>wheel</em>, <em>axle</em>, <em>yoke</em>, <em>thill</em> (the shaft connecting a wagon to a draught animal), <em>to convey in a vehicle</em>, <em>wool</em>, <em>honey-mead</em>, <em>horse</em>, and a complex vocabulary for sheep, cattle, and dairying.</p>
+
+    <p>This vocabulary tells us something specific: Proto-Indo-European must have been spoken <em>after</em> the invention of wool-bearing sheep and the wagon, technologies which are securely dated archaeologically to no earlier than about 4000 BCE, and which became widespread only around 3500 BCE. This single observation rules out Renfrew's much older Anatolian timeline. It places the speakers of Proto-Indo-European squarely in the late fourth millennium BCE — the Yamnaya horizon.</p>
+
+    <h3>The Bit-Wear Discovery</h3>
+
+    <p>Anthony, working with his colleague Dorcas Brown, also made a methodological contribution to the study of horse domestication itself. By examining wear patterns on the second premolar teeth of ancient horses — the precise location where a bit, made of bone, antler, leather or rope, would chafe against the tooth enamel — they developed a way to identify which ancient horses had been ridden. The technique allowed them to push back the date of horseback riding well into the fourth millennium BCE.</p>
+
+    <h3>Recruitment, Not Just Conquest</h3>
+
+    <p>A subtle but important argument in the book is that early Indo-European expansion was driven less by military conquest than by what Anthony calls <em class="term">recruitment</em>. Yamnaya patron-client institutions — feasting, oath-taking, hospitality, the cultivation of loyalty to a chief — were attractive social technologies. Local populations could be drawn into them, adopting the language, the gods, and the lifeways of their new patrons. Language spread, in this account, as much through aspiration and integration as through violence.</p>
+
+    <blockquote>
+      We speak English not just because our parents taught it to us but because wild horses used to roam the steppes of central Eurasia, because steppe-dwellers invented the spoked wheel, and because poetry once had real power.
+      <span class="attrib">— Christine Kenneally, on Anthony's argument, NY Times Book Review</span>
+    </blockquote>
+  </section>
+
+  <div class="ornament">
+    <span class="glyph">⊹</span>
+    <span>IV</span>
+    <span class="glyph">⊹</span>
+  </div>
+
+  <section>
+    <span class="section-num">§ 04 — Vindication</span>
+    <h2>What Ancient DNA Confirmed</h2>
+
+    <p>When <em>The Horse, the Wheel, and Language</em> was published in 2007, ancient DNA from the steppe Bronze Age barely existed. The technology to sequence degraded ancient genomes at scale was not yet mature. Anthony's case rested on archaeology and linguistics; the genetic test was still to come.</p>
+
+    <p>It came in 2015. Two landmark papers — one led by David Reich's group at Harvard, one by Eske Willerslev's group in Copenhagen — sequenced ancient DNA from dozens of skeletons across Bronze Age Europe and the steppe. The result was striking: a massive genetic turnover swept across northern and central Europe beginning around 3000 BCE, and the source population was unambiguously the Yamnaya. The arrival of Yamnaya ancestry coincided, geographically and chronologically, with the emergence of the Corded Ware culture across northern Europe — a culture long suspected by linguists of being early Indo-European-speaking.</p>
+
+    <p>Subsequent work showed the same signature spreading east, into Central Asia and eventually into the Indian subcontinent, where the Sintashta culture (whose burials contain the world's oldest known chariots) and later Andronovo populations carried steppe ancestry south of the Hindu Kush. The genetic map and the linguistic map were, to a remarkable degree, the same map.</p>
+
+    <h3>The 2025 Update: An Indo-Anatolian Homeland</h3>
+
+    <p>The most recent twist in the story came in February 2025, when Lazaridis, Patterson, Anthony, and colleagues published an analysis of ancient DNA from 428 individuals in the journal <em>Nature</em>. They argued that the Yamnaya themselves were not the original speakers of Proto-Indo-European, but a daughter group. The deeper ancestor — sometimes called <em class="term">Indo-Anatolian</em> or <em class="term">Pre-Proto-Indo-European</em> — was spoken some six thousand years ago in a homeland in the North Caucasus and the lower Volga region, by a Caucasus-Lower-Volga (CLV) population. From that population, one branch moved south into Anatolia, where it would become Hittite and the other Anatolian languages. Another branch moved north onto the steppe, where, mixing with Eastern European hunter-gatherers, it became the Yamnaya — and the ancestor of every other Indo-European language alive today.</p>
+
+    <h3>An Important Caveat</h3>
+
+    <p>The genetic evidence is striking, but linguists are right to insist on a distinction. Language is transmitted socially, not biologically — there is no <em>gene</em> for speaking Indo-European, and there have been many cases in history where populations adopted a new language without significant genetic change (or vice versa). The Yamnaya story is unusually clean: the genetic and linguistic signals reinforce each other to a degree rarely seen. But the deeper sociolinguistic mechanism — exactly <em>how</em> the language travelled with the genes — remains, and will probably always remain, partly a matter of inference.</p>
+  </section>
+
+  <div class="ornament">
+    <span class="glyph">✦</span>
+    <span>V</span>
+    <span class="glyph">✦</span>
+  </div>
+
+  <section>
+    <span class="section-num">§ 05 — Chronology</span>
+    <h2>A Steppe Timeline</h2>
+
+    <ul class="timeline">
+      <li><span class="when">c. 4500 BCE</span><span class="what"><strong>Khvalynsk culture</strong> on the middle Volga. Horses begin to appear in human burials beside cattle and sheep — the earliest signal that horses are crossing from the wild into the domesticated sphere.</span></li>
+      <li><span class="when">c. 4000 BCE</span><span class="what">First wool-bearing sheep and the earliest evidence of wheeled vehicles in the Near East and steppe borderlands. The vocabulary for wagon-parts now exists in the world.</span></li>
+      <li><span class="when">c. 3500 BCE</span><span class="what">Wheeled wagons spread across the Pontic-Caspian region. The oldest wheel from the steppe is dated to <strong>3336–3105 BCE</strong>, found at Sharakhalsun in the North Caucasus.</span></li>
+      <li><span class="when">c. 3300 BCE</span><span class="what">The <strong>Yamnaya archaeological complex</strong> emerges. Wagon parts and ox-drawn vehicles begin to appear under Yamnaya kurgans across the steppe.</span></li>
+      <li><span class="when">c. 3000 BCE</span><span class="what">The Yamnaya have spread from <strong>Hungary in the west to Kazakhstan in the east</strong>. The Indo-European migrations are underway.</span></li>
+      <li><span class="when">c. 2900 BCE</span><span class="what">Earliest osteological evidence of a Yamnaya rider — kurgan 1, grave 3, near Strejnicu, Romania, dated 2822–2663 BCE.</span></li>
+      <li><span class="when">c. 2800 BCE</span><span class="what">The <strong>Corded Ware culture</strong> spreads across northern and central Europe, carrying massive Yamnaya genetic ancestry.</span></li>
+      <li><span class="when">c. 2000 BCE</span><span class="what">The <strong>Sintashta culture</strong> in the Urals develops the world's earliest known chariots. Modern domestic horses (the DOM2 lineage) emerge and spread.</span></li>
+      <li><span class="when">2007 CE</span><span class="what">David Anthony publishes <strong><em>The Horse, the Wheel, and Language</em></strong>.</span></li>
+      <li><span class="when">2015 CE</span><span class="what">Reich and Willerslev labs publish ancient-DNA evidence confirming the steppe origin of major Indo-European migrations.</span></li>
+      <li><span class="when">2025 CE</span><span class="what">Lazaridis, Patterson, Anthony et al. publish <em>The Genetic Origin of the Indo-Europeans</em> in <em>Nature</em>, locating the deeper Indo-Anatolian homeland in the North Caucasus–lower Volga region.</span></li>
+    </ul>
+  </section>
+
+</main>
+
+<section class="facts">
+  <div class="facts-inner">
+    <h2>Twelve Notable Facts</h2>
+    <p class="sub">Selected from the recent literature on Yamnaya, Indo-European origins, and the work of David Anthony.</p>
+
+    <div class="facts-grid">
+
+      <div class="fact">
+        <span class="num">01</span>
+        <h4>Half the world</h4>
+        <p>Languages descended from Proto-Indo-European are spoken by roughly half of all living humans — including English, Spanish, Russian, Hindi, Bengali, Persian, German, French, Greek, and Punjabi.</p>
+      </div>
+
+      <div class="fact">
+        <span class="num">3,300 <small>BCE</small></span>
+        <h4>The expansion begins</h4>
+        <p>The Yamnaya complex emerges on the Pontic-Caspian steppe around 3300 BCE. Within roughly three centuries it stretches from Hungary to Kazakhstan — over 4,000 km.</p>
+      </div>
+
+      <div class="fact">
+        <span class="num">~ a few <small>thousand</small></span>
+        <h4>Tiny founding pop.</h4>
+        <p>On the eve of their explosive expansion, after a probable climate or plague crisis, ancient-DNA modelling suggests the founding Yamnaya population numbered only a few thousand individuals.</p>
+      </div>
+
+      <div class="fact">
+        <span class="num">02</span>
+        <h4>Two technologies</h4>
+        <p>The Yamnaya economy combined slow, bulk transport in ox-drawn wagons with rapid travel on horseback — the same dual-transport model later described by Herodotus among the Scythians.</p>
+      </div>
+
+      <div class="fact">
+        <span class="num">2,822 <small>BCE</small></span>
+        <h4>Oldest known rider</h4>
+        <p>A Yamnaya skeleton from kurgan 1, grave 3, near Strejnicu, Romania (2822–2663 BCE) shows "rider's syndrome" — pathologies in hips, femurs, and spine consistent with frequent horseback riding.</p>
+      </div>
+
+      <div class="fact">
+        <span class="num">428</span>
+        <h4>Ancient genomes</h4>
+        <p>The 2025 <em>Nature</em> paper by Lazaridis, Patterson, Anthony et al. assembled DNA from 428 ancient individuals to localise Yamnaya origins in the North Caucasus–lower Volga region.</p>
+      </div>
+
+      <div class="fact">
+        <span class="num">1,500</span>
+        <h4>Reconstructed words</h4>
+        <p>Comparative linguists have reconstructed roughly 1,500 words of Proto-Indo-European vocabulary, including specific terms for <em>wheel</em>, <em>axle</em>, <em>yoke</em>, <em>thill</em>, and <em>to convey by vehicle</em>.</p>
+      </div>
+
+      <div class="fact">
+        <span class="num">2007</span>
+        <h4>The book</h4>
+        <p>Anthony's <em>The Horse, the Wheel, and Language</em> is published. It wins the Society for American Archaeology's Book Award in 2010 and reframes the entire debate about Indo-European origins.</p>
+      </div>
+
+      <div class="fact">
+        <span class="num">2015</span>
+        <h4>Genetic confirmation</h4>
+        <p>Two simultaneous ancient-DNA studies confirm a massive Yamnaya-derived genetic migration into Europe around 3000 BCE — what Anthony calls "the largest migration into Europe in the last 5,000 years."</p>
+      </div>
+
+      <div class="fact">
+        <span class="num">R1b</span>
+        <h4>Y-chromosome signature</h4>
+        <p>The Y-chromosome haplogroup R1b — specifically the Z2103 subclade of R1b-L23 — is the dominant paternal lineage among sequenced Yamnaya individuals.</p>
+      </div>
+
+      <div class="fact">
+        <span class="num">15<small>th</small> <small>cent.</small></span>
+        <h4>Living tradition</h4>
+        <p>The kurgan burial-mound tradition initiated on the steppe by Yamnaya pastoralists continued in the same region almost continuously until the 15th century CE, when Buddhist Mongol nomads moved in.</p>
+      </div>
+
+      <div class="fact">
+        <span class="num">Hittite</span>
+        <h4>The lost branch</h4>
+        <p>Hittite, attested in Bronze Age Anatolia, branched from the Indo-Anatolian ancestor before the Yamnaya expansion — making it Proto-Indo-European's deepest known sister, not its daughter.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section class="reading">
+  <div class="reading-inner">
+    <span class="section-num" style="color: var(--ochre-deep);">§ 06 — Apparatus</span>
+    <h2>Further Reading</h2>
+
+    <div class="item">
+      <div class="num-r">i.</div>
+      <div>
+        <div class="ref-title">Anthony, D. W. <em>The Horse, the Wheel, and Language: How Bronze-Age Riders from the Eurasian Steppes Shaped the Modern World</em></div>
+        <div class="ref-meta">Princeton University Press · 2007 · 568 pp.</div>
+        <div class="ref-note">The foundational synthesis. Dense, field-by-field, occasionally textbook-like, but the single indispensable book on the topic. Winner of the SAA Book Award.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="num-r">ii.</div>
+      <div>
+        <div class="ref-title">Lazaridis, I., Patterson, N., Anthony, D., Vyazov, L., Pinhasi, R., Reich, D., et al. "The Genetic Origin of the Indo-Europeans"</div>
+        <div class="ref-meta">Nature · February 2025</div>
+        <div class="ref-note"><a href="https://www.nature.com/articles/s41586-024-08531-5" target="_blank" rel="noopener">nature.com/articles/s41586-024-08531-5</a> — the most recent and ambitious synthesis, locating the deeper Indo-Anatolian homeland in the North Caucasus–lower Volga region using DNA from 428 ancient individuals.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="num-r">iii.</div>
+      <div>
+        <div class="ref-title">Reich, D. <em>Who We Are and How We Got Here: Ancient DNA and the New Science of the Human Past</em></div>
+        <div class="ref-meta">Pantheon · 2018</div>
+        <div class="ref-note">A first-person account of the ancient-DNA revolution, including the 2015 papers that genetically confirmed Anthony's argument. Accessible to general readers.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="num-r">iv.</div>
+      <div>
+        <div class="ref-title">Trautmann, M. et al. "First bioanthropological evidence for Yamnaya horsemanship"</div>
+        <div class="ref-meta">Science Advances · March 2023</div>
+        <div class="ref-note">The skeletal-pathology study identifying five Yamnaya individuals, dated 3021–2501 BCE, as the oldest osteologically-attested horseback riders in the human record.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="num-r">v.</div>
+      <div>
+        <div class="ref-title">Mallory, J. P. <em>In Search of the Indo-Europeans: Language, Archaeology and Myth</em></div>
+        <div class="ref-meta">Thames &amp; Hudson · 1989 (still in print)</div>
+        <div class="ref-note">The classic predecessor to Anthony's book — pre-DNA, but lucid, judicious, and an excellent introduction to comparative Indo-European method.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="num-r">vi.</div>
+      <div>
+        <div class="ref-title">Kristiansen, K., Kroonen, G., et al. (eds.) <em>The Indo-European Puzzle Revisited: Integrating Archaeology, Genetics, and Linguistics</em></div>
+        <div class="ref-meta">Cambridge University Press · 2023</div>
+        <div class="ref-note">A multi-author volume bringing together the three disciplines that have transformed the field. Useful for readers who want to see current debates rather than a single synthesis.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="num-r">vii.</div>
+      <div>
+        <div class="ref-title">Curry, A. "The First Horsemen"</div>
+        <div class="ref-meta">National Geographic · August 2019</div>
+        <div class="ref-note">A vivid, photograph-led popular account of Yamnaya life and recent fieldwork — a good entry point for readers new to the subject.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="num-r">viii.</div>
+      <div>
+        <div class="ref-title">Taylor, W. <em>Hoof Beats: How Horses Shaped Human History</em></div>
+        <div class="ref-meta">University of California Press · 2024</div>
+        <div class="ref-note">A useful counterweight: argues that <em>full</em> horse domestication (the DOM2 lineage) post-dated the Yamnaya migrations, complicating — though not overturning — the standard story.</div>
+      </div>
+    </div>
+
+    <div class="item">
+      <div class="num-r">ix.</div>
+      <div>
+        <div class="ref-title">Lewis-Kraus, G. "Is Ancient DNA Research Revealing New Truths — or Falling Into Old Traps?"</div>
+        <div class="ref-meta">The New York Times Magazine · January 2019</div>
+        <div class="ref-note">A long, careful piece of journalism on the methodological and ethical debates in ancient-DNA work — essential reading for anyone wanting to understand the field's controversies as well as its successes.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="colophon">
+  <div class="glyphs">✦ ⊹ ✦</div>
+  Composed in Cinzel, Cormorant Garamond &amp; JetBrains Mono<br>
+  All citations from peer-reviewed and editorially-vetted sources<br>
+  Field Report № 04 · End
+</div>
+
+</body>
+</html>

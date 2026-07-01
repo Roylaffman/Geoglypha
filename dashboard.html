@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Weather Dashboard &mdash; Geoglypha</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="../assets/css/design-system.css">
+    <style>
+      /* ── Dashboard layout & component overrides ─────── */
+      .dash-header {
+        background: var(--paper-deep);
+        border-bottom: 1px solid var(--rule);
+        padding: 36px 8vw;
+      }
+      .dash-header-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        letter-spacing: 0.2em;
+        color: var(--ochre-deep);
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 10px;
+      }
+      .dash-header h1 {
+        font-family: 'Cinzel', serif;
+        font-weight: 500;
+        font-size: clamp(26px, 3.5vw, 48px);
+        color: var(--ink);
+        letter-spacing: -0.01em;
+        margin-bottom: 10px;
+      }
+      .dash-header p {
+        font-family: 'Cormorant Garamond', serif;
+        font-style: italic;
+        font-size: 19px;
+        color: var(--ink);
+        opacity: 0.72;
+        max-width: 60ch;
+        margin: 0;
+      }
+      .dashboard-container {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 1.5rem;
+        padding: 2rem 8vw;
+        max-width: 1400px;
+        margin: 0 auto;
+        box-sizing: border-box;
+      }
+      #map {
+        height: 500px;
+        border: 1px solid var(--rule);
+      }
+      .sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+      .info-card {
+        background: var(--paper-deep);
+        border: 1px solid var(--rule);
+        padding: 1.4rem 1.6rem;
+      }
+      .info-card h3 {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--ochre-deep);
+        margin-bottom: 1rem;
+      }
+      .current-conditions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+      }
+      .condition-item {
+        text-align: center;
+        padding: 0.6rem 0.4rem;
+        background: var(--paper);
+        border: 1px solid var(--rule);
+      }
+      .condition-item .value {
+        font-family: 'Cinzel', serif;
+        font-size: 1.05rem;
+        font-weight: 500;
+        color: var(--ink);
+      }
+      .condition-item .label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 9px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ochre-deep);
+        margin-top: 0.2rem;
+      }
+      .forecast-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+      }
+      .forecast-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0.6rem;
+        background: var(--paper);
+        border: 1px solid var(--rule);
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 15px;
+        color: var(--ink);
+      }
+      .forecast-item .day { opacity: 0.85; }
+      .forecast-item .temp {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        color: var(--ochre-deep);
+        font-weight: 500;
+      }
+      .chart-container {
+        background: var(--paper-deep);
+        border: 1px solid var(--rule);
+        padding: 1.4rem 1.6rem;
+        grid-column: 1 / -1;
+      }
+      .chart-container h3 {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--ochre-deep);
+        margin-bottom: 0.6rem;
+      }
+      .chart-wrapper { height: 250px; }
+      .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 10px;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--ochre-deep);
+        opacity: 0.6;
+      }
+      .error {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 16px;
+        color: var(--rust);
+        padding: 0.8rem 1rem;
+        background: var(--paper);
+        border-left: 2px solid var(--rust);
+      }
+      .data-source {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 9px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink);
+        opacity: 0.4;
+        margin-top: 0.5rem;
+      }
+      .legend {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.6rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 9px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink);
+        opacity: 0.7;
+      }
+      .legend-item { display: flex; align-items: center; gap: 0.3rem; }
+      .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+      .station-select {
+        width: 100%;
+        padding: 0.5rem 0.6rem;
+        border: 1px solid var(--rule);
+        background: var(--paper);
+        color: var(--ink);
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 16px;
+        outline: none;
+        margin-bottom: 0.4rem;
+        -webkit-appearance: none;
+        border-radius: 0;
+      }
+      .station-info {
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 15px;
+        color: var(--ink);
+        padding: 0.6rem 0.8rem;
+        background: var(--paper);
+        border-left: 2px solid var(--ochre-deep);
+        margin-top: 0.5rem;
+        line-height: 1.55;
+      }
+      .station-info strong { color: var(--ochre-deep); }
+      .radius-indicator {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 9px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--ink);
+        opacity: 0.45;
+        margin-top: 0.3rem;
+      }
+      .active-station {
+        background: var(--paper-deep);
+        border-left: 2px solid var(--ochre-deep);
+        padding-left: 0.5rem;
+      }
+      @media (max-width: 900px) {
+        .dashboard-container { grid-template-columns: 1fr; padding: 1.5rem 24px; }
+        #map { height: 380px; }
+      }
+      @media (max-width: 480px) {
+        .current-conditions { grid-template-columns: 1fr; }
+        #map { height: 280px; }
+        .dash-header { padding: 28px 24px; }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="site-nav">
+      <div class="nav-inner">
+        <a href="../index.html" class="nav-logo">Geoglypha</a>
+        <button class="nav-mobile-btn" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Toggle navigation">&#9776;</button>
+        <ul class="nav-links">
+          <li><a href="../index.html">Home</a></li>
+          <li><a href="index.html">Overview</a></li>
+          <li><a href="dashboard.html">Dashboard</a></li>
+          <li><a href="temperature_chart.html">Temperature</a></li>
+          <li><a href="precipitation_chart.html">Precipitation</a></li>
+          <li><a href="wind_speed_chart.html">Wind</a></li>
+          <li><a href="barometric_pressure_chart.html">Pressure</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="dash-header">
+      <span class="dash-header-label">&#167; Live Data &nbsp;&mdash;&nbsp; West Asheville, NC</span>
+      <h1>Live Weather Dashboard</h1>
+      <p>Real-time and historic weather data for West Asheville, NC using Open-Meteo and NWS APIs.</p>
+    </div>
+
+    <div class="dashboard-container">
+      <div id="map"></div>
+
+      <div class="sidebar">
+        <div class="info-card">
+          <h3><i class="fas fa-broadcast-tower"></i> Weather Stations</h3>
+          <select id="station-select" class="station-select">
+            <option value="">Loading stations...</option>
+          </select>
+          <p class="radius-indicator">Showing stations within 2.5 miles of West Asheville (Haywood Rd)</p>
+          <div id="station-info" class="station-info" style="display: none;"></div>
+        </div>
+
+        <div class="info-card">
+          <h3><i class="fas fa-cloud-sun"></i> Current Conditions</h3>
+          <div id="current-weather" class="current-conditions">
+            <div class="loading"><i class="fas fa-spinner"></i> Loading...</div>
+          </div>
+          <p class="data-source">Source: <span id="current-source">Open-Meteo API</span></p>
+        </div>
+
+        <div class="info-card">
+          <h3><i class="fas fa-calendar-week"></i> 7-Day Forecast</h3>
+          <div id="forecast" class="forecast-list">
+            <div class="loading"><i class="fas fa-spinner"></i> Loading...</div>
+          </div>
+          <p class="data-source">Source: NWS Weather.gov</p>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h3><i class="fas fa-chart-line"></i> Past 7 Days — <span id="chart-station-name">West Asheville (default)</span></h3>
+        <div class="legend">
+          <div class="legend-item"><span class="legend-dot" style="background: #FF9A73;"></span> Temperature (°C)</div>
+          <div class="legend-item"><span class="legend-dot" style="background: #5b9bd5;"></span> Precipitation (mm)</div>
+          <div class="legend-item"><span class="legend-dot" style="background: #7a9a8a;"></span> Wind Speed (km/h)</div>
+          <div class="legend-item"><span class="legend-dot" style="background: #9b59b6;"></span> Pressure (hPa)</div>
+        </div>
+        <div class="chart-wrapper">
+          <canvas id="historyChart"></canvas>
+        </div>
+        <p class="data-source">Source: Open-Meteo Historical API</p>
+      </div>
+    </div>
+
+    <script>
+      // West Asheville coordinates (center point for station search)
+      const WEST_ASHEVILLE_LAT = 35.57876574204799;
+      const WEST_ASHEVILLE_LON = -82.59477296025109;
+
+      // Default display location (can be changed by station selection)
+      let currentLat = WEST_ASHEVILLE_LAT;
+      let currentLon = WEST_ASHEVILLE_LON;
+      let currentStationName = 'West Asheville (default)';
+
+      // 2.5 mile radius in meters
+      const SEARCH_RADIUS_MILES = 2.5;
+      const SEARCH_RADIUS_METERS = SEARCH_RADIUS_MILES * 1609.34;
+
+      // Store station data
+      let stationsData = [];
+      let stationMarkers = [];
+
+      // Initialize map centered on West Asheville (zoom 13 for 2.5-mile radius)
+      const map = L.map('map').setView([WEST_ASHEVILLE_LAT, WEST_ASHEVILLE_LON], 13);
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      // Add West Asheville center marker
+      const centerMarker = L.marker([WEST_ASHEVILLE_LAT, WEST_ASHEVILLE_LON], {
+        icon: L.divIcon({
+          className: 'center-marker',
+          html: '<div style="background: #1a1612; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #f1ead9; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+          iconSize: [12, 12]
+        })
+      }).addTo(map).bindPopup('<strong>West Asheville</strong><br>Haywood Road Area<br>Search center point');
+
+      // Add 5-mile radius circle
+      const radiusCircle = L.circle([WEST_ASHEVILLE_LAT, WEST_ASHEVILLE_LON], {
+        radius: SEARCH_RADIUS_METERS,
+        color: '#b8651a',
+        fillColor: '#b8651a',
+        fillOpacity: 0.06,
+        weight: 1.5,
+        dashArray: '5, 5'
+      }).addTo(map);
+
+      // Chart instance
+      let historyChart = null;
+
+      // Calculate distance between two points in miles
+      function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 3959; // Earth's radius in miles
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+      }
+
+      // Fetch current weather from Open-Meteo (includes pressure)
+      async function fetchCurrentWeather(lat = currentLat, lon = currentLon) {
+        try {
+          const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m,surface_pressure,weather_code&temperature_unit=celsius&wind_speed_unit=kmh&timezone=America/New_York`;
+
+          const response = await fetch(url);
+          const data = await response.json();
+
+          if (data.current) {
+            const current = data.current;
+            const weatherDesc = getWeatherDescription(current.weather_code);
+
+            document.getElementById('current-weather').innerHTML = `
+              <div class="condition-item">
+                <div class="value">${current.temperature_2m}°C</div>
+                <div class="label">Temperature</div>
+              </div>
+              <div class="condition-item">
+                <div class="value">${current.relative_humidity_2m}%</div>
+                <div class="label">Humidity</div>
+              </div>
+              <div class="condition-item">
+                <div class="value">${current.wind_speed_10m}</div>
+                <div class="label">Wind (km/h)</div>
+              </div>
+              <div class="condition-item">
+                <div class="value">${current.precipitation}</div>
+                <div class="label">Precip (mm)</div>
+              </div>
+              <div class="condition-item">
+                <div class="value">${Math.round(current.surface_pressure)}</div>
+                <div class="label">Pressure (hPa)</div>
+              </div>
+              <div class="condition-item">
+                <div class="value">${weatherDesc}</div>
+                <div class="label">Conditions</div>
+              </div>
+            `;
+          }
+        } catch (error) {
+          console.error('Error fetching current weather:', error);
+          document.getElementById('current-weather').innerHTML =
+            '<div class="error">Unable to load current conditions</div>';
+        }
+      }
+
+      // Fetch forecast from NWS API
+      async function fetchNWSForecast(lat = currentLat, lon = currentLon) {
+        try {
+          const pointsUrl = `https://api.weather.gov/points/${lat},${lon}`;
+          const pointsResponse = await fetch(pointsUrl, {
+            headers: { 'User-Agent': 'Geoglypha Weather Dashboard' }
+          });
+          const pointsData = await pointsResponse.json();
+
+          const forecastUrl = pointsData.properties.forecast;
+          const forecastResponse = await fetch(forecastUrl, {
+            headers: { 'User-Agent': 'Geoglypha Weather Dashboard' }
+          });
+          const forecastData = await forecastResponse.json();
+
+          if (forecastData.properties && forecastData.properties.periods) {
+            const periods = forecastData.properties.periods.slice(0, 7);
+
+            document.getElementById('forecast').innerHTML = periods.map(period => `
+              <div class="forecast-item">
+                <span class="day">${period.name}</span>
+                <span class="temp">${period.temperature}°${period.temperatureUnit}</span>
+              </div>
+            `).join('');
+          }
+        } catch (error) {
+          console.error('Error fetching NWS forecast:', error);
+          document.getElementById('forecast').innerHTML =
+            '<div class="error">Unable to load forecast from NWS</div>';
+        }
+      }
+
+      // Fetch historical data from Open-Meteo (includes pressure)
+      async function fetchHistoricalData(lat = currentLat, lon = currentLon) {
+        try {
+          const endDate = new Date();
+          const startDate = new Date();
+          startDate.setDate(startDate.getDate() - 7);
+
+          const formatDate = (d) => d.toISOString().split('T')[0];
+
+          const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation,wind_speed_10m,surface_pressure&start_date=${formatDate(startDate)}&end_date=${formatDate(endDate)}&temperature_unit=celsius&wind_speed_unit=kmh&timezone=America/New_York`;
+
+          const response = await fetch(url);
+          const data = await response.json();
+
+          if (data.hourly) {
+            renderHistoryChart(data.hourly);
+          }
+        } catch (error) {
+          console.error('Error fetching historical data:', error);
+        }
+      }
+
+      // Render the history chart with pressure
+      function renderHistoryChart(hourlyData) {
+        const ctx = document.getElementById('historyChart').getContext('2d');
+
+        const labels = [];
+        const temps = [];
+        const precip = [];
+        const wind = [];
+        const pressure = [];
+
+        for (let i = 0; i < hourlyData.time.length; i += 3) {
+          const date = new Date(hourlyData.time[i]);
+          labels.push(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric' }));
+          temps.push(hourlyData.temperature_2m[i]);
+          precip.push(hourlyData.precipitation[i]);
+          wind.push(hourlyData.wind_speed_10m[i]);
+          pressure.push(hourlyData.surface_pressure[i]);
+        }
+
+        if (historyChart) {
+          historyChart.destroy();
+        }
+
+        historyChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'Temperature (°C)',
+                data: temps,
+                borderColor: '#FF9A73',
+                backgroundColor: 'rgba(255, 154, 115, 0.1)',
+                tension: 0.3,
+                yAxisID: 'y'
+              },
+              {
+                label: 'Precipitation (mm)',
+                data: precip,
+                borderColor: '#5b9bd5',
+                backgroundColor: 'rgba(91, 155, 213, 0.1)',
+                tension: 0.3,
+                yAxisID: 'y1'
+              },
+              {
+                label: 'Wind Speed (km/h)',
+                data: wind,
+                borderColor: '#7a9a8a',
+                backgroundColor: 'rgba(122, 154, 138, 0.1)',
+                tension: 0.3,
+                yAxisID: 'y'
+              },
+              {
+                label: 'Pressure (hPa)',
+                data: pressure,
+                borderColor: '#9b59b6',
+                backgroundColor: 'rgba(155, 89, 182, 0.1)',
+                tension: 0.3,
+                yAxisID: 'y2'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+              mode: 'index',
+              intersect: false
+            },
+            plugins: {
+              legend: {
+                display: false
+              }
+            },
+            scales: {
+              x: {
+                display: true,
+                ticks: {
+                  maxTicksLimit: 8,
+                  font: { size: 10 }
+                }
+              },
+              y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+                title: {
+                  display: true,
+                  text: 'Temp (°C) / Wind (km/h)',
+                  font: { size: 10 }
+                }
+              },
+              y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                title: {
+                  display: true,
+                  text: 'Precip (mm)',
+                  font: { size: 10 }
+                },
+                grid: {
+                  drawOnChartArea: false
+                }
+              },
+              y2: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                title: {
+                  display: true,
+                  text: 'Pressure (hPa)',
+                  font: { size: 10 }
+                },
+                grid: {
+                  drawOnChartArea: false
+                }
+              }
+            }
+          }
+        });
+      }
+
+      // Weather code to description
+      function getWeatherDescription(code) {
+        const codes = {
+          0: 'Clear',
+          1: 'Mostly Clear',
+          2: 'Partly Cloudy',
+          3: 'Overcast',
+          45: 'Foggy',
+          48: 'Rime Fog',
+          51: 'Light Drizzle',
+          53: 'Drizzle',
+          55: 'Heavy Drizzle',
+          61: 'Light Rain',
+          63: 'Rain',
+          65: 'Heavy Rain',
+          71: 'Light Snow',
+          73: 'Snow',
+          75: 'Heavy Snow',
+          80: 'Rain Showers',
+          81: 'Mod. Showers',
+          82: 'Heavy Showers',
+          95: 'Thunderstorm',
+          96: 'T-Storm + Hail'
+        };
+        return codes[code] || 'Unknown';
+      }
+
+      // Fetch latest observation from a single NWS station
+      async function fetchStationObservation(stationId) {
+        try {
+          const url = `https://api.weather.gov/stations/${stationId}/observations/latest`;
+          const response = await fetch(url, {
+            headers: { 'User-Agent': 'Geoglypha Weather Dashboard' }
+          });
+          const data = await response.json();
+          const props = data.properties;
+
+          return {
+            temperature: props.temperature?.value !== null
+              ? (props.temperature.value * 9/5 + 32).toFixed(1) + '°F'
+              : 'N/A',
+            temperatureC: props.temperature?.value !== null
+              ? props.temperature.value.toFixed(1) + '°C'
+              : 'N/A',
+            windSpeed: props.windSpeed?.value !== null
+              ? (props.windSpeed.value * 0.621371).toFixed(1) + ' mph'
+              : 'N/A',
+            humidity: props.relativeHumidity?.value !== null
+              ? Math.round(props.relativeHumidity.value) + '%'
+              : 'N/A',
+            pressure: props.barometricPressure?.value !== null
+              ? (props.barometricPressure.value / 100).toFixed(1) + ' hPa'
+              : 'N/A',
+            description: props.textDescription || 'N/A',
+            timestamp: props.timestamp
+              ? new Date(props.timestamp).toLocaleString('en-US', {
+                  month: 'short', day: 'numeric',
+                  hour: 'numeric', minute: '2-digit'
+                })
+              : 'N/A'
+          };
+        } catch (error) {
+          console.error(`Error fetching observations for ${stationId}:`, error);
+          return null;
+        }
+      }
+
+      // Fetch and display NWS observation stations within radius
+      async function fetchNWSStations() {
+        try {
+          const url = `https://api.weather.gov/points/${WEST_ASHEVILLE_LAT},${WEST_ASHEVILLE_LON}/stations`;
+          const response = await fetch(url, {
+            headers: { 'User-Agent': 'Geoglypha Weather Dashboard' }
+          });
+          const data = await response.json();
+
+          if (data.features) {
+            // Filter stations within 2.5-mile radius
+            stationsData = data.features.filter(station => {
+              const coords = station.geometry.coordinates;
+              const distance = calculateDistance(
+                WEST_ASHEVILLE_LAT, WEST_ASHEVILLE_LON,
+                coords[1], coords[0]
+              );
+              station.distance = distance;
+              return distance <= SEARCH_RADIUS_MILES;
+            }).sort((a, b) => a.distance - b.distance);
+
+            // If fewer than 3 stations found, expand to include nearest ones
+            if (stationsData.length < 3) {
+              const allSorted = data.features.map(station => {
+                const coords = station.geometry.coordinates;
+                station.distance = calculateDistance(
+                  WEST_ASHEVILLE_LAT, WEST_ASHEVILLE_LON,
+                  coords[1], coords[0]
+                );
+                return station;
+              }).sort((a, b) => a.distance - b.distance);
+              stationsData = allSorted.slice(0, 5);
+            }
+
+            // Update dropdown
+            const select = document.getElementById('station-select');
+            select.innerHTML = '<option value="">Select a weather station...</option>';
+
+            stationsData.forEach((station, index) => {
+              const name = station.properties.name;
+              const distance = station.distance.toFixed(1);
+              select.innerHTML += `<option value="${index}">${name} (${distance} mi)</option>`;
+            });
+
+            // Fetch observations and add markers for each station
+            for (let index = 0; index < stationsData.length; index++) {
+              const station = stationsData[index];
+              const coords = station.geometry.coordinates;
+              const name = station.properties.name;
+              const stationId = station.properties.stationIdentifier;
+              const distance = station.distance.toFixed(1);
+
+              // Fetch live observations for this station
+              const obs = await fetchStationObservation(stationId);
+              station.latestObs = obs;
+
+              let popupContent = `
+                <div style="min-width: 200px;">
+                  <strong style="font-size: 14px;">${name}</strong><br>
+                  <span style="color: #666; font-size: 11px;">ID: ${stationId} | ${distance} miles away</span>
+                  <hr style="margin: 6px 0; border: none; border-top: 1px solid #ddd;">
+              `;
+
+              if (obs) {
+                popupContent += `
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 12px;">
+                    <div><strong>Temp:</strong> ${obs.temperatureC}</div>
+                    <div><strong>Wind:</strong> ${obs.windSpeed}</div>
+                    <div><strong>Humidity:</strong> ${obs.humidity}</div>
+                    <div><strong>Pressure:</strong> ${obs.pressure}</div>
+                  </div>
+                  <div style="font-size: 11px; margin-top: 4px; color: #555;">
+                    ${obs.description}
+                  </div>
+                  <div style="font-size: 10px; color: #999; margin-top: 4px;">
+                    Last updated: ${obs.timestamp}
+                  </div>
+                `;
+              } else {
+                popupContent += `<div style="font-size: 12px; color: #999;">No observation data available</div>`;
+              }
+
+              popupContent += `
+                  <button onclick="selectStation(${index})"
+                    style="margin-top: 8px; width: 100%; padding: 6px; background: #1a1612; color: #f1ead9;
+                           border: none; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;">
+                    View 7-Day Chart
+                  </button>
+                </div>
+              `;
+
+              const marker = L.circleMarker([coords[1], coords[0]], {
+                radius: 8,
+                fillColor: '#5b9bd5',
+                color: '#fff',
+                weight: 2,
+                fillOpacity: 0.8
+              })
+              .addTo(map)
+              .bindPopup(popupContent, { maxWidth: 250 });
+
+              marker.on('click', () => {
+                document.getElementById('station-select').value = index;
+              });
+
+              stationMarkers.push(marker);
+            }
+
+            if (stationsData.length === 0) {
+              select.innerHTML = '<option value="">No stations found nearby</option>';
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching NWS stations:', error);
+          document.getElementById('station-select').innerHTML =
+            '<option value="">Error loading stations</option>';
+        }
+      }
+
+      // Select a station and fetch its data
+      async function selectStation(index) {
+        if (index === '' || index === null) {
+          // Reset to default location
+          currentLat = WEST_ASHEVILLE_LAT;
+          currentLon = WEST_ASHEVILLE_LON;
+          currentStationName = 'West Asheville (default)';
+          document.getElementById('station-info').style.display = 'none';
+          document.getElementById('current-source').textContent = 'Open-Meteo API';
+        } else {
+          const station = stationsData[index];
+          const coords = station.geometry.coordinates;
+          currentLat = coords[1];
+          currentLon = coords[0];
+          currentStationName = station.properties.name;
+
+          // Show station info
+          const stationInfo = document.getElementById('station-info');
+          stationInfo.style.display = 'block';
+
+          let infoHTML = `
+            <strong>${station.properties.name}</strong><br>
+            ID: ${station.properties.stationIdentifier}<br>
+            Distance: ${station.distance.toFixed(1)} miles from center
+          `;
+
+          if (station.latestObs) {
+            const obs = station.latestObs;
+            infoHTML += `<br><span style="font-size: 0.75rem;">
+              ${obs.temperatureC} | ${obs.pressure} | ${obs.description}
+            </span>`;
+          }
+
+          stationInfo.innerHTML = infoHTML;
+
+          document.getElementById('current-source').textContent =
+            `Open-Meteo API (${station.properties.name})`;
+
+          // Pan map to station
+          map.panTo([currentLat, currentLon]);
+
+          // Highlight selected station marker
+          stationMarkers.forEach((m, i) => {
+            if (i === parseInt(index)) {
+              m.setStyle({ fillColor: '#e74c3c', radius: 10 });
+            } else {
+              m.setStyle({ fillColor: '#5b9bd5', radius: 8 });
+            }
+          });
+        }
+
+        // Update chart label
+        document.getElementById('chart-station-name').textContent = currentStationName;
+
+        // Refresh all data for the selected location
+        await Promise.all([
+          fetchCurrentWeather(currentLat, currentLon),
+          fetchNWSForecast(currentLat, currentLon),
+          fetchHistoricalData(currentLat, currentLon)
+        ]);
+      }
+
+      // Handle dropdown change
+      document.getElementById('station-select').addEventListener('change', (e) => {
+        selectStation(e.target.value);
+      });
+
+      // Make selectStation available globally for popup button
+      window.selectStation = selectStation;
+
+      // Initialize dashboard
+      fetchCurrentWeather();
+      fetchNWSForecast();
+      fetchHistoricalData();
+      fetchNWSStations();
+
+      // Refresh current conditions every 5 minutes
+      setInterval(() => fetchCurrentWeather(currentLat, currentLon), 5 * 60 * 1000);
+    </script>
+
+    <footer class="colophon">
+      <div class="colophon-ornament">&#10022; &nbsp; &#8297; &nbsp; &#10022;</div>
+      <nav class="colophon-nav">
+        <a href="../index.html">Geoglypha Home</a>
+        <a href="../geography.html">Geography</a>
+        <a href="../history.html">History</a>
+        <a href="index.html">Weather Overview</a>
+        <a href="temperature_chart.html">Temperature</a>
+        <a href="precipitation_chart.html">Precipitation</a>
+      </nav>
+      <div class="colophon-meta">
+        <div>&copy; <span id="year"></span> Geoglypha &nbsp;&middot;&nbsp; Ryan Lafferty</div>
+        <div>Data: Open-Meteo &middot; NWS Weather.gov</div>
+      </div>
+    </footer>
+    <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
+  </body>
+</html>
