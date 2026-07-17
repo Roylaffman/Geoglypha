@@ -22,6 +22,15 @@ node_modules/
 !bucket-policy.json
 service-account*.json
 
+# Temp scripts
+_gen.py
+_temp_append.py
+
+# Generated outputs
+lithium_analysis.pdf
+lithium_analysis_files/
+lithium_analysis_old.html
+
 # OS
 .DS_Store
 Thumbs.db
