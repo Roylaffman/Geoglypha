@@ -1,0 +1,1909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#1c1814">
+    <title>Petra &amp; the Nabataeans · An Atlas of the Rose-Red City and the Incense Road</title>
+
+    <!-- Fonts: Fraunces (display, archival) + Inter Tight (body) — matches house atlas style -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500&family=Inter+Tight:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Leaflet (with three-CDN fallback below) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+
+    <style>
+        /* ============================================================
+           PETRA ATLAS — archival/editorial style
+           Palette: parchment, ink, sandstone rose, deep wadi shadow,
+                    weathered copper accents
+           Type:    Fraunces (display) + Inter Tight (body)
+           ============================================================ */
+
+        :root {
+            --bg:            #f1ead8;   /* parchment */
+            --bg-deep:       #e8dec5;   /* sun-bleached parchment */
+            --ink:           #1c1814;   /* warm black */
+            --ink-soft:      #3a322a;
+            --ink-mute:      #6b5d4d;
+            --rule:          #2c241d;
+            --rose:          #b54b2f;   /* sandstone rose / Petra cliff */
+            --rose-deep:     #7d2b18;   /* deep wadi shadow */
+            --copper:        #8a5a2b;   /* weathered copper */
+            --sand:          #c89a5f;   /* desert ochre */
+            --shadow:        rgba(28, 24, 20, 0.18);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: 'Inter Tight', system-ui, sans-serif;
+            font-weight: 400;
+            font-size: 17px;
+            line-height: 1.65;
+            /* paper grain overlay */
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(181, 75, 47, 0.04) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(138, 90, 43, 0.05) 0%, transparent 50%),
+                url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.11 0 0 0 0 0.09 0 0 0 0 0.08 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-attachment: fixed;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Typography */
+        h1, h2, h3, h4 {
+            font-family: 'Fraunces', Georgia, serif;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+            color: var(--ink);
+        }
+
+        .display {
+            font-family: 'Fraunces', Georgia, serif;
+            font-variation-settings: "opsz" 144;
+            font-style: italic;
+            font-weight: 400;
+        }
+
+        /* ============================================================
+           LAYOUT
+           ============================================================ */
+
+        .page {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 3rem 2rem 6rem;
+        }
+
+        @media (max-width: 720px) {
+            .page { padding: 2rem 1.25rem 4rem; }
+            body { font-size: 16px; }
+        }
+
+        /* ============================================================
+           MASTHEAD
+           ============================================================ */
+
+        .masthead {
+            border-top: 3px solid var(--rule);
+            border-bottom: 1px solid var(--rule);
+            padding: 1.25rem 0 1rem;
+            margin-bottom: 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 1rem;
+            font-family: 'Inter Tight', sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--ink-mute);
+        }
+        .masthead .vol { font-weight: 600; color: var(--ink); }
+        .masthead .date { font-style: italic; text-transform: none; letter-spacing: 0.05em; }
+
+        /* ============================================================
+           HERO
+           ============================================================ */
+
+        .hero {
+            margin-bottom: 4rem;
+            padding-bottom: 3rem;
+            border-bottom: 1px solid var(--rule);
+            position: relative;
+        }
+
+        .hero .eyebrow {
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--rose-deep);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .hero .eyebrow::before,
+        .hero .eyebrow::after {
+            content: '';
+            flex: 1;
+            max-width: 100px;
+            height: 1px;
+            background: var(--rose-deep);
+            opacity: 0.4;
+        }
+
+        .hero h1 {
+            font-size: clamp(2.75rem, 7vw, 5.5rem);
+            line-height: 0.95;
+            letter-spacing: -0.025em;
+            font-weight: 400;
+            margin-bottom: 1.5rem;
+        }
+        .hero h1 .accent {
+            font-style: italic;
+            color: var(--rose-deep);
+            font-weight: 400;
+        }
+
+        .hero .lede {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: clamp(1.15rem, 1.8vw, 1.35rem);
+            line-height: 1.55;
+            color: var(--ink-soft);
+            max-width: 720px;
+            font-weight: 400;
+            font-style: italic;
+        }
+
+        .hero .byline {
+            margin-top: 2rem;
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--ink-mute);
+            font-weight: 500;
+        }
+        .hero .byline strong { color: var(--ink); font-weight: 600; }
+
+        /* ============================================================
+           SECTION HEADINGS
+           ============================================================ */
+
+        section { margin-bottom: 4rem; }
+
+        .section-num {
+            display: inline-block;
+            font-family: 'Inter Tight', sans-serif;
+            font-size: 0.7rem;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--rose-deep);
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            line-height: 1.05;
+            margin-bottom: 1.5rem;
+            font-weight: 400;
+            letter-spacing: -0.02em;
+        }
+
+        h2 .em { font-style: italic; color: var(--rose-deep); }
+
+        h3 {
+            font-size: 1.5rem;
+            margin: 2rem 0 0.75rem;
+            font-weight: 500;
+        }
+
+        /* ============================================================
+           BODY PROSE
+           ============================================================ */
+
+        p { margin-bottom: 1.1rem; max-width: 70ch; }
+
+        p.standfirst {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 1.2rem;
+            line-height: 1.5;
+            color: var(--ink-soft);
+            border-left: 3px solid var(--rose);
+            padding-left: 1.5rem;
+            margin: 1.5rem 0 2rem;
+            font-weight: 400;
+            font-style: italic;
+            max-width: none;
+        }
+
+        a {
+            color: var(--rose-deep);
+            text-decoration: underline;
+            text-decoration-thickness: 1px;
+            text-underline-offset: 3px;
+            transition: color 0.15s;
+        }
+        a:hover { color: var(--ink); }
+
+        em { font-style: italic; color: var(--ink-soft); }
+        strong { font-weight: 600; }
+
+        /* ============================================================
+           MAP
+           ============================================================ */
+
+        .map-wrap {
+            margin: 2rem 0 3rem;
+        }
+
+        .map-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            border-top: 2px solid var(--rule);
+            border-bottom: 1px solid var(--rule);
+            padding: 0.75rem 0;
+            margin-bottom: 0;
+            font-family: 'Inter Tight', sans-serif;
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--ink-mute);
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .map-header .lbl { font-weight: 600; color: var(--ink); }
+
+        #mapFrame {
+            position: relative;
+            background: var(--bg-deep);
+            border: 1px solid var(--rule);
+            border-top: none;
+        }
+
+        #mapHost { width: 100%; height: 560px; }
+
+        @media (max-width: 720px) {
+            #mapHost { height: 460px; }
+        }
+
+        .map-controls {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .map-btn {
+            background: var(--bg);
+            color: var(--ink);
+            border: 1px solid var(--rule);
+            font-family: 'Inter Tight', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 0.5rem 0.75rem;
+            cursor: pointer;
+            box-shadow: 0 2px 6px var(--shadow);
+            transition: background 0.15s;
+        }
+        .map-btn:hover { background: var(--rose); color: var(--bg); }
+
+        .map-caption {
+            border-top: 1px solid var(--rule);
+            padding: 0.75rem 0;
+            font-size: 0.85rem;
+            color: var(--ink-mute);
+            font-style: italic;
+            font-family: 'Fraunces', serif;
+        }
+
+        /* Leaflet popup styling — match atlas */
+        .leaflet-popup-content-wrapper {
+            background: var(--bg);
+            color: var(--ink);
+            border-radius: 0;
+            border: 1px solid var(--rule);
+            box-shadow: 0 6px 24px rgba(28, 24, 20, 0.3);
+            font-family: 'Inter Tight', sans-serif;
+        }
+        .leaflet-popup-content {
+            margin: 12px 14px;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        .leaflet-popup-content h4 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.05rem;
+            margin-bottom: 0.25rem;
+            font-weight: 500;
+        }
+        .leaflet-popup-content .pop-kind {
+            font-size: 0.65rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--rose-deep);
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+        }
+        .leaflet-popup-tip { background: var(--bg); border: 1px solid var(--rule); }
+        .leaflet-container { font-family: 'Inter Tight', sans-serif; background: var(--bg-deep); }
+
+        /* Numbered marker */
+        .site-marker {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--rose-deep);
+            color: var(--bg);
+            font-family: 'Fraunces', serif;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border: 2px solid var(--bg);
+            box-shadow: 0 2px 6px rgba(28, 24, 20, 0.5);
+        }
+        .site-marker.water  { background: #2e5d6e; }
+        .site-marker.tomb   { background: var(--rose-deep); }
+        .site-marker.temple { background: var(--copper); }
+        .site-marker.trade  { background: #4a5d2c; }
+        .site-marker.satellite { background: #6b5d4d; }
+
+        /* Water infrastructure overlay markers — diamond shape */
+        .water-pt {
+            width: 13px;
+            height: 13px;
+            border: 2px solid rgba(241, 234, 216, 0.92);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.55);
+            transform: rotate(45deg);
+            cursor: pointer;
+        }
+        .water-pt.spring  { background: #1d8a6e; }
+        .water-pt.cistern { background: #1a5c8a; }
+        .water-pt.dam     { background: #6b3a1a; }
+        .water-pt.reservoir { background: #26728f; }
+
+        /* Map legend */
+        .map-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.25rem;
+            margin: 1rem 0 0;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--rule);
+            background: var(--bg-deep);
+            font-size: 0.75rem;
+            color: var(--ink-soft);
+        }
+        .map-legend .dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 0.4rem;
+            vertical-align: middle;
+            border: 1.5px solid var(--bg);
+            box-shadow: 0 0 0 1px var(--rule);
+        }
+        .legend-item { display: flex; align-items: center; }
+
+        /* ============================================================
+           SITE ENTRIES — numbered article cards
+           ============================================================ */
+
+        .site-entries {
+            margin-top: 3rem;
+        }
+
+        .site-entry {
+            border-top: 2px solid var(--rule);
+            padding: 2rem 0 2.5rem;
+            display: grid;
+            grid-template-columns: 80px 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 720px) {
+            .site-entry {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+        }
+
+        .site-entry .num {
+            font-family: 'Fraunces', serif;
+            font-size: 3rem;
+            font-weight: 400;
+            color: var(--rose-deep);
+            line-height: 1;
+            font-variation-settings: "opsz" 144;
+            font-style: italic;
+        }
+
+        .site-entry .meta {
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--ink-mute);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .site-entry .meta .kind { color: var(--rose-deep); font-weight: 600; }
+
+        .site-entry h3 {
+            font-size: 1.65rem;
+            margin: 0 0 0.85rem;
+            font-weight: 500;
+            line-height: 1.1;
+        }
+        .site-entry h3 .alt {
+            display: block;
+            font-style: italic;
+            font-size: 1rem;
+            color: var(--ink-mute);
+            font-weight: 400;
+            margin-top: 0.15rem;
+        }
+
+        .site-entry p { margin-bottom: 0.85rem; max-width: 68ch; }
+
+        /* Further-study link strips */
+        .links {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--ink-mute);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .links .links-label {
+            font-size: 0.65rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--ink-mute);
+            font-weight: 600;
+            width: 100%;
+            margin-bottom: 0.25rem;
+        }
+        .link-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.75rem;
+            border: 1px solid var(--rule);
+            background: var(--bg);
+            color: var(--ink);
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.15s;
+        }
+        .link-chip:hover {
+            background: var(--ink);
+            color: var(--bg);
+        }
+        .link-chip .tag {
+            font-size: 0.6rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--rose-deep);
+            font-weight: 700;
+            border-right: 1px solid var(--ink-mute);
+            padding-right: 0.4rem;
+            margin-right: 0.1rem;
+        }
+        .link-chip:hover .tag { color: var(--sand); border-color: var(--bg-deep); }
+
+        .link-chip.gis .tag { color: #2e5d6e; }
+        .link-chip.data .tag { color: #4a5d2c; }
+
+        /* ============================================================
+           FEATURE CALLOUTS — frankincense, water, etc.
+           ============================================================ */
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .feature-card {
+            background: var(--bg-deep);
+            border: 1px solid var(--rule);
+            border-top: 3px solid var(--rose-deep);
+            padding: 1.5rem;
+            position: relative;
+        }
+        .feature-card .badge {
+            font-size: 0.65rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--rose-deep);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .feature-card h4 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.2rem;
+            margin-bottom: 0.6rem;
+            font-weight: 500;
+        }
+        .feature-card p {
+            font-size: 0.9rem;
+            margin-bottom: 0;
+            line-height: 1.55;
+            color: var(--ink-soft);
+        }
+
+        /* ============================================================
+           TIMELINE
+           ============================================================ */
+
+        .timeline {
+            border-left: 2px solid var(--rule);
+            padding-left: 2rem;
+            margin: 2rem 0;
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2.45rem;
+            top: 0.4rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--rose-deep);
+            border: 2px solid var(--bg);
+            box-shadow: 0 0 0 1.5px var(--rule);
+        }
+        .timeline-item .date {
+            font-family: 'Inter Tight', sans-serif;
+            font-size: 0.7rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--rose-deep);
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        .timeline-item h4 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.1rem;
+            margin-bottom: 0.35rem;
+            font-weight: 500;
+        }
+        .timeline-item p {
+            font-size: 0.9rem;
+            color: var(--ink-soft);
+            margin-bottom: 0;
+        }
+
+        /* ============================================================
+           PULL QUOTE
+           ============================================================ */
+
+        .pullquote {
+            margin: 3rem 0;
+            text-align: center;
+            font-family: 'Fraunces', Georgia, serif;
+            font-style: italic;
+            font-size: clamp(1.4rem, 2.5vw, 1.85rem);
+            line-height: 1.4;
+            color: var(--rose-deep);
+            max-width: 720px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 2rem 0;
+            border-top: 1px solid var(--ink-mute);
+            border-bottom: 1px solid var(--ink-mute);
+            font-weight: 400;
+        }
+        .pullquote .attrib {
+            display: block;
+            margin-top: 1rem;
+            font-style: normal;
+            font-family: 'Inter Tight', sans-serif;
+            font-size: 0.75rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--ink-mute);
+            font-weight: 600;
+        }
+
+        /* ============================================================
+           ROADMAP / TODO BLOCK (long-term goals)
+           ============================================================ */
+
+        .roadmap {
+            background: var(--bg-deep);
+            border: 1px solid var(--rule);
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+        .roadmap h3 {
+            font-size: 1.3rem;
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+        .roadmap-list {
+            list-style: none;
+            padding: 0;
+            margin: 1rem 0 0;
+        }
+        .roadmap-list li {
+            padding: 0.75rem 0;
+            border-bottom: 1px dashed var(--ink-mute);
+            font-size: 0.9rem;
+            display: grid;
+            grid-template-columns: 90px 1fr;
+            gap: 1rem;
+            align-items: baseline;
+        }
+        .roadmap-list li:last-child { border-bottom: none; }
+        .roadmap-list .phase {
+            font-size: 0.65rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--rose-deep);
+            font-weight: 700;
+        }
+
+        /* ============================================================
+           BIBLIOGRAPHY / SOURCES
+           ============================================================ */
+
+        .sources {
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 2px solid var(--rule);
+        }
+        .sources h2 { font-size: 1.6rem; margin-bottom: 1.5rem; }
+        .sources-list {
+            list-style: none;
+            padding: 0;
+            counter-reset: src;
+        }
+        .sources-list li {
+            counter-increment: src;
+            padding: 0.85rem 0 0.85rem 2.5rem;
+            border-bottom: 1px solid var(--ink-mute);
+            font-size: 0.88rem;
+            line-height: 1.5;
+            position: relative;
+            color: var(--ink-soft);
+        }
+        .sources-list li::before {
+            content: counter(src, decimal-leading-zero);
+            position: absolute;
+            left: 0;
+            top: 0.85rem;
+            font-family: 'Fraunces', serif;
+            font-style: italic;
+            font-size: 0.85rem;
+            color: var(--rose-deep);
+            font-weight: 500;
+        }
+        .sources-list .src-tag {
+            display: inline-block;
+            font-size: 0.6rem;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--bg);
+            background: var(--rose-deep);
+            padding: 0.15rem 0.5rem;
+            margin-right: 0.5rem;
+            font-weight: 600;
+        }
+        .sources-list .src-tag.gis { background: #2e5d6e; }
+        .sources-list .src-tag.data { background: #4a5d2c; }
+        .sources-list .src-tag.primary { background: var(--ink); }
+
+        /* ============================================================
+           COLOPHON
+           ============================================================ */
+
+        .colophon {
+            margin-top: 5rem;
+            padding: 2rem 0 0;
+            border-top: 3px solid var(--rule);
+            font-size: 0.78rem;
+            color: var(--ink-mute);
+            font-family: 'Inter Tight', sans-serif;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            line-height: 1.7;
+        }
+        .colophon .mark {
+            font-family: 'Fraunces', serif;
+            font-style: italic;
+            font-size: 1rem;
+            color: var(--ink);
+        }
+
+        /* ============================================================
+           FULLSCREEN MAP OVERLAY
+           ============================================================ */
+
+        .fs-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+        }
+        .fs-overlay.active { display: flex; }
+        body.fs-open { overflow: hidden; }
+        .fs-overlay .fs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1.25rem;
+            border-bottom: 2px solid var(--rule);
+            font-family: 'Fraunces', serif;
+            font-style: italic;
+            font-size: 1rem;
+        }
+        .fs-overlay .fs-close {
+            background: var(--ink);
+            color: var(--bg);
+            border: none;
+            font-family: 'Inter Tight', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+        }
+        .fs-overlay .fs-close:hover { background: var(--rose-deep); }
+        .fs-overlay #mapHost { flex: 1; height: auto; }
+
+        /* Print-friendly fallback */
+        @media print {
+            body { background: white; color: black; }
+            .map-controls, .fs-overlay { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="page">
+
+    <!-- ====================== MASTHEAD ====================== -->
+    <header class="masthead">
+        <div class="vol">Geoglypha · Atlas Series · No. III</div>
+        <div class="date">Petra &amp; the Nabataeans · 4th c. BCE – 4th c. CE</div>
+    </header>
+
+    <!-- ====================== HERO ====================== -->
+    <section class="hero">
+        <div class="eyebrow">An atlas of the rose-red city</div>
+        <h1>Petra <span class="accent">&amp;</span> the<br>Nabataean World</h1>
+        <p class="lede">
+            A field guide to the carved city, its hydraulic kingdom,
+            and the incense road that built both — assembled from
+            scholarly survey, satellite imagery, and the open archive
+            of Nabataean GIS.
+        </p>
+        <div class="byline">
+            Compiled for the <strong>Geoglypha</strong> webmap series · GIS &amp; cartography by <strong>Lafferty</strong>
+        </div>
+    </section>
+
+    <!-- ====================== INTRODUCTION ====================== -->
+    <section id="intro">
+        <div class="section-num">§ I · Prologue</div>
+        <h2>A city <span class="em">cut from rock</span>, run on rain</h2>
+
+        <p class="standfirst">
+            Petra is not a city built upon stone — it is a city <em>carved into it</em>.
+            For four centuries the Nabataeans ran a desert capital of perhaps
+            thirty thousand souls on roughly four inches of rain a year, and
+            paid for it all with the resin of a tree that grew nowhere near them.
+        </p>
+
+        <p>
+            The Nabataeans were Arabian nomads who, beginning some time before the
+            fourth century BCE, settled the sandstone canyons of southern Jordan
+            and turned them into a state. Their capital, <em>Raqmu</em> — known
+            to the Greeks as <em>Petra</em>, "the rock" — sat at the hinge between
+            two trades: the overland caravan road carrying frankincense and myrrh
+            up from south Arabia, and the eastern crossings out of Mesopotamia and
+            the Persian Gulf. Whoever controlled the waterholes between Dedan and
+            Gaza controlled the price of incense in the Mediterranean. The
+            Nabataeans controlled the waterholes.
+        </p>
+
+        <p>
+            What they built with the proceeds is unlike any other ancient capital.
+            More than three thousand monuments — tombs, temples, dining halls,
+            cisterns, channels, dams — were cut directly out of cliff faces of
+            Cambrian sandstone. The famous façades (the Treasury, the Monastery,
+            the Royal Tombs) are only the conspicuous outliers of a far larger
+            funerary and ritual landscape that climbs the high places around the
+            city basin. Beneath all of it ran a hydraulic system whose
+            sophistication is still being mapped today.
+        </p>
+
+        <p>
+            This atlas collects the twelve sites that anchor the Nabataean world,
+            the scholarly literature that has revealed them, and the open
+            geographic data through which they can now be mapped at high
+            resolution. It is structured as the working notebook for a long-term
+            web-mapping project — one whose end state is a fully interactive
+            LiDAR-grade reconstruction of Petra's water network, tombs, and trade
+            geography.
+        </p>
+    </section>
+
+    <!-- ====================== WEBMAP ====================== -->
+    <section id="map">
+        <div class="section-num">§ II · The webmap</div>
+        <h2>The Nabataean <span class="em">geography</span></h2>
+
+        <p>
+            The map below plots Petra's core monuments together with the wider
+            Nabataean network: the satellite settlements of Bayda and Sabra, the
+            spring at Ain Mousa that fed the city, the staging post at Humayma on
+            the road south, and Hegra (Mada'in Salih), the great rock-cut
+            necropolis that anchored the kingdom's southern reach into what is now
+            Saudi Arabia. Coordinates draw on UNESCO World Heritage records,
+            published archaeological surveys, and OpenStreetMap.
+        </p>
+
+        <div class="map-wrap">
+            <div class="map-header">
+                <span><span class="lbl">Fig. 1</span> · The Nabataean kingdom, principal nodes</span>
+                <span>30.32° N · 35.45° E</span>
+            </div>
+            <div id="mapFrame">
+                <div id="mapHost"></div>
+                <div class="map-controls">
+                    <button class="map-btn" id="enlargeBtn">⛶ Enlarge</button>
+                </div>
+            </div>
+            <div class="map-caption">
+                Twelve numbered sites · diamond markers show cisterns, springs, and dams ·
+                dashed lines trace the Siq channel, Wadi Mudhlim diversion tunnel, and
+                Ain Braq pipeline. Toggle Water Infrastructure and Hydraulic Lines in
+                the layer control (top left). Click any marker or line for source notes.
+            </div>
+            <div class="map-legend">
+                <span class="legend-item"><span class="dot" style="background:#7d2b18"></span>Tomb / facade</span>
+                <span class="legend-item"><span class="dot" style="background:#8a5a2b"></span>Temple / civic</span>
+                <span class="legend-item"><span class="dot" style="background:#2e5d6e"></span>Spring / hydraulic site</span>
+                <span class="legend-item"><span class="dot" style="background:#6b5d4d"></span>Satellite settlement</span>
+                <span class="legend-item"><span class="dot" style="background:#4a5d2c"></span>Trade-route node</span>
+                <span class="legend-item"><span class="dot" style="background:#1a5c8a;transform:rotate(45deg);border-radius:2px;"></span>Cistern / reservoir</span>
+                <span class="legend-item"><span class="dot" style="background:#1d8a6e;transform:rotate(45deg);border-radius:2px;"></span>Spring source</span>
+                <span class="legend-item"><span class="dot" style="background:#6b3a1a;transform:rotate(45deg);border-radius:2px;"></span>Dam / barrier</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================== HISTORY ====================== -->
+    <section id="history">
+        <div class="section-num">§ III · A short history</div>
+        <h2>From nomads to <span class="em">kingdom</span></h2>
+
+        <p>
+            The Nabataeans first emerge in the historical record at the end of the
+            fourth century BCE, when the Greek diadochus Antigonus Monophthalmus
+            sent two expeditions against them in 312 BCE and failed both times.
+            Diodorus Siculus, drawing on the lost history of Hieronymus of Cardia,
+            describes them as nomads who refused to plant grain or build houses —
+            and who already kept hidden water cisterns sealed against intruders.
+            That single detail, written more than two thousand years ago, is the
+            seed of everything Petra became.
+        </p>
+
+        <p>
+            By the third century BCE the Nabataeans had moved from caravan trade
+            into caravan control: customs posts, watering stations, and a road
+            network that ran south to Dedan and Hegra and on into the Hadhramaut.
+            Petra emerged as the storage and transshipment node where incense
+            arriving from Arabia was repacked for the Mediterranean leg through
+            Gaza. By the first century BCE under King Obodas II and especially
+            under <em>Aretas IV Philopatris</em> (r. 9 BCE – 40 CE), the city
+            entered its monumental phase: the Khazneh, the Monastery, the
+            colonnaded street, the Great Temple, and most of the Siq's hydraulic
+            plumbing all date from this single dynastic generation.
+        </p>
+
+        <p>
+            In 106 CE the emperor Trajan annexed the kingdom and folded it into
+            the new Roman province of <em>Arabia Petraea</em>. The Nabataeans
+            were not destroyed — they were administered. Petra remained
+            inhabited, with Byzantine churches built into older tombs (the Urn
+            Tomb was consecrated as a cathedral in 446/447 CE), but the trade
+            arteries shifted: incense increasingly moved by sea via Egyptian Red
+            Sea ports, and the desert capital became, slowly, a periphery. A
+            major earthquake in 363 CE collapsed much of the urban core, and the
+            city dwindled until, by the early Islamic period, it was inhabited
+            mainly by Bedouin and effectively lost to outside scholarship until
+            Johann Ludwig Burckhardt re-identified it in 1812.
+        </p>
+
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="date">312 BCE</div>
+                <h4>First mention</h4>
+                <p>Antigonid expeditions against the Nabataeans, recorded by
+                Diodorus. The Nabataeans already control caravan water sources.</p>
+            </div>
+            <div class="timeline-item">
+                <div class="date">c. 200 BCE</div>
+                <h4>Petra as transshipment hub</h4>
+                <p>Caravanserais, cisterns, and customs posts formalised along
+                the northern incense road; Petra becomes the storage and
+                taxation centre for the Gaza terminus.</p>
+            </div>
+            <div class="timeline-item">
+                <div class="date">9 BCE – 40 CE</div>
+                <h4>Aretas IV — the monumental city</h4>
+                <p>The reign during which most of Petra's famous façades, the
+                Siq pipeline, and the Great Temple are built. Population
+                estimates approach 30,000.</p>
+            </div>
+            <div class="timeline-item">
+                <div class="date">106 CE</div>
+                <h4>Roman annexation</h4>
+                <p>Trajan absorbs the kingdom as <em>Provincia Arabia</em>.
+                Petra remains an urban centre; the colonnaded street is
+                refurbished in Roman fashion.</p>
+            </div>
+            <div class="timeline-item">
+                <div class="date">363 CE</div>
+                <h4>The Galilee earthquake</h4>
+                <p>Major seismic event collapses portions of the city core and
+                damages the hydraulic network. Recovery is partial.</p>
+            </div>
+            <div class="timeline-item">
+                <div class="date">446 / 447 CE</div>
+                <h4>Christian Petra</h4>
+                <p>The Urn Tomb is consecrated as a cathedral by Bishop Jason;
+                Byzantine basilicas built across the city.</p>
+            </div>
+            <div class="timeline-item">
+                <div class="date">1812</div>
+                <h4>Re-identification</h4>
+                <p>The Swiss explorer Johann Ludwig Burckhardt, posing as a
+                Muslim pilgrim, enters the Siq and identifies the ruins as
+                ancient Petra.</p>
+            </div>
+            <div class="timeline-item">
+                <div class="date">1985 / 2007</div>
+                <h4>UNESCO &amp; the New Seven Wonders</h4>
+                <p>Inscribed as a World Heritage Site in 1985; voted one of the
+                New Seven Wonders of the World in 2007.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================== FRANKINCENSE ====================== -->
+    <section id="trade">
+        <div class="section-num">§ IV · The trade</div>
+        <h2>Frankincense, <span class="em">myrrh</span>, &amp; the road that built a kingdom</h2>
+
+        <p>
+            Frankincense is the dried resin of <em>Boswellia sacra</em>, a
+            scraggly tree that grows wild only in a narrow strip of southern
+            Arabia (modern Yemen and Oman) and the Horn of Africa. Myrrh — the
+            resin of <em>Commiphora</em> — comes from the same general region.
+            Both were burnt as incense in temples across the ancient
+            Mediterranean and Near East, used in medicine, and (in the case of
+            myrrh) in embalming. Demand was enormous. Pliny the Elder, writing
+            in the first century CE, claimed that the trade had made the people
+            of southern Arabia the wealthiest in the world; estimates suggest
+            the Roman Empire alone consumed on the order of three thousand
+            tonnes of frankincense annually.
+        </p>
+
+        <p>
+            The geography of the trade was simple and unforgiving. Resin had to
+            move overland from harvest groves near the Hadhramaut north through
+            roughly 2,400 kilometres of desert, with caravans of camels
+            stopping at fixed watering points every day or two. Whoever owned
+            those watering points owned the trade. By the third century BCE the
+            Nabataeans had systematised the northern half of the route: a chain
+            of caravanserais, cisterns, customs posts, and rock-cut staging
+            tombs that reached from Hegra in the south through Petra to Gaza on
+            the Mediterranean coast. The same network carried Indian spices,
+            silks, ebony, pearls, and gemstones brought in via the Persian Gulf.
+        </p>
+
+        <p>
+            The Nabataean script itself appears to have evolved out of this
+            commercial record-keeping: a cursive Aramaic variant used for
+            inscriptions, contracts, and tomb dedications, which eventually
+            developed into the Arabic script. The trade did not just build a
+            capital. It built a writing system.
+        </p>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <span class="badge">The product</span>
+                <h4>Boswellia sacra</h4>
+                <p>Native to Dhofar (Oman), the Hadhramaut (Yemen), and Somalia.
+                Resin tapped by scoring the bark; harvested twice a year. The
+                grade of resin (and its odour) varied with the season and the
+                tree's altitude.</p>
+            </div>
+            <div class="feature-card">
+                <span class="badge">The route</span>
+                <h4>Shabwa → Petra → Gaza</h4>
+                <p>The land road ran ~2,400 km from the South Arabian collection
+                points up the western edge of the Arabian Peninsula, through the
+                Nabataean stations of Hegra and Dedan, to Petra, and on through
+                the Negev to the Mediterranean port of Gaza.</p>
+            </div>
+            <div class="feature-card">
+                <span class="badge">The toll</span>
+                <h4>Caravan tax</h4>
+                <p>The Nabataeans extracted duties at each major station. The
+                accumulation of these tolls — together with their hydraulic
+                monopoly — funded the rock-cut monuments. The same wealth that
+                paid for the Khazneh was paid for in resin.</p>
+            </div>
+            <div class="feature-card">
+                <span class="badge">The decline</span>
+                <h4>Sea over sand</h4>
+                <p>After Rome's annexation of Egypt in 30 BCE and of Nabataea in
+                106 CE, more incense moved by Red Sea routes via Myos Hormos and
+                Berenike, bypassing the overland caravans. The land road never
+                fully recovered.</p>
+            </div>
+        </div>
+
+        <p class="pullquote">
+            Wells, cisterns, taxation posts —<br>
+            the architecture of a kingdom whose first capital was the watering hole.
+            <span class="attrib">— after the testimony of Diodorus, Strabo, Pliny</span>
+        </p>
+    </section>
+
+    <!-- ====================== WATER SYSTEM ====================== -->
+    <section id="water">
+        <div class="section-num">§ V · The hydraulic kingdom</div>
+        <h2>How a desert city <span class="em">held its water</span></h2>
+
+        <p>
+            Petra sits in a basin that receives, in a good year, perhaps 100 to
+            150 millimetres of rain — and most of that arrives in a few violent
+            winter storms. The Nabataean answer was not to import water but to
+            <em>capture every drop that fell</em> and pipe in everything else
+            from springs as much as 14 km away. By the first century CE the
+            city's water system supported, by Ortloff's calculations, some
+            30,000 inhabitants at roughly 360 litres per person per day — a
+            standard of supply unmatched by most modern cities of equivalent
+            size in arid climates.
+        </p>
+
+        <p>
+            Four distinct hydraulic strategies operated at once. <strong>Spring
+            water</strong> from <em>Ain Mousa</em> was carried roughly 14 km
+            into the city through a sequence of pipelines and open channels,
+            most famously the dual-channel system running along the north wall
+            of the Siq — one rock-cut channel for redundancy, the other a line
+            of waterproofed terracotta pipes feeding settling basins along the
+            way. <strong>Rainfall runoff</strong> was harvested at hundreds of
+            catchment points and stored in more than 200 cisterns, many of them
+            carved deep into the sandstone and lined with gypsum or lime
+            plaster. <strong>Flood control</strong> was managed by a network of
+            diversion dams — most famously the dam at the head of the Siq, which
+            in modern reconstruction prevents the canyon from acting as a
+            killing funnel during flash floods. And <strong>groundwater
+            recharge</strong> was deliberately engineered: water stored behind
+            dams raised the local water table and kept the wells productive
+            through the dry season.
+        </p>
+
+        <p>
+            Modern computational fluid dynamics work, especially Charles
+            Ortloff's analyses of the Siq, Wadi Mataha, and Ain Braq pipelines,
+            has shown that the Nabataean engineers matched pipeline slope to
+            spring supply rate so precisely that the system minimised leakage
+            and avoided the surge instabilities that plague gravity-fed open
+            channels. They were not simply moving water. They were managing it
+            as a designed system.
+        </p>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <span class="badge">Capacity</span>
+                <h4>200+ cisterns</h4>
+                <p>Rock-cut, plastered, gravity-linked. Distributed across high
+                places, neighborhoods, and approach roads. Some served entire
+                quarters; others were emergency reserves.</p>
+            </div>
+            <div class="feature-card">
+                <span class="badge">Conduit</span>
+                <h4>Dual Siq pipeline</h4>
+                <p>One channel cut into rock; one of terracotta pipe sections.
+                Designed for redundancy and serviceability. Four settling
+                basins along the run kept silt out of the city distribution.</p>
+            </div>
+            <div class="feature-card">
+                <span class="badge">Defence</span>
+                <h4>Flood-diversion dam</h4>
+                <p>The dam at the Siq head — destroyed in antiquity, rebuilt
+                in modern times — protected the city's main entry from flash
+                floods, a hazard that killed twenty-three visitors in 1963 and
+                remains the principal modern threat.</p>
+            </div>
+            <div class="feature-card">
+                <span class="badge">Recharge</span>
+                <h4>Engineered water table</h4>
+                <p>Dam-impounded water seeped through the sandstone to recharge
+                the local aquifer, keeping wells productive year-round. The
+                Nabataeans treated the geology itself as a reservoir.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ====================== SITE ENTRIES ====================== -->
+    <section id="sites">
+        <div class="section-num">§ VI · The sites</div>
+        <h2>Twelve <span class="em">monuments</span> &amp; nodes</h2>
+
+        <p style="margin-bottom:2.5rem">
+            A working list of the principal Nabataean sites at and around Petra,
+            with the satellites that anchored the kingdom. Each entry is paired
+            with a numbered marker on the map above. The "further study &amp;
+            data" links flag scholarly publications, heritage records,
+            geographic gazetteer entries (tagged <strong>GIS</strong> or
+            <strong>GEO</strong>), and open data sources (tagged
+            <strong>DATA</strong>).
+        </p>
+
+        <div class="site-entries">
+
+            <!-- ============ 01. AL-KHAZNEH ============ -->
+            <article class="site-entry">
+                <div class="num">1</div>
+                <div>
+                    <div class="meta"><span class="kind">Tomb · Façade</span> · 30.3225° N, 35.4517° E · 1st c. BCE / 1st c. CE</div>
+                    <h3>Al-Khazneh <span class="alt">"The Treasury"</span></h3>
+                    <p>
+                        The most photographed monument in the ancient Near East
+                        and the first vista the Siq delivers to anyone walking
+                        in: a 40-metre-tall Hellenistic façade carved out of a
+                        single sandstone cliff. The "Treasury" name is Bedouin
+                        folklore — a story that the urn on the upper level
+                        contained pharaonic gold, which is why the urn is
+                        pocked with rifle damage from generations of attempts to
+                        break it open. The structure was almost certainly a
+                        royal mausoleum, most likely of Aretas IV. In 2003 an
+                        unexcavated lower level was identified beneath the
+                        façade, and excavations there in 2024 confirmed twelve
+                        burials — the first intact Nabataean royal interments
+                        ever recovered at the site.
+                    </p>
+                    <div class="links">
+                        <span class="links-label">Further study &amp; data</span>
+                        <a class="link-chip" href="https://whc.unesco.org/en/list/326/" target="_blank" rel="noopener"><span class="tag">UNESCO</span>World Heritage record</a>
+                        <a class="link-chip" href="https://smarthistory.org/petra-rock-cut-facades/" target="_blank" rel="noopener"><span class="tag">SCHOLAR</span>Smarthistory · rock-cut façades</a>
+                        <a class="link-chip gis" href="https://www.openstreetmap.org/?mlat=30.3225&mlon=35.4517#map=18/30.3225/35.4517" target="_blank" rel="noopener"><span class="tag">GIS</span>OSM pin</a>
+                        <a class="link-chip" href="https://nabataea.net/explore/petra/" target="_blank" rel="noopener"><span class="tag">ARCHIVE</span>Nabataea.net</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- ============ 02. THE SIQ ============ -->
+            <article class="site-entry">
+                <div class="num">2</div>
+                <div>
+                    <div class="meta"><span class="kind">Canyon · Hydraulic corridor</span> · 30.3232° N, 35.4524° E · Natural · engineered c. 1st c. CE</div>
+                    <h3>The Siq <span class="alt">The narrow gorge of approach</span></h3>
+                    <p>
+                        A 1.2-km natural fault in the sandstone, in places only
+                        three metres wide and walled by cliffs eighty metres
+                        high, that forms the ceremonial east-side entry to
+                        Petra. The Siq is also a piece of infrastructure: along
+                        its north wall ran the dual Nabataean pipeline carrying
+                        spring water from Ain Mousa, and at its head stood a
+                        diversion dam that routed flash floods away from the
+                        canyon. The combination of geological drama and
+                        hydraulic ingenuity is the reason the Siq is itself
+                        considered an exceptional engineering monument and is
+                        among the site's most endangered features.
+                    </p>
+                    <div class="links">
+                        <span class="links-label">Further study &amp; data</span>
+                        <a class="link-chip" href="https://www.mdpi.com/2073-4441/12/12/3498" target="_blank" rel="noopener"><span class="tag">RESEARCH</span>Ortloff · MDPI Water 2020</a>
+                        <a class="link-chip" href="https://www.asce.org/about-civil-engineering/history-and-heritage/historic-landmarks/petra" target="_blank" rel="noopener"><span class="tag">HERITAGE</span>ASCE landmark</a>
+                        <a class="link-chip gis" href="https://www.openstreetmap.org/?mlat=30.3232&mlon=35.4524#map=17/30.3232/35.4524" target="_blank" rel="noopener"><span class="tag">GIS</span>OSM pin</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- ============ 03. ROYAL TOMBS ============ -->
+            <article class="site-entry">
+                <div class="num">3</div>
+                <div>
+                    <div class="meta"><span class="kind">Tomb complex · Royal necropolis</span> · 30.3293° N, 35.4499° E · Mid-1st c. CE</div>
+                    <h3>The Royal Tombs <span class="alt">Urn · Silk · Corinthian · Palace</span></h3>
+                    <p>
+                        A linear row of four monumental façades on the western
+                        face of Jebel al-Khubtha, overlooking the colonnaded
+                        street. The <em>Urn Tomb</em>, with its vaulted
+                        substructure and broad colonnaded courtyard, was
+                        converted into a Byzantine cathedral in 446/447 CE by
+                        Bishop Jason — an inscription on the rear wall records
+                        the consecration. The <em>Silk Tomb</em> is named for
+                        the iridescent banding of its weathered sandstone. The
+                        <em>Corinthian Tomb</em> echoes the Treasury's tholos-
+                        and-broken-pediment composition. The <em>Palace Tomb</em>,
+                        roughly fifty metres wide with four portals and three
+                        partly-built storeys, draws on Roman palace facades —
+                        most often compared to Nero's Domus Aurea.
+                    </p>
+                    <div class="links">
+                        <span class="links-label">Further study &amp; data</span>
+                        <a class="link-chip" href="https://en.wikipedia.org/wiki/Petra" target="_blank" rel="noopener"><span class="tag">REF</span>Wikipedia · Petra</a>
+                        <a class="link-chip" href="https://universes.art/en/art-destinations/jordan/petra/royal-tombs" target="_blank" rel="noopener"><span class="tag">VISUAL</span>Universes in Universe</a>
+                        <a class="link-chip gis" href="https://www.openstreetmap.org/?mlat=30.3293&mlon=35.4499#map=18/30.3293/35.4499" target="_blank" rel="noopener"><span class="tag">GIS</span>OSM pin</a>
+                        <a class="link-chip" href="https://nabataea.net/explore/petra/petra-the-royal-tombs/" target="_blank" rel="noopener"><span class="tag">ARCHIVE</span>Nabataea.net</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- ============ 04. AD-DEIR ============ -->
+            <article class="site-entry">
+                <div class="num">4</div>
+                <div>
+                    <div class="meta"><span class="kind">Monument · Cult dining hall</span> · 30.3389° N, 35.4350° E · 1st c. CE</div>
+                    <h3>Ad-Deir <span class="alt">"The Monastery"</span></h3>
+                    <p>
+                        Petra's largest carved monument — fifty metres wide,
+                        forty-five metres tall — and the most distant from the
+                        city core, reached by a stepped climb of roughly eight
+                        hundred carved stairs. Despite the modern name it was
+                        not a monastery; behind the façade is a single great
+                        chamber with a cultic podium at the back, almost
+                        certainly used for ritual banqueting connected with the
+                        deified king <em>Obodas I</em>. The forecourt is a
+                        flattened plaza — a religious assembly space. The
+                        Doric-Nabataean orders here are noticeably more
+                        abstracted than at the Treasury, with the figural
+                        decoration replaced by plain roundels in the metopes.
+                    </p>
+                    <div class="links">
+                        <span class="links-label">Further study &amp; data</span>
+                        <a class="link-chip" href="https://smarthistory.org/petra-rock-cut-facades/" target="_blank" rel="noopener"><span class="tag">SCHOLAR</span>Smarthistory</a>
+                        <a class="link-chip" href="https://whc.unesco.org/en/list/326/" target="_blank" rel="noopener"><span class="tag">UNESCO</span>WHS record</a>
+                        <a class="link-chip gis" href="https://www.openstreetmap.org/?mlat=30.3389&mlon=35.4350#map=18/30.3389/35.4350" target="_blank" rel="noopener"><span class="tag">GIS</span>OSM pin</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- ============ 05. QASR AL-BINT ============ -->
+            <article class="site-entry">
+                <div class="num">5</div>
+                <div>
+                    <div class="meta"><span class="kind">Temple · Free-standing</span> · 30.3287° N, 35.4408° E · Late 1st c. BCE</div>
+                    <h3>Qasr al-Bint <span class="alt">Temple of Dushara</span></h3>
+                    <p>
+                        The principal free-standing temple of Petra and one of
+                        the very few major Nabataean structures
+                        <em>not</em> cut from the cliff. Built of ashlar
+                        sandstone with traces of stucco and painted decoration
+                        still visible on its interior walls. The dedication is
+                        almost certainly to <em>Dushara</em> — the chief male
+                        deity of the Nabataeans, worshipped in aniconic form as
+                        a rectangular standing stone or <em>baetyl</em>. The
+                        modern name ("Castle of the Pharaoh's Daughter") is
+                        Bedouin folklore; the temple is the religious anchor of
+                        the colonnaded street and survived the 363 CE
+                        earthquake in better shape than most of the freestanding
+                        city.
+                    </p>
+                    <div class="links">
+                        <span class="links-label">Further study &amp; data</span>
+                        <a class="link-chip" href="https://nabataea.net/explore/petra/" target="_blank" rel="noopener"><span class="tag">ARCHIVE</span>Nabataea.net</a>
+                        <a class="link-chip gis" href="https://www.openstreetmap.org/?mlat=30.3287&mlon=35.4408#map=18/30.3287/35.4408" target="_blank" rel="noopener"><span class="tag">GIS</span>OSM pin</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- ============ 06. GREAT TEMPLE ============ -->
+            <article class="site-entry">
+                <div class="num">6</div>
+                <div>
+                    <div class="meta"><span class="kind">Temple complex · Civic</span> · 30.3279° N, 35.4423° E · Late 1st c. BCE – 1st c. CE</div>
+                    <h3>The Great Temple <span class="alt">Brown University excavations</span></h3>
+                    <p>
+                        Excavated between 1993 and 2008 by Martha Sharp
+                        Joukowsky's team from Brown University, the Great
+                        Temple is one of the largest precinct complexes in
+                        Petra: a 7,560 m² platform with a colonnaded propylaeum,
+                        a hexagonally-paved lower temenos, and a tetrastyle
+                        upper temple incorporating an extraordinary feature —
+                        a small theatron inside the cella. The excavations were
+                        pioneering for their digital methods: GIS, GPS, ground-
+                        penetrating radar, palynology, and one of the earliest
+                        archaeological deployments of 3D free-form modelling.
+                        Whether the building was strictly cultic or also civic
+                        (a council hall, a king's audience chamber) is still
+                        debated.
+                    </p>
+                    <div class="links">
+                        <span class="links-label">Further study &amp; data</span>
+                        <a class="link-chip" href="https://www.brown.edu/Departments/Joukowsky_Institute/Petra/excavations/technology.html" target="_blank" rel="noopener"><span class="tag">PRIMARY</span>Brown · technology &amp; GIS</a>
+                        <a class="link-chip data" href="https://www.brown.edu/Departments/Joukowsky_Institute/Petra/" target="_blank" rel="noopener"><span class="tag">DATA</span>Brown excavation site</a>
+                        <a class="link-chip gis" href="https://www.openstreetmap.org/?mlat=30.3279&mlon=35.4423#map=18/30.3279/35.4423" target="_blank" rel="noopener"><span class="tag">GIS</span>OSM pin</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- ============ 07. HIGH PLACE OF SACRIFICE ============ -->
+            <article class="site-entry">
+                <div class="num">7</div>
+                <div>
+                    <div class="meta"><span class="kind">Cult site · Open-air altar</span> · 30.3216° N, 35.4459° E · 1st c. BCE – 1st c. CE</div>
+                    <h3>Jebel Madbah · the High Place <span class="alt">Al-Madhbah · the altar mountain</span></h3>
+                    <p>
+                        The best-preserved of Petra's rock-cut open-air
+                        sanctuaries — a flattened summit platform reached by a
+                        stairway carved into the cliff, with two altars, a
+                        rectangular pool, and a circle of standing stones. The
+                        site is one of the principal subjects of recent
+                        archaeoastronomical work: Paradise's GIS survey of
+                        Petra found solar alignments at roughly 80% of
+                        Nabataean structures, with multiple altars at the High
+                        Place oriented to solstice or equinox sunrise — a
+                        finding that lends support to Strabo's report that the
+                        early Nabataeans worshipped a solar deity.
+                    </p>
+                    <div class="links">
+                        <span class="links-label">Further study &amp; data</span>
+                        <a class="link-chip" href="https://arxiv.org/pdf/1209.1540" target="_blank" rel="noopener"><span class="tag">RESEARCH</span>Light &amp; Shadows · arXiv</a>
+                        <a class="link-chip" href="https://www.academia.edu/10814083/Nabataean_Architecture_and_the_Sun_landmark_discovery_using_GIS_in_Petra_Jordan" target="_blank" rel="noopener"><span class="tag">SCHOLAR</span>Paradise · GIS &amp; the Sun</a>
+                        <a class="link-chip gis" href="https://www.openstreetmap.org/?mlat=30.3216&mlon=35.4459#map=17/30.3216/35.4459" target="_blank" rel="noopener"><span class="tag">GIS</span>OSM pin</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- ============ 08. AIN MOUSA ============ -->
+            <article class="site-entry">
+                <div class="num">8</div>
+                <div>
+                    <div class="meta"><span class="kind">Spring · Source</span> · 30.3197° N, 35.5005° E · Natural · channeled from 1st c. CE</div>
+                    <h3>Ain Mousa <span class="alt">The Spring of Moses</span></h3>
+                    <p>
+                        The principal perennial water source for ancient Petra.
+                        Local tradition (recorded by Burckhardt and earlier) links
+                        the spring to the rock Moses struck for water in Exodus
+                        17; the modern town of Wadi Musa takes its name from
+                        the same association. The Nabataean pipeline ran
+                        approximately 14 km from this spring to the Siq, where
+                        the dual rock-channel / terracotta-pipe system fed the
+                        city's distribution network. Ain Mousa still flows, and
+                        is still the principal water source for the modern
+                        town — making it one of the few features in the Petra
+                        landscape that has been continuously in use as
+                        infrastructure for two thousand years.
+                    </p>
+                    <div class="links">
+                        <span class="links-label">Further study &amp; data</span>
+                        <a class="link-chip" href="https://www.mdpi.com/2073-4441/12/12/3498" target="_blank" rel="noopener"><span class="tag">RESEARCH</span>Ortloff · MDPI Water</a>
+                        <a class="link-chip" href="https://www.bible.ca/archeology/bible-archeology-exodus-kadesh-barnea-petra-water-supply-of-petra-charles-r-ortloff-2005.htm" target="_blank" rel="noopener"><span class="tag">RESEARCH</span>Ortloff 2005 · full text</a>
+                        <a class="link-chip gis" href="https://www.openstreetmap.org/?mlat=30.3197&mlon=35.5005#map=15/30.3197/35.5005" target="_blank" rel="noopener"><span class="tag">GIS</span>OSM pin</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- ============ 09. BAYDA / LITTLE PETRA ============ -->
+            <article class="site-entry">
+                <div class="num">9</div>
+                <div>
+                    <div class="meta"><span class="kind">Satellite settlement · Caravanserai</span> · 30.3776° N, 35.4488° E · 1st c. BCE – 1st c. CE</div>
+                    <h3>Bayda <span class="alt">Siq al-Barid · "Little Petra"</span></h3>
+                    <p>
+                        A miniature suburban Petra eight kilometres north of
+                        the main city: rock-cut façades, dining triclinia,
+                        cisterns, and (uniquely) a painted ceiling in the
+                        so-called Painted Biclinium, with surviving frescoes of
+                        vine scrolls, putti, and birds — one of the few intact
+                        examples of Nabataean wall painting. Bayda is
+                        interpreted as a caravan staging post where merchants
+                        rested, watered, and stored goods before the final
+                        descent to Petra. Beidha proper, just adjacent, is also
+                        the location of one of the most important PPNB
+                        Neolithic villages in the Levant. The site has been the
+                        focus of the Brown University Petra Archaeological
+                        Project (BUPAP) since the 2000s.
+                    </p>
+                    <div class="links">
+                        <span class="links-label">Further study &amp; data</span>
+                        <a class="link-chip" href="https://brown.edu/Departments/Joukowsky_Institute/fieldwork/bupap/8501.html" target="_blank" rel="noopener"><span class="tag">PRIMARY</span>BUPAP · Brown</a>
+                        <a class="link-chip" href="https://publication.doa.gov.jo/uploads/publications/45/ADAJ_2011_55-489-508.pdf" target="_blank" rel="noopener"><span class="tag">RESEARCH</span>ADAJ 2010 survey</a>
+                        <a class="link-chip gis" href="https://www.openstreetmap.org/?mlat=30.3776&mlon=35.4488#map=16/30.3776/35.4488" target="_blank" rel="noopener"><span class="tag">GIS</span>OSM pin</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- ============ 10. SABRA ============ -->
+            <article class="site-entry">
+                <div class="num">10</div>
+                <div>
+                    <div class="meta"><span class="kind">Satellite settlement · Southern approach</span> · 30.2716° N, 35.4602° E · 1st c. BCE – 2nd c. CE</div>
+                    <h3>Sabra <span class="alt">Southern staging post</span></h3>
+                    <p>
+                        The southern counterpart to Bayda: a Nabataean
+                        caravanserai on the road that approached Petra from the
+                        Hejaz. Sabra preserves a theatre, temple foundations,
+                        cisterns, and a network of tombs — and, crucially, sits
+                        in the Wadi Sabra catchment, an important secondary
+                        water source. Less excavated and less visited than
+                        Bayda, but explicitly noted in the UNESCO inscription as
+                        part of the wider Petra heritage landscape. Sabra
+                        underscores how Petra worked: not as a single point but
+                        as the hub of a network of fortified, watered stops.
+                    </p>
+                    <div class="links">
+                        <span class="links-label">Further study &amp; data</span>
+                        <a class="link-chip" href="https://whc.unesco.org/en/list/326/" target="_blank" rel="noopener"><span class="tag">UNESCO</span>WHS record</a>
+                        <a class="link-chip gis" href="https://www.openstreetmap.org/?mlat=30.2716&mlon=35.4602#map=14/30.2716/35.4602" target="_blank" rel="noopener"><span class="tag">GIS</span>OSM pin</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- ============ 11. HUMAYMA ============ -->
+            <article class="site-entry">
+                <div class="num">11</div>
+                <div>
+                    <div class="meta"><span class="kind">Trade node · Roman fort</span> · 29.9508° N, 35.3411° E · 1st c. BCE – Roman / Early Islamic</div>
+                    <h3>Humayma <span class="alt">Auara · the desert outpost</span></h3>
+                    <p>
+                        About 80 km south of Petra on the Via Nova Traiana,
+                        Humayma — ancient <em>Auara</em> — was founded as a
+                        Nabataean settlement by King Aretas III in the early
+                        first century BCE and later became a Roman fort and an
+                        important early Islamic estate (the residence of the
+                        Abbasid family before their revolution against the
+                        Umayyads). Excavated by the Humayma Excavation Project
+                        under John Peter Oleson, the site preserves an
+                        exceptional Nabataean hydraulic landscape: an aqueduct
+                        delivering spring water from twenty kilometres away,
+                        reservoirs, and a network of catchment cisterns. A key
+                        node for understanding the trade road south of Petra.
+                    </p>
+                    <div class="links">
+                        <span class="links-label">Further study &amp; data</span>
+                        <a class="link-chip" href="https://en.wikipedia.org/wiki/Humayma" target="_blank" rel="noopener"><span class="tag">REF</span>Wikipedia</a>
+                        <a class="link-chip gis" href="https://www.openstreetmap.org/?mlat=29.9508&mlon=35.3411#map=14/29.9508/35.3411" target="_blank" rel="noopener"><span class="tag">GIS</span>OSM pin</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- ============ 12. HEGRA ============ -->
+            <article class="site-entry">
+                <div class="num">12</div>
+                <div>
+                    <div class="meta"><span class="kind">Satellite city · Southern necropolis</span> · 26.7891° N, 37.9531° E · 1st c. BCE – 1st c. CE</div>
+                    <h3>Hegra <span class="alt">Mada'in Salih · the southern Petra</span></h3>
+                    <p>
+                        The southernmost major Nabataean city, in the
+                        Al-'Ula region of northwestern Saudi Arabia, and the
+                        country's first inscribed UNESCO World Heritage site
+                        (2008). Hegra preserves over one hundred monumental
+                        rock-cut tombs whose façades echo Petra's repertoire in
+                        slightly drier, more conservative terms — and uniquely,
+                        many bear dated dedicatory inscriptions in Nabataean
+                        Aramaic that name the tomb owners and curse violators.
+                        These inscriptions are the single best dated corpus of
+                        Nabataean funerary architecture, and the foundation for
+                        chronologies elsewhere (including Petra). Currently the
+                        focus of intensive survey and excavation by the
+                        Royal Commission for AlUla.
+                    </p>
+                    <div class="links">
+                        <span class="links-label">Further study &amp; data</span>
+                        <a class="link-chip" href="https://whc.unesco.org/en/list/1293/" target="_blank" rel="noopener"><span class="tag">UNESCO</span>Hegra WHS</a>
+                        <a class="link-chip" href="https://alexander-the-great.org/settlements/hegra" target="_blank" rel="noopener"><span class="tag">REF</span>Trade-route context</a>
+                        <a class="link-chip" href="https://www.worldhistory.foundation/uncategorized/nabataeans-ancient-arabia/" target="_blank" rel="noopener"><span class="tag">SCHOLAR</span>Nehmé interview · WHF</a>
+                        <a class="link-chip gis" href="https://www.openstreetmap.org/?mlat=26.7891&mlon=37.9531#map=14/26.7891/37.9531" target="_blank" rel="noopener"><span class="tag">GIS</span>OSM pin</a>
+                    </div>
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+    <!-- ====================== ROADMAP ====================== -->
+    <section id="roadmap">
+        <div class="section-num">§ VII · Long-term goals</div>
+        <h2>Toward a <span class="em">LiDAR-grade</span> webmap</h2>
+
+        <p>
+            This atlas is the documentary first pass. The longer-term project is
+            a fully interactive webmap of the Petra basin with elevation data,
+            traced hydraulic features, and tomb / cistern / well inventories
+            queryable by category. The phased plan below reflects roughly the
+            same architecture as the Bronze Age and megalith atlases in the
+            Geoglypha series — a Leaflet front end backed by Cloud Storage for
+            static assets and PostGIS (via Django) for any layer that needs
+            attribute querying.
+        </p>
+
+        <div class="roadmap">
+            <h3>Phased plan</h3>
+            <ul class="roadmap-list">
+                <li>
+                    <span class="phase">Phase 1</span>
+                    <span><strong>This atlas.</strong> Static HTML + Leaflet, twelve anchor sites, scholarly source links. Deployed to GCS static bucket.</span>
+                </li>
+                <li>
+                    <span class="phase">Phase 2</span>
+                    <span><strong>OSM hydraulic layer.</strong> Pull Nabataean water features (cisterns, channels, dams) from OpenStreetMap and the Madaba Plains / BUPAP datasets; serve as GeoJSON.</span>
+                </li>
+                <li>
+                    <span class="phase">Phase 3</span>
+                    <span><strong>Elevation underlay.</strong> SRTM 30m to start (free, global), then ALOS World 3D 30m (free) where coverage is better. Render hillshade with QGIS or rio-shaded-relief; serve as raster tiles.</span>
+                </li>
+                <li>
+                    <span class="phase">Phase 4</span>
+                    <span><strong>High-resolution DEM.</strong> Pursue access to the Petra GIS / ArcGIS lidar collected by Paradise et al. (University of Arkansas); the Petra National Trust and DAJ have collaborated on aerial lidar campaigns. If unavailable, a photogrammetry pass with open Maxar imagery + AW3D may suffice for the city core.</span>
+                </li>
+                <li>
+                    <span class="phase">Phase 5</span>
+                    <span><strong>Water-table modelling.</strong> Layer published spring discharge data and the dam-recharge model from Ortloff onto the DEM; show seasonal aquifer behaviour as an animated overlay.</span>
+                </li>
+                <li>
+                    <span class="phase">Phase 6</span>
+                    <span><strong>Tomb &amp; well catalog.</strong> Stand up a PostGIS table for the 3,000+ rock-cut features with type, façade order, dedication (where known), and link out to scholarly references — queryable from the map.</span>
+                </li>
+                <li>
+                    <span class="phase">Phase 7</span>
+                    <span><strong>Trade-route overlay.</strong> Reconstruct the incense road as polylines from Shabwa through Hegra to Petra to Gaza, joined to caravanserai and well datasets. The story becomes spatial.</span>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ====================== SOURCES ====================== -->
+    <section class="sources" id="sources">
+        <h2>Sources &amp; further reading</h2>
+
+        <ol class="sources-list">
+            <li><span class="src-tag primary">PRIMARY</span> <strong>Diodorus Siculus</strong>, <em>Bibliotheca Historica</em>, Book XIX. The earliest extended account of the Nabataeans, drawn from Hieronymus of Cardia. The hidden-cistern passage is in §94.</li>
+            <li><span class="src-tag primary">PRIMARY</span> <strong>Strabo</strong>, <em>Geography</em>, Book XVI. First-century geographic and ethnographic notes on Petra and on Nabataean religion (the reference to early Nabataean sun-worship).</li>
+            <li><span class="src-tag primary">PRIMARY</span> <strong>Pliny the Elder</strong>, <em>Natural History</em>, Books VI &amp; XII. The frankincense/myrrh trade and its toll structure along the Arabian land road.</li>
+            <li><span class="src-tag">SCHOLAR</span> <strong>Joukowsky, M. S.</strong> (1998–2008). <em>Petra Great Temple</em>, vols. I–III. Brown University. The Great Temple excavation reports — and the source for one of the earliest archaeological GIS / GPR / 3D-modelling deployments at Petra. <a href="https://www.brown.edu/Departments/Joukowsky_Institute/Petra/excavations/technology.html" target="_blank" rel="noopener">brown.edu</a></li>
+            <li><span class="src-tag">SCHOLAR</span> <strong>McKenzie, J.</strong> (1990, repr. 2005). <em>The Architecture of Petra</em>. Oxford. The standard architectural reference for the carved façades and their typology.</li>
+            <li><span class="src-tag">SCHOLAR</span> <strong>Paradise, T. R.</strong> (2012, 2015). "Nabataean Architecture and the Sun: a landmark discovery using GIS in Petra, Jordan." University of Arkansas Petra GIS Project. <a href="https://www.academia.edu/10814083/Nabataean_Architecture_and_the_Sun_landmark_discovery_using_GIS_in_Petra_Jordan" target="_blank" rel="noopener">academia.edu</a></li>
+            <li><span class="src-tag gis">GIS</span> <strong>Paradise, T. R.</strong> "Cultural Heritage Management and GIS in Petra, Jordan." <em>ArcNews</em>, ESRI. Discussion of the Petra GIS project and pending lidar acquisition. <a href="https://www.esri.com/news/arcnews/summer12articles/cultural-heritage-management-and-gis-in-petra-jordan.html" target="_blank" rel="noopener">esri.com</a></li>
+            <li><span class="src-tag">RESEARCH</span> <strong>Ortloff, C. R.</strong> (2005). "The Water Supply and Distribution System of the Nabataean City of Petra (Jordan), 300 BC – AD 300." <em>Cambridge Archaeological Journal</em> 15(1). <a href="https://www.researchgate.net/publication/279150253" target="_blank" rel="noopener">researchgate</a></li>
+            <li><span class="src-tag">RESEARCH</span> <strong>Ortloff, C. R.</strong> (2020). "Hydraulic Engineering at 100 BC – AD 300 Nabataean Petra." <em>Water</em> 12(12), 3498. <a href="https://www.mdpi.com/2073-4441/12/12/3498" target="_blank" rel="noopener">MDPI</a></li>
+            <li><span class="src-tag">SCHOLAR</span> <strong>Belmonte, J. A., González-García, A. C., &amp; Polcaro, A.</strong> (2013). "Light and Shadows over Petra: astronomy and landscape in Nabataean lands." <em>arXiv:1209.1540</em>. <a href="https://arxiv.org/pdf/1209.1540" target="_blank" rel="noopener">arXiv</a></li>
+            <li><span class="src-tag">SCHOLAR</span> <strong>Nehmé, L.</strong> The Madâ'in Sâlih (Hegra) Archaeological Project. Editor of <em>Atlas archéologique et épigraphique de Pétra</em> (2012). The standard ongoing publication of Hegra and the framework for Nabataean Aramaic epigraphy.</li>
+            <li><span class="src-tag">RESEARCH</span> <strong>Brown University Petra Archaeological Project (BUPAP).</strong> Survey reports for the Petra hinterland, Bayda, and the Wadi Sulaysil. <a href="https://brown.edu/Departments/Joukowsky_Institute/fieldwork/bupap/" target="_blank" rel="noopener">brown.edu</a></li>
+            <li><span class="src-tag">RESEARCH</span> <strong>Alcock, S. E., &amp; Knodell, A. R.</strong> (2011). "The 2010 Petra Area and Wâdī Sulaysil Survey." <em>ADAJ</em> 55. <a href="https://publication.doa.gov.jo/uploads/publications/45/ADAJ_2011_55-489-508.pdf" target="_blank" rel="noopener">doa.gov.jo</a></li>
+            <li><span class="src-tag">SCHOLAR</span> <strong>Oleson, J. P.</strong> Humayma Excavation Project final reports. The standard for understanding the Nabataean → Roman → Abbasid transition south of Petra.</li>
+            <li><span class="src-tag">SCHOLAR</span> <strong>Kouki, P.</strong> (2009). "Archaeological Evidence of Land Tenure in the Petra Region, Jordan: Nabataean–Early Roman to Late Byzantine." <em>Journal of Mediterranean Archaeology</em> 22(1), 29–56.</li>
+            <li><span class="src-tag">HERITAGE</span> <strong>UNESCO World Heritage Centre.</strong> Petra (1985), inscription 326. <a href="https://whc.unesco.org/en/list/326/" target="_blank" rel="noopener">whc.unesco.org</a></li>
+            <li><span class="src-tag">HERITAGE</span> <strong>UNESCO World Heritage Centre.</strong> Hegra Archaeological Site (2008), inscription 1293. <a href="https://whc.unesco.org/en/list/1293/" target="_blank" rel="noopener">whc.unesco.org</a></li>
+            <li><span class="src-tag">HERITAGE</span> <strong>American Society of Civil Engineers.</strong> Petra — Historic Civil Engineering Landmark. <a href="https://www.asce.org/about-civil-engineering/history-and-heritage/historic-landmarks/petra" target="_blank" rel="noopener">asce.org</a></li>
+            <li><span class="src-tag gis">GIS</span> <strong>OpenStreetMap.</strong> Wadi Musa / Petra archaeological area. Live OSM extract via Overpass API is the simplest path to a working GeoJSON layer for tombs, cisterns, paths, and channels. <a href="https://www.openstreetmap.org/#map=14/30.3285/35.4444" target="_blank" rel="noopener">OSM</a></li>
+            <li><span class="src-tag data">DATA</span> <strong>OpenTopography.</strong> SRTM 30m / 90m and ALOS AW3D 30m DEM tiles covering the Petra basin — the practical starting point for an elevation underlay until lidar is obtainable. <a href="https://portal.opentopography.org/" target="_blank" rel="noopener">opentopography.org</a></li>
+            <li><span class="src-tag data">DATA</span> <strong>NASA Earthdata · SRTMGL1.</strong> 1-arc-second SRTM global digital elevation, free with login. <a href="https://earthdata.nasa.gov/" target="_blank" rel="noopener">earthdata.nasa.gov</a></li>
+            <li><span class="src-tag data">DATA</span> <strong>JAXA · ALOS World 3D 30m (AW3D30).</strong> Often higher-quality than SRTM in rough terrain like the Petra cliffs. <a href="https://www.eorc.jaxa.jp/ALOS/en/dataset/aw3d30/aw3d30_e.htm" target="_blank" rel="noopener">jaxa.jp</a></li>
+            <li><span class="src-tag data">DATA</span> <strong>Sentinel-2 / Copernicus Open Access Hub.</strong> 10m multispectral imagery; useful for vegetation and surface-moisture proxies in the basin. <a href="https://dataspace.copernicus.eu/" target="_blank" rel="noopener">copernicus.eu</a></li>
+            <li><span class="src-tag">ARCHIVE</span> <strong>Nabataea.net.</strong> Long-running archival site by Dan Gibson with photographic surveys of Petra's tombs and inscriptions. Not peer-reviewed but useful as a visual index. <a href="https://nabataea.net/" target="_blank" rel="noopener">nabataea.net</a></li>
+            <li><span class="src-tag">SCHOLAR</span> <strong>Madain Project.</strong> Compiled syntheses of the Incense Route, Hegra, and the Nabataean trade nodes with bibliography. <a href="https://madainproject.com/incense_route" target="_blank" rel="noopener">madainproject.com</a></li>
+            <li><span class="src-tag">ARCHIVE</span> <strong>Smarthistory.</strong> "Petra: rock-cut façades" — accessible scholarly overview. <a href="https://smarthistory.org/petra-rock-cut-facades/" target="_blank" rel="noopener">smarthistory.org</a></li>
+        </ol>
+    </section>
+
+    <!-- ====================== COLOPHON ====================== -->
+    <footer class="colophon">
+        <div>
+            <div class="mark">Geoglypha Atlas Series · No. III</div>
+            Petra &amp; the Nabataeans — set in Fraunces &amp; Inter Tight ·
+            mapped with Leaflet &amp; OpenStreetMap ·
+            assembled from open scholarship.
+        </div>
+        <div>
+            For research and visual use ·
+            attributions retained at each linked source.
+        </div>
+    </footer>
+
+</div>
+
+<!-- ====================== FULLSCREEN OVERLAY ====================== -->
+<div class="fs-overlay" id="fsOverlay">
+    <div class="fs-header">
+        <div><em>Fig. 1</em> — The Nabataean kingdom</div>
+        <button class="fs-close" id="fsCloseBtn">Close ✕</button>
+    </div>
+    <!-- mapHost is moved into here when fullscreen is active -->
+</div>
+
+<!-- ====================== LEAFLET FALLBACK + MAP ====================== -->
+<script>
+/* Three-CDN Leaflet loader with fallback — matches the megalith atlas pattern. */
+(function loadLeaflet() {
+    const sources = [
+        'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js',
+        'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
+        'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js'
+    ];
+    let i = 0;
+    function tryNext() {
+        if (i >= sources.length) {
+            document.getElementById('mapHost').innerHTML =
+                '<div style="padding:2rem;font-family:Inter Tight, sans-serif;color:#6b5d4d;">Map library failed to load (offline?). Site data is available below.</div>';
+            return;
+        }
+        const s = document.createElement('script');
+        s.src = sources[i++];
+        s.crossOrigin = '';
+        s.onload  = () => window.dispatchEvent(new Event('leafletReady'));
+        s.onerror = tryNext;
+        document.head.appendChild(s);
+    }
+    tryNext();
+})();
+</script>
+
+<script>
+/* ====================== SITE DATA ======================
+   All twelve sites embedded inline. The same array drives
+   both map markers and the editorial cards above.
+   ====================================================== */
+const sites = [
+    { id:1,  lat:30.3225, lng:35.4517, name:"Al-Khazneh (The Treasury)",        kind:"Tomb · Façade",          cls:"tomb" },
+    { id:2,  lat:30.3232, lng:35.4524, name:"The Siq",                          kind:"Canyon · Hydraulic",     cls:"water" },
+    { id:3,  lat:30.3293, lng:35.4499, name:"The Royal Tombs",                  kind:"Royal Necropolis",       cls:"tomb" },
+    { id:4,  lat:30.3389, lng:35.4350, name:"Ad-Deir (The Monastery)",          kind:"Cult dining hall",       cls:"tomb" },
+    { id:5,  lat:30.3287, lng:35.4408, name:"Qasr al-Bint",                     kind:"Temple of Dushara",      cls:"temple" },
+    { id:6,  lat:30.3279, lng:35.4423, name:"The Great Temple",                 kind:"Temple complex",         cls:"temple" },
+    { id:7,  lat:30.3216, lng:35.4459, name:"Jebel Madbah · High Place",        kind:"Open-air altar",         cls:"temple" },
+    { id:8,  lat:30.3197, lng:35.5005, name:"Ain Mousa (Spring of Moses)",      kind:"Spring · source",        cls:"water" },
+    { id:9,  lat:30.3776, lng:35.4488, name:"Bayda (Little Petra)",             kind:"Satellite caravanserai", cls:"satellite" },
+    { id:10, lat:30.2716, lng:35.4602, name:"Sabra",                            kind:"Southern staging post",  cls:"satellite" },
+    { id:11, lat:29.9508, lng:35.3411, name:"Humayma (Auara)",                  kind:"Trade node · fort",      cls:"trade" },
+    { id:12, lat:26.7891, lng:37.9531, name:"Hegra (Mada'in Salih)",            kind:"Southern Nabataean city",cls:"trade" }
+];
+
+let map = null;
+function buildMap() {
+    if (typeof L === 'undefined') return;
+    if (map) return;
+
+    map = L.map('mapHost', {
+        center: [29.5, 36.0],
+        zoom: 7,
+        zoomControl: true,
+        scrollWheelZoom: false   // prevent capturing page scroll
+    });
+
+    /* Three tile choices — topographic default, editorial for contrast,
+       and Esri imagery for the satellite/lidar pass.
+       Default is OpenTopoMap which shows wadis and terrain clearly. */
+    const base = L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+        {
+            attribution: '&copy; OpenStreetMap contributors · &copy; CARTO',
+            maxZoom: 19,
+            subdomains: 'abcd'
+        }
+    );
+
+    const sat = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        {
+            attribution: 'Tiles &copy; Esri, Maxar, Earthstar Geographics',
+            maxZoom: 19
+        }
+    );
+
+    const topo = L.tileLayer(
+        'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+        {
+            attribution: 'Map data: &copy; OSM, SRTM · Style: &copy; OpenTopoMap',
+            maxZoom: 17,
+            subdomains: 'abc'
+        }
+    ).addTo(map);
+
+    /* ---- Water infrastructure points ---- */
+    const waterPoints = [
+        { lat:30.3213, lng:35.4890, name:"Birket Musa",
+          desc:"Large open reservoir collecting Ain Musa spring water at the Siq approach. The primary holding basin before water was distributed into the Siq channel system toward the city.",
+          type:"reservoir" },
+        { lat:30.3289, lng:35.4425, name:"Pool &amp; Garden Complex Cistern",
+          desc:"Monumental pool (43 × 23 m, 2.5 m deep) with castellum pressure tank and supply cisterns fed by hillslope channels. Capacity over 2,000 m³. Excavated by Leigh-Ann Bedal (Penn State) from 1998.",
+          type:"cistern" },
+        { lat:30.3276, lng:35.4415, name:"Great Temple Cistern",
+          desc:"Cistern within the Great Temple precinct, supplied by a terracotta pressure-pipe delivery system descending from the surrounding slopes. Part of the same pressure-pipe network feeding the Pool Complex.",
+          type:"cistern" },
+        { lat:30.3810, lng:35.4375, name:"Bir al-Arayis (Cistern of the Brides)",
+          desc:"Largest known Nabataean cistern at Petra, located in the Bayda (Little Petra) area northwest of the main city. Estimated storage capacity approximately 12 million liters.",
+          type:"cistern" },
+        { lat:30.3218, lng:35.4823, name:"Bab al-Siq Dam",
+          desc:"12.80-meter dam sealing the eastern entrance to the Siq gorge. Built after a catastrophic mid-1st-century BCE flash flood destroyed the earlier pipeline and road. Paired with the Wadi Mudhlim diversion tunnel to convert floods into a managed supply.",
+          type:"dam" },
+        { lat:30.3690, lng:35.4180, name:"Ain Braq",
+          desc:"Secondary perennial spring northwest of the city. Flow rate approximately 0.8 m³/hour. Its pipeline includes a pressure-surge control branch — an early form of hydraulic pressure management documented by Ortloff (MDPI Water, 2020).",
+          type:"spring" },
+    ];
+
+    /* ---- Hydraulic system polylines ---- */
+    const hydroLines = [
+        {
+            name: "Siq Water Channel",
+            desc: "Two parallel conveyance systems ran the full 1.2 km of the Siq from Ain Musa spring: an open rock-cut channel (north wall) and a ceramic pressure pipeline (south wall), with four settling basins at intervals to remove suspended sediment (Ortloff 2005).",
+            color: "#1a5c8a",
+            dash: "8 5",
+            coords: [
+                [30.3197, 35.5005],
+                [30.3210, 35.4923],
+                [30.3218, 35.4823],
+                [30.3222, 35.4740],
+                [30.3224, 35.4640],
+                [30.3225, 35.4520]
+            ]
+        },
+        {
+            name: "Wadi Mudhlim Diversion Tunnel",
+            desc: "88-meter rock-cut tunnel (12.8 m high) redirecting Wadi Musa floodwaters north around the Jabal al-Khubtha massif into Wadi Mataha, routing them into city-center cisterns rather than the Siq. Cleared by archaeologists in 2000 and again functional.",
+            color: "#6b3a1a",
+            dash: "5 8",
+            coords: [
+                [30.3218, 35.4823],
+                [30.3255, 35.4792],
+                [30.3295, 35.4720],
+                [30.3325, 35.4630],
+                [30.3342, 35.4520]
+            ]
+        },
+        {
+            name: "Ain Braq Pipeline",
+            desc: "Northwest supply pipeline from Ain Braq spring toward the city and Monastery area. Includes a branch bypass basin for hydraulic surge control — one of the earliest documented pressure-management features in the ancient Near East (Ortloff 2020).",
+            color: "#1d8a6e",
+            dash: "8 5",
+            coords: [
+                [30.3690, 35.4180],
+                [30.3590, 35.4245],
+                [30.3490, 35.4295],
+                [30.3389, 35.4350]
+            ]
+        }
+    ];
+
+    /* ---- Layer groups ---- */
+    const waterGroup = L.layerGroup();
+    const hydroGroup  = L.layerGroup();
+
+    waterPoints.forEach(pt => {
+        const icon = L.divIcon({
+            className: '',
+            html: `<div class="water-pt ${pt.type}" title="${pt.name}"></div>`,
+            iconSize: [13, 13],
+            iconAnchor: [6, 6]
+        });
+        const popup = `
+            <div class="pop-kind">${pt.type.charAt(0).toUpperCase() + pt.type.slice(1)}</div>
+            <h4>${pt.name}</h4>
+            <div style="font-size:0.78rem;color:#6b5d4d;margin-top:0.35rem;">${pt.desc}</div>
+        `;
+        L.marker([pt.lat, pt.lng], { icon }).bindPopup(popup).addTo(waterGroup);
+    });
+
+    hydroLines.forEach(line => {
+        const pl = L.polyline(line.coords, {
+            color: line.color,
+            weight: 3,
+            opacity: 0.85,
+            dashArray: line.dash
+        });
+        pl.bindPopup(`<div class="pop-kind">Hydraulic System</div><h4>${line.name}</h4><div style="font-size:0.78rem;color:#6b5d4d;margin-top:0.35rem;">${line.desc}</div>`);
+        pl.addTo(hydroGroup);
+    });
+
+    waterGroup.addTo(map);
+    hydroGroup.addTo(map);
+
+    L.control.layers(
+        { 'Topographic': topo, 'Editorial (CARTO)': base, 'Satellite (Esri)': sat },
+        { 'Water Infrastructure': waterGroup, 'Hydraulic Lines': hydroGroup },
+        { position: 'topleft', collapsed: true }
+    ).addTo(map);
+
+    /* Numbered site markers */
+    const bounds = [];
+    sites.forEach(s => {
+        const icon = L.divIcon({
+            className: '',
+            html: `<div class="site-marker ${s.cls}">${s.id}</div>`,
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+        });
+        const popupHtml = `
+            <div class="pop-kind">${s.kind}</div>
+            <h4>${s.name}</h4>
+            <div style="font-size:0.78rem;color:#6b5d4d;">
+                ${s.lat.toFixed(4)}° N · ${s.lng.toFixed(4)}° E
+            </div>
+            <div style="margin-top:0.5rem;font-size:0.78rem;">
+                See entry <strong>№ ${s.id}</strong> below.
+            </div>
+        `;
+        L.marker([s.lat, s.lng], { icon })
+            .addTo(map)
+            .bindPopup(popupHtml);
+        bounds.push([s.lat, s.lng]);
+    });
+
+    /* Fit to Petra core only (sites 1–10) on first load */
+    const coreBounds = sites.filter(s => s.id <= 10).map(s => [s.lat, s.lng]);
+    map.fitBounds(coreBounds, { padding: [40, 40] });
+}
+
+window.addEventListener('leafletReady', buildMap);
+/* Also try in case the script loaded synchronously before listener attached */
+if (typeof L !== 'undefined') buildMap();
+</script>
+
+<script>
+/* ====================== FULLSCREEN MAP ====================== */
+const enlargeBtn = document.getElementById('enlargeBtn');
+const fsCloseBtn = document.getElementById('fsCloseBtn');
+const fsOverlay  = document.getElementById('fsOverlay');
+const mapFrame   = document.getElementById('mapFrame');
+const mapHost    = document.getElementById('mapHost');
+
+function enterFullscreen() {
+    fsOverlay.appendChild(mapHost);
+    fsOverlay.classList.add('active');
+    document.body.classList.add('fs-open');
+    setTimeout(() => map && map.invalidateSize(), 60);
+}
+function exitFullscreen() {
+    mapFrame.appendChild(mapHost);
+    fsOverlay.classList.remove('active');
+    document.body.classList.remove('fs-open');
+    setTimeout(() => map && map.invalidateSize(), 60);
+}
+enlargeBtn.addEventListener('click', enterFullscreen);
+fsCloseBtn.addEventListener('click', exitFullscreen);
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && fsOverlay.classList.contains('active')) exitFullscreen();
+});
+window.addEventListener('resize', () => map && map.invalidateSize());
+window.addEventListener('orientationchange', () => setTimeout(() => map && map.invalidateSize(), 200));
+</script>
+
+</body>
+</html>

@@ -23,8 +23,8 @@ Source key: **[GEO]** = Geoglypha site project (`C:\Users\royla\OneDrive\Documen
 | File | GCS last pushed | Git branch (current) | Notes |
 |------|----------------|---------------------|-------|
 | index.html | 2026-04-11 | design-system-refactor | Argonauts link updated 2026-05-06 |
-| geography.html | 2026-04-19 | design-system-refactor | Argonauts link updated 2026-05-06 |
-| history.html | 2026-04-11 | design-system-refactor | |
+| geography.html | 2026-05-08 | design-system-refactor | Bagan card added 2026-05-08 |
+| history.html | 2026-05-10 | main | Koh Ker card added 2026-05-10 |
 | stack.html | 2026-04-11 | design-system-refactor | |
 | supplies.html | 2026-04-11 | design-system-refactor | |
 | cahokia.html | 2026-02-16 | design-system-refactor | Needs re-push after branch merge |
@@ -42,7 +42,7 @@ Source key: **[GEO]** = Geoglypha site project (`C:\Users\royla\OneDrive\Documen
 | argonauts-route-roads | argonauts-route-roads.html | 2026-04-17 | [GEO] | live — canonical |
 | argonauts_map | argonauts_map.html | 2026-05-01 | [GEO] | live — OLD build, links replaced |
 | chimney-rock | chimney-rock.html | 2026-04-11 | [GEO] | live |
-| angkor-barays | angkor-barays.html | 2026-03-28 | [GEO] | live |
+| angkor-barays | angkor-barays.html | 2026-05-12 | [GEO] | live — companion links (Flow Network Map + Analysis Dashboard) added, parchment map wrappers |
 | angkor-hydraulic-map | angkor-hydraulic-map.html | 2026-04-28 | [GIS] | live — OSM coord fix (Indratataka, East Baray, Srah Srang) |
 | angkor-sedimentation-timeline-charts | angkor-sedimentation-timeline-charts.html | 2026-05-04 | [GIS] | live — chart label + legend fixes |
 | forest-carbon | forest-carbon.html | 2026-05-06 | [GEO] | live — updated |
@@ -52,9 +52,12 @@ Source key: **[GEO]** = Geoglypha site project (`C:\Users\royla\OneDrive\Documen
 | everglades-history | everglades-history.html | 2026-03-10 | [GEO] | live |
 | rana-boylii-map | rana-boylii-map.html | 2026-04-11 | [GEO] | live |
 | yamnaya-report | yamnaya-report.html | 2026-04-26 | [GIS] | live — new report pushed from GIS project |
+| bagan-empire | bagan-empire.html | 2026-05-08 | [GIS] | live — Bagan story map, 5 map layers, Esri Topo basemap |
 | storyboard | storyboard.html | 2026-04-04 | [GEO] | live |
 | outlaw-trail-map | outlaw-trail-map.html | 2026-04-11 | [GEO] | live |
 | angkor-barays-presentation | angkor-barays-presentation.html | 2026-03-10 | [GEO] | live |
+| lithium-analysis | lithium_analysis.html | 2026-05-12 | [GEO] | live — user-refactored, self-contained with PDF |
+| petra-nabataean-atlas | petra-nabataean-atlas.html | 2026-05-19 | [GIS] | live — Petra & the Nabataeans atlas, self-contained 95.4 KB |
 
 ## GIS / Quarto Project push history
 
@@ -65,6 +68,12 @@ Pushes originating from `C:\Users\royla\Documents\projects\` to `gs://www.geogly
 | 2026-04-26 | yamnaya-report.html, maps.json | gs://www.geoglypha1.org/ | New Yamnaya Bronze Age migration story map. Manifest entry added via manage_manifest.py. |
 | 2026-04-28 | angkor-hydraulic-map.html | gs://www.geoglypha1.org/ | OSM coordinate enrichment via Overpass API. Indratataka corrected by -6.5 km, East Baray and Srah Srang nodes also fixed. Scripts: Scripts/enrich_angkor_coords.py, Scripts/patch_angkor_html.py. |
 | 2026-05-04 | angkor-sedimentation-timeline-charts.html | gs://www.geoglypha1.org/ | Chart fixes: Tab 1 drought labels staggered, Siamese Sack moved to row 3, System Capacity legend shifted left to clear East Baray Fails milestone label. |
+| 2026-05-08 | bagan-empire.html, maps.json | gs://www.geoglypha1.org/ | New Bagan story map. Self-contained (map inlined as data URI). Layers: OSM monuments 1,365 footprints, waterways 131, Zamani Project 12, CyArk 8. Esri World Topo default basemap. |
+| 2026-05-08 | geography.html, maps.json | gs://www.geoglypha1.org/ | Bagan card added to geography.html. maps.json page field corrected to geography. |
+| 2026-05-08 | assets/css/design-system.css | gs://www.geoglypha1.org/assets/css/ | CSS was missing from bucket — caused unstyled geography.html. Now live at /assets/css/design-system.css. |
+| 2026-05-08 | images/bagan-card.jpg | gs://www.geoglypha1.org/images/ | New Bagan card thumbnail. geography.html updated from west-baray.jpg. [GEO] |
+| 2026-05-08 | angkor-barays.html | gs://www.geoglypha1.org/ | Editorial parchment theme (bagan-empire style). Source: Analysis/angkor-barays.qmd + angkor-barays.scss. [GIS] |
+| 2026-05-19 | petra-nabataean-atlas.html | gs://www.geoglypha1.org/ | Petra & the Nabataeans: An Atlas of the Rose-Red City and the Incense Road. 95.4 KB, self-contained HTML. Source: Analysis/petra-nabataean-atlas.html [GIS]. Copy placed in Geoglypha/docs/. |
 
 ## Production bucket — galleries
 
@@ -84,10 +93,10 @@ Pushes originating from `C:\Users\royla\Documents\projects\` to `gs://www.geogly
 |------|----------------|-------|
 | weather/index.html | 2026-04-11 (approx) | design-system-refactor |
 | weather/dashboard.html | 2026-01 (approx) | main |
-| weather/temperature_chart.html | 2026-04-11 (approx) | design-system-refactor |
-| weather/precipitation_chart.html | 2026-04-11 (approx) | design-system-refactor |
-| weather/wind_speed_chart.html | 2026-04-11 (approx) | design-system-refactor |
-| weather/barometric_pressure_chart.html | 2026-04-11 (approx) | design-system-refactor |
+| weather/temperature_chart.html | 2026-05-10 | main | Refactored to design-system.css — Cinzel/Cormorant Garamond, parchment bg, footer added |
+| weather/precipitation_chart.html | 2026-05-10 | main | Refactored to design-system.css — D3 fonts updated, parchment tooltip, footer added |
+| weather/wind_speed_chart.html | 2026-05-10 | main | Refactored to design-system.css — Cinzel/Cormorant Garamond, parchment bg, footer added |
+| weather/barometric_pressure_chart.html | 2026-05-10 | main | Refactored to design-system.css — Cinzel/Cormorant Garamond, parchment bg, footer added |
 
 ## Git branches
 

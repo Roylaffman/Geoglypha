@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Troy & Mycenae — Aegean Bronze Age GIS Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+:root {
+  --blueprint: #0050FF;
+  --orange: #F38020;
+  --surface: #f8f9fb;
+  --ink: #1a1a2e;
+  --ink-mute: #6b7280;
+  --rule: #e5e7eb;
+  --rule-strong: #d1d5db;
+  --water: #0050FF;
+  --gold: #FFD700;
+  --terracotta: #CC5500;
+  --teal: #008080;
+  --brick: #C04000;
+  --amber: #FFBF00;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--surface);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.masthead {
+  text-align: center;
+  padding: 1.8rem 1.5rem 1.2rem;
+  border-bottom: 1px solid var(--rule);
+  background: #fff;
+}
+.masthead h1 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--ink);
+}
+.masthead h1 span { color: var(--blueprint); }
+.masthead .subtitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--ink-mute);
+  margin-top: 0.3rem;
+  letter-spacing: 0.05em;
+}
+.masthead .updated {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--orange);
+  margin-top: 0.4rem;
+}
+.masthead-actions {
+  margin-top: 0.7rem;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.masthead-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--ink-mute);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+.masthead-btn:hover { border-color: var(--blueprint); color: var(--blueprint); }
+.masthead-btn.back { border-color: var(--orange); color: var(--orange); }
+.masthead-btn.back:hover { background: var(--orange); color: #fff; }
+
+.stats-row {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.stat-card {
+  background: #fff;
+  border-radius: 6px;
+  padding: 0.7rem 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  text-align: center;
+  min-width: 100px;
+  flex: 1;
+  max-width: 160px;
+}
+.stat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 0.3rem;
+}
+.stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--blueprint);
+}
+.stat-value.orange { color: var(--orange); }
+.stat-value.gold { color: #b8860b; }
+.stat-value.teal { color: var(--teal); }
+.stat-unit {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--ink-mute);
+}
+
+.container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+}
+.card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  margin-bottom: 1rem;
+  width: 100%;
+  max-width: 1400px;
+}
+.card-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  margin-bottom: 0.6rem;
+}
+#map {
+  height: 600px;
+  width: 100%;
+  border-radius: 6px;
+  z-index: 1;
+}
+#map:fullscreen, #map:-webkit-full-screen {
+  height: 100vh !important;
+  width: 100vw !important;
+  border-radius: 0;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  padding: 0.6rem 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  align-items: center;
+  justify-content: center;
+}
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 1px solid rgba(0,0,0,0.15);
+}
+.legend-line {
+  width: 24px;
+  height: 0;
+  border-bottom: 2px dashed var(--blueprint);
+  display: inline-block;
+}
+.legend-line.solid {
+  border-bottom-style: solid;
+  border-color: var(--orange);
+}
+
+.site-popup {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  line-height: 1.6;
+  color: var(--ink);
+  max-width: 260px;
+}
+.site-popup h3 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 0.3rem;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.2rem;
+}
+.site-popup .pop-tag {
+  display: inline-block;
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--surface);
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  margin-bottom: 0.3rem;
+  color: var(--ink-mute);
+}
+.site-popup .pop-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+.site-popup .pop-label {
+  color: var(--ink-mute);
+  min-width: 50px;
+}
+.site-popup a {
+  color: var(--blueprint);
+  text-decoration: none;
+}
+.site-popup a:hover { text-decoration: underline; }
+
+.route-popup {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  color: var(--ink);
+  max-width: 280px;
+}
+.route-popup h3 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  border-bottom: 1px solid var(--rule);
+  padding-bottom: 0.2rem;
+}
+
+.footer {
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 0.65rem;
+  color: var(--ink-mute);
+  border-top: 1px solid var(--rule);
+  background: #fff;
+}
+.footer .mono {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--blueprint);
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <h1>Troy & <span>Mycenae</span></h1>
+  <div class="subtitle">Aegean Bronze Age — GIS Archaeological Map</div>
+  <div class="updated" id="updateTime">Research Brief: 30 June 2026</div>
+  <div class="masthead-actions">
+    <button class="masthead-btn" onclick="toggleFullscreen()" title="Fullscreen map">Fullscreen</button>
+    <a class="masthead-btn back" href="https://www.geoglypha1.org">&larr; geoglypha1.org</a>
+  </div>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-label">Sites</div>
+    <div class="stat-value">15</div>
+    <div class="stat-unit">archaeological</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Routes</div>
+    <div class="stat-value orange">2</div>
+    <div class="stat-unit">maritime + strait</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Period</div>
+    <div class="stat-value gold">1700–1050</div>
+    <div class="stat-unit">BCE</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Area</div>
+    <div class="stat-value teal">Aegean</div>
+    <div class="stat-unit">Greece &rarr; Anatolia</div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="card">
+    <div class="card-label">Aegean Bronze Age · Archaeological Sites &amp; Routes</div>
+    <div id="map"></div>
+    <div class="legend">
+      <span class="legend-item"><span class="legend-dot" style="background:var(--gold)"></span> Mycenaean Palace</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--brick)"></span> Fortress / Citadel</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--terracotta)"></span> Hittite Capital</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--blueprint)"></span> Sanctuary / Colony</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--teal)"></span> Mycenaean Colony</span>
+      <span class="legend-item"><span class="legend-dot" style="background:var(--orange)"></span> Troy</span>
+      <span class="legend-item"><span class="legend-line"></span> Sea Route</span>
+      <span class="legend-item"><span class="legend-line solid"></span> Hellespont</span>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <p>Data: Pleiades Gazetteer &middot; AWMC &middot; ToposText &middot; UNESCO &middot; OpenStreetMap</p>
+  <p>Sources: Homer (Iliad, Odyssey) &middot; Hittite Diplomatic Letters &middot; Egyptian Medinet Habu &middot; Linear B &middot; Pausanias &middot; Thucydides &middot; Strabo</p>
+  <p>Author: Ryan Lafferty &middot; <span class="mono">Pi Map &middot; Hermes Agent</span></p>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+var geojsonData = {
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          26.2387,
+          39.9574
+        ]
+      },
+      "properties": {
+        "name": "Troy (Hisarlik)",
+        "type": "fortified_citadel",
+        "period": "Troy I-IX (3000 BCE - 500 CE)",
+        "significance": "Homeric Ilion. 9 settlement layers. Troy VIIa destroyed ca. 1180 BCE. UNESCO.",
+        "url": "https://whc.unesco.org/en/list/357/",
+        "excavators": "Schliemann, D\u00f6rpfeld, Blegen, Korfmann"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          32.8647,
+          39.9199
+        ]
+      },
+      "properties": {
+        "name": "Hattusa (Bogazkoy)",
+        "type": "capital",
+        "period": "Hittite Empire (1650-1190 BCE)",
+        "significance": "Hittite capital. Archives of 30,000 tablets including Wilusa/Troy correspondence.",
+        "url": "https://whc.unesco.org/en/list/377/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.7561,
+          37.7308
+        ]
+      },
+      "properties": {
+        "name": "Mycenae",
+        "type": "primary_palace",
+        "period": "LH I-IIIB (1700-1200 BCE)",
+        "significance": "Agamemnon's capital. Lion Gate, Cyclopean walls, Grave Circle A.",
+        "url": "https://whc.unesco.org/en/list/941/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.8,
+          37.5993
+        ]
+      },
+      "properties": {
+        "name": "Tiryns",
+        "type": "primary_palace",
+        "period": "LH II-IIIB (1500-1200 BCE)",
+        "significance": "Massive Cyclopean walls (8m). Heracles birthplace. UNESCO.",
+        "url": "https://whc.unesco.org/en/list/941/"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          21.695,
+          37.027
+        ]
+      },
+      "properties": {
+        "name": "Pylos (Palace of Nestor)",
+        "type": "primary_palace",
+        "period": "LH IIIB (1300-1200 BCE)",
+        "significance": "Best preserved Mycenaean palace. 1000+ Linear B tablets. Homer's 'sandy Pylos'."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          23.7257,
+          37.9715
+        ]
+      },
+      "properties": {
+        "name": "Athens (Acropolis)",
+        "type": "primary_palace",
+        "period": "LH (1600-1100 BCE)",
+        "significance": "Mycenaean palace on Acropolis. Cyclopean Pelargikon wall. Theseus myth."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          23.317,
+          38.317
+        ]
+      },
+      "properties": {
+        "name": "Thebes (Kadmeia)",
+        "type": "primary_palace",
+        "period": "LH (1600-1200 BCE)",
+        "significance": "Cadmean palace. Linear B archives. Oedipus, Seven Against Thebes myths."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.895,
+          39.358
+        ]
+      },
+      "properties": {
+        "name": "Iolcos (Dimini)",
+        "type": "primary_palace",
+        "period": "LH (1600-1200 BCE)",
+        "significance": "Northern Mycenaean palace. Jason and the Argonauts tradition."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.4333,
+          37.0667
+        ]
+      },
+      "properties": {
+        "name": "Sparta (Menelaion)",
+        "type": "secondary_citadel",
+        "period": "LH (1450-1200 BCE)",
+        "significance": "Menelaus and Helen cult site. Mycenaean palace at Therapne."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          23.17,
+          38.484
+        ]
+      },
+      "properties": {
+        "name": "Gla",
+        "type": "fortress",
+        "period": "LH IIIB (1300-1200 BCE)",
+        "significance": "Largest Mycenaean fortress (20+ ha). Lake Copais island. Not mentioned in Homer."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          25.163,
+          35.298
+        ]
+      },
+      "properties": {
+        "name": "Knossos (Mycenaean)",
+        "type": "secondary_citadel",
+        "period": "LM II-IIIB (1450-1200 BCE)",
+        "significance": "Mycenaean administration of Crete. Linear B archives (4,300 tablets). Homeric Crete."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          27.28,
+          37.53
+        ]
+      },
+      "properties": {
+        "name": "Miletus (Millawanda)",
+        "type": "mycenaean_colony",
+        "period": "LH IIIA-C (1400-1050 BCE)",
+        "significance": "Mycenaean/Ahhiyawan base in Anatolia. Mentioned in Hittite Milawata letter."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          22.842,
+          37.647
+        ]
+      },
+      "properties": {
+        "name": "Midea",
+        "type": "fortress",
+        "period": "LH IIIB (1350-1200 BCE)",
+        "significance": "Citadel between Mycenae and Tiryns. Cyclopean walls, Linear B finds."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          32.835,
+          39.951
+        ]
+      },
+      "properties": {
+        "name": "Yazilikaya",
+        "type": "sanctuary",
+        "period": "Hittite Empire",
+        "significance": "Rock sanctuary near Hattusa. Procession of gods relief."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          33.6954,
+          40.2305
+        ]
+      },
+      "properties": {
+        "name": "Alaca Hoyuk",
+        "type": "hittite_city",
+        "period": "Hittite (1650-1200 BCE)",
+        "significance": "Hittite cult center with Sphinx Gate and royal tombs."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            22.7561,
+            37.7308
+          ],
+          [
+            22.9833,
+            36.15
+          ],
+          [
+            25.163,
+            35.298
+          ],
+          [
+            27.0,
+            35.4
+          ],
+          [
+            28.15,
+            36.4
+          ],
+          [
+            27.2833,
+            36.9
+          ],
+          [
+            27.28,
+            37.53
+          ],
+          [
+            26.0,
+            38.4
+          ],
+          [
+            26.55,
+            39.1
+          ],
+          [
+            26.0667,
+            39.8333
+          ],
+          [
+            26.2387,
+            39.9574
+          ]
+        ]
+      },
+      "properties": {
+        "name": "Aegean Maritime Route (Mycenae to Troy)",
+        "type": "sea_route",
+        "period": "Late Bronze Age",
+        "description": "Main southern maritime route from Mycenaean Greece to Troy via Cythera, Crete, Rhodes, Miletus, Lesbos."
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            26.1833,
+            40.0333
+          ],
+          [
+            26.3,
+            40.1333
+          ],
+          [
+            26.4,
+            40.2
+          ],
+          [
+            26.55,
+            40.2667
+          ],
+          [
+            26.65,
+            40.3
+          ]
+        ]
+      },
+      "properties": {
+        "name": "Hellespont / Dardanelles",
+        "type": "strait",
+        "period": "All periods",
+        "description": "Hellespont strait. Narrowest crossing at Abydos-Sestos (1.2 km). Homeric and historical crossing point."
+      }
+    }
+  ]
+};
+
+var map = L.map('map', { scrollWheelZoom: false }).setView([37.8, 24.5], 6);
+
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Tiles &copy; Esri',
+  maxZoom: 18
+}).addTo(map);
+
+L.tileLayer('https://basemap.nationalmap.gov/arcgis/rest/services/USGSShadedReliefOnly/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'USGS 3DEP DEM',
+  opacity: 0.35
+}).addTo(map);
+
+// Color mapping
+var typeColors = {
+  'fortified_citadel': '#F38020',
+  'capital': '#CC5500',
+  'primary_palace': '#FFD700',
+  'secondary_citadel': '#0050FF',
+  'fortress': '#C04000',
+  'mycenaean_colony': '#008080',
+  'sanctuary': '#FFBF00',
+  'hittite_city': '#CC5500'
+};
+
+var typeRadii = {
+  'fortified_citadel': 10,
+  'capital': 10,
+  'primary_palace': 10,
+  'secondary_citadel': 7,
+  'fortress': 8,
+  'mycenaean_colony': 7,
+  'sanctuary': 7,
+  'hittite_city': 9
+};
+
+L.geoJSON(geojsonData, {
+  pointToLayer: function(feature, latlng) {
+    var props = feature.properties;
+    var color = typeColors[props.type] || '#888';
+    var radius = typeRadii[props.type] || 7;
+    // Special marker for Troy
+    if (props.name && props.name.startsWith('Troy')) {
+      return L.circleMarker(latlng, {
+        radius: 12,
+        fillColor: color,
+        color: '#333',
+        weight: 3,
+        opacity: 1,
+        fillOpacity: 0.85
+      });
+    }
+    return L.circleMarker(latlng, {
+      radius: radius,
+      fillColor: color,
+      color: '#333',
+      weight: props.type === 'primary_palace' ? 2 : 1,
+      opacity: 1,
+      fillOpacity: 0.8
+    });
+  },
+  onEachFeature: function(feature, layer) {
+    var props = feature.properties;
+    if (feature.geometry.type === 'Point') {
+      var popup = '<div class="site-popup">';
+      popup += '<h3>' + props.name + '</h3>';
+      popup += '<div class="pop-tag">' + props.type.replace(/_/g, ' ') + '</div>';
+      popup += '<div class="pop-row"><span class="pop-label">Period:</span><span>' + (props.period || '—') + '</span></div>';
+      if (props.significance) {
+        popup += '<p style="margin-top:0.3rem;font-size:0.65rem;line-height:1.4">' + props.significance + '</p>';
+      }
+      if (props.url) {
+        popup += '<p style="margin-top:0.3rem"><a href="' + props.url + '" target="_blank">' + props.url.replace('https://', '') + '</a></p>';
+      }
+      if (props.excavators) {
+        popup += '<div class="pop-row" style="margin-top:0.3rem"><span class="pop-label">Exc:</span><span style="font-size:0.6rem">' + props.excavators + '</span></div>';
+      }
+      popup += '</div>';
+      layer.bindPopup(popup);
+    } else if (feature.geometry.type === 'LineString') {
+      var popup = '<div class="route-popup">';
+      popup += '<h3>' + props.name + '</h3>';
+      if (props.description) {
+        popup += '<p style="font-size:0.65rem">' + props.description + '</p>';
+      }
+      popup += '</div>';
+      layer.bindPopup(popup);
+    }
+  },
+  style: function(feature) {
+    if (feature.geometry.type === 'LineString') {
+      var props = feature.properties;
+      if (props.type === 'sea_route') {
+        return {
+          color: '#0050FF',
+          weight: 2,
+          opacity: 0.7,
+          dashArray: '8 6'
+        };
+      }
+      return {
+        color: '#F38020',
+        weight: 3,
+        opacity: 0.8
+      };
+    }
+  }
+}).addTo(map);
+
+function toggleFullscreen() {
+  var el = document.getElementById('map');
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+    if (el.requestFullscreen) { el.requestFullscreen(); }
+    else if (el.webkitRequestFullscreen) { el.webkitRequestFullscreen(); }
+  } else {
+    if (document.exitFullscreen) { document.exitFullscreen(); }
+    else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+  }
+}
+document.addEventListener('fullscreenchange', function(){ map.invalidateSize(); });
+document.addEventListener('webkitfullscreenchange', function(){ map.invalidateSize(); });
+</script>
+</body>
+</html>

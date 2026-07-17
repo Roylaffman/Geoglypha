@@ -3,144 +3,74 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-      @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
-      
-      body {
-        margin: 0;
-        padding: 0;
-        font-family: 'SF Pro Display', sans-serif;
-        color: #3C3C3C;
-      }
-      
-      .weather-nav {
-        position: sticky;
-        top: 0;
-        background-color: #3a6351;
-        padding: 0.75rem 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 1.5rem;
-        z-index: 100;
-        flex-wrap: wrap;
-      }
-
-      .weather-nav a {
-        color: #f5f5f5;
-        text-decoration: none;
-        font-family: 'SF Pro Display', sans-serif;
-        font-size: 14px;
-        font-weight: 500;
-        transition: color 0.3s;
-      }
-
-      .weather-nav a:hover {
-        color: #f2edd7;
-      }
-
-      .weather-nav .nav-brand {
-        font-weight: 700;
-        font-size: 16px;
-        margin-right: auto;
-      }
-
-      .slide-container {
-        width: 100%;
-        max-width: 1280px;
-        min-height: 720px;
-        margin: 0 auto;
-        background: #FFFFFF;
-        display: flex;
-        flex-direction: column;
-        padding: 40px;
-        box-sizing: border-box;
-      }
-
-      @media (max-width: 900px) {
-        .content-container {
-          flex-direction: column;
-        }
-        .text-container {
-          width: 100%;
-          padding-right: 0;
-          margin-bottom: 20px;
-        }
-        .chart-container {
-          width: 100%;
-        }
-        .slide-container {
-          padding: 20px;
-          min-height: auto;
-        }
-        .title {
-          font-size: 28px;
-        }
-        .description {
-          font-size: 16px;
-        }
-      }
-      
-      .title {
-        font-family: 'Inter', sans-serif;
-        font-size: 36px;
-        font-weight: 600;
-        color: #111111;
-        margin-bottom: 20px;
-      }
-      
-      .content-container {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        flex: 1;
-      }
-      
-      .text-container {
-        width: 30%;
-        padding-right: 20px;
-      }
-      
-      .chart-container {
-        width: 70%;
-        min-height: 500px;
-      }
-      
-      .description {
-        font-size: 20px;
-        line-height: 1.5;
-        margin-bottom: 20px;
-      }
-      
-      .highlight {
-        font-weight: 600;
-        color: #DFDFCE;
-      }
-    </style>
+  <title>Barometric Pressure Analysis &mdash; Geoglypha Weather</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/design-system.css">
   <style>
-    .site-nav { background: #f1ead9; border-bottom: 1px solid rgba(26,22,18,0.2); padding: 14px 0; position: sticky; top: 0; z-index: 200; }
-    .site-nav .nav-inner { display: flex; justify-content: space-between; align-items: center; max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; }
-    .nav-logo { font-family: 'Cinzel', serif; font-weight: 500; font-size: 18px; color: #1a1612; text-decoration: none; letter-spacing: 0.06em; flex-shrink: 0; }
-    .nav-links-list { display: flex; list-style: none; gap: 20px; flex-wrap: wrap; justify-content: flex-end; }
-    .nav-links-list a { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: #1a1612; text-decoration: none; opacity: 0.6; transition: opacity 0.2s; }
-    .nav-links-list a:hover { opacity: 1; }
-    .nav-mobile-btn { display: none; background: none; border: none; cursor: pointer; font-size: 20px; color: #1a1612; padding: 4px; }
-    @media (max-width: 700px) { .nav-links-list { display: none; position: absolute; top: 100%; left: 0; right: 0; background: #f1ead9; padding: 20px 24px; flex-direction: column; gap: 18px; z-index: 199; } .nav-links-list.open { display: flex; } .nav-mobile-btn { display: block; } }
+    .slide-container {
+      width: 100%;
+      max-width: 1280px;
+      min-height: calc(100vh - 60px);
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      padding: 48px 40px;
+      box-sizing: border-box;
+    }
+    @media (max-width: 900px) {
+      .content-container { flex-direction: column; }
+      .text-container { width: 100%; padding-right: 0; margin-bottom: 20px; }
+      .chart-container { width: 100%; }
+      .slide-container { padding: 24px 20px; min-height: auto; }
+    }
+    .chart-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(24px, 3.5vw, 40px);
+      font-weight: 500;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+      margin-bottom: 36px;
+      border-bottom: 1px solid var(--rule);
+      padding-bottom: 20px;
+    }
+    .content-container {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      flex: 1;
+      gap: 32px;
+    }
+    .text-container { width: 28%; flex-shrink: 0; }
+    .chart-container { flex: 1; min-height: 500px; position: relative; }
+    .description {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 19px;
+      line-height: 1.65;
+      color: var(--ink);
+      opacity: 0.85;
+      margin-bottom: 20px;
+    }
+    .highlight { font-weight: 600; color: var(--ochre-deep); }
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--ochre-deep);
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 12px;
+    }
   </style>
-  </head>
+</head>
   <body>
     <nav class="site-nav">
       <div class="nav-inner">
         <a href="../index.html" class="nav-logo">Geoglypha</a>
         <button class="nav-mobile-btn" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Toggle navigation">&#9776;</button>
-        <ul class="nav-links-list">
+        <ul class="nav-links">
           <li><a href="../index.html">Home</a></li>
           <li><a href="index.html">Overview</a></li>
           <li><a href="dashboard.html">Dashboard</a></li>
@@ -152,7 +82,8 @@
       </div>
     </nav>
     <div class="slide-container">
-      <h1 class="title">Barometric Pressure Trends</h1>
+      <span class="section-label">&#167; Pressure Analysis &nbsp;&mdash;&nbsp; Asheville, NC &middot; Sept 2024</span>
+      <h1 class="chart-title">Barometric Pressure Trends</h1>
       
       <div class="content-container">
         <div class="text-container">
@@ -393,7 +324,7 @@
               position: 'top',
               labels: {
                 font: {
-                  family: 'SF Pro Display',
+                  family: 'Cormorant Garamond',
                   size: 14
                 }
               }
@@ -402,7 +333,7 @@
               display: true,
               text: 'Barometric Pressure in Asheville (September 25-29, 2024)',
               font: {
-                family: 'Inter',
+                family: 'Cinzel',
                 size: 16,
                 weight: 'bold'
               }
@@ -415,7 +346,7 @@
               },
               ticks: {
                 font: {
-                  family: 'SF Pro Display',
+                  family: 'Cormorant Garamond',
                   size: 12
                 },
                 maxRotation: 45,
@@ -428,7 +359,7 @@
               },
               ticks: {
                 font: {
-                  family: 'SF Pro Display',
+                  family: 'Cormorant Garamond',
                   size: 12
                 }
               },
@@ -436,7 +367,7 @@
                 display: true,
                 text: 'Pressure (hPa)',
                 font: {
-                  family: 'SF Pro Display',
+                  family: 'Cormorant Garamond',
                   size: 14
                 }
               }
@@ -445,6 +376,19 @@
         }
       });
     </script>
+  <footer class="colophon">
+    <div class="colophon-ornament">&#10022; &nbsp; &#8297; &nbsp; &#10022;</div>
+    <nav class="colophon-nav">
+      <a href="../index.html">Geoglypha Home</a>
+      <a href="../geography.html">Geography</a>
+      <a href="../history.html">History</a>
+      <a href="index.html">Weather Overview</a>
+    </nav>
+    <div class="colophon-meta">
+      <div>&copy; <span id="year"></span> Geoglypha &nbsp;&middot;&nbsp; Ryan Lafferty</div>
+    </div>
+  </footer>
+  <script>document.getElementById('year').textContent = new Date().getFullYear();</script>
   </body>
 </html>
 

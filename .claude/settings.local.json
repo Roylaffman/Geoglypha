@@ -4,7 +4,40 @@
       "Bash(ls:*)",
       "Bash(gcloud auth:*)",
       "Bash(git commit:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(gsutil cp:*)",
+      "WebSearch",
+      "WebFetch(domain:www.theoi.com)",
+      "WebFetch(domain:www.argonauts-book.com)",
+      "WebFetch(domain:womenshistorynetwork.org)",
+      "WebFetch(domain:en.wikipedia.org)",
+      "WebFetch(domain:dcc.dickinson.edu)",
+      "WebFetch(domain:litteraesapientes.wordpress.com)",
+      "WebFetch(domain:web.viu.ca)",
+      "Bash(python3 -c:*)",
+      "Bash(python3 /dev/stdin:*)",
+      "Bash(python3 -c \"print\\(len\\(open\\(''C:/Users/royla/OneDrive/Documents/2.9Dev/Geoglypha/Research_Argonautica_2026-03-28.md''\\).read\\(\\)\\)\\)\")",
+      "Bash(gsutil ls:*)",
+      "Bash(gsutil acl:*)",
+      "Read(//c/Users/royla/Documents/art/**)",
+      "Bash(gsutil -m cp -r \"C:/Users/royla/Documents/art/.\" gs://www.geoglypha1.org/gallery/)",
+      "Bash(gsutil iam:*)",
+      "Bash(gsutil -m acl ch -r -u AllUsers:R gs://www.geoglypha1.org/gallery/)",
+      "Bash(gsutil rm:*)",
+      "Bash(gsutil -m cp c:/Users/royla/OneDrive/Documents/2.9Dev/Geoglypha/graphita/index.html c:/Users/royla/OneDrive/Documents/2.9Dev/Geoglypha/graphita/gallery.css c:/Users/royla/OneDrive/Documents/2.9Dev/Geoglypha/graphita/gallery.js c:/Users/royla/OneDrive/Documents/2.9Dev/Geoglypha/graphita/your-images.json gs://www.geoglypha1.org/graphita/)",
+      "Bash(gsutil -m cp -r \"c:/Users/royla/OneDrive/Documents/2.9Dev/Geoglypha/graphita/images/.\" gs://www.geoglypha1.org/graphita/images/)",
+      "Bash(gsutil -m cp c:/Users/royla/OneDrive/Documents/2.9Dev/Geoglypha/index.html gs://www.geoglypha1.org/index.html)",
+      "Bash(gsutil -m cp c:/Users/royla/OneDrive/Documents/2.9Dev/Geoglypha/graphita/your-images.json c:/Users/royla/OneDrive/Documents/2.9Dev/Geoglypha/graphita/index.html gs://www.geoglypha1.org/graphita/)",
+      "Bash(gsutil version:*)",
+      "Bash(gsutil -m cp index.html gs://www.geoglypha1.org/index.html)",
+      "Bash(gsutil -m cp graphita/your-images.json gs://www.geoglypha1.org/graphita/your-images.json)",
+      "Bash(gsutil -m cp Argonaut_route1.jpg gs://www.geoglypha1.org/Argonaut_route1.jpg)",
+      "Bash(gsutil -m cp images/Songline.jpg images/Untitled1982Basquiat.jpg images/Atreus.jpg images/Brackett.jpg images/sanctum-architecture.PNG 'images/Rana Clade.jpg' 'images/Towers Tibet2.jpg' images/switchbacks.jpg images/lithium-map.jpg images/critical-minerals-map.jpg gs://www.geoglypha1.org/images/)",
+      "Bash(gsutil -m cp images/IndianRock.jpg images/emeryville.jpg images/bay.jpg images/thecave.jpg images/lakemerit.jpg images/chicago-snow.jpg images/farm.png images/gobekli-tepe.jpg images/neworleanscastle.jpg images/turkey.jpg images/bolete.jpg images/field_notes.jpg images/helene_analysis.jpg images/Evergladesphoto.jpg images/west-baray.jpg images/WatsonsPlace-RabbitKey.jpg images/hummingbird-Nasca.jpeg images/monks_mound.jpg images/cahokia_woodhenge.jpg images/spider-nasca.jpg gs://www.geoglypha1.org/images/)",
+      "Bash(gsutil -m cp -r images/magic images/songlines images/greco-roman images/lithium images/stone-towers images/chimney-rock images/helene images/outlawtrail images/rana-boylii images/sino-tibetan-towers gs://www.geoglypha1.org/images/)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\royla\\Documents\\art"
     ]
   }
 }

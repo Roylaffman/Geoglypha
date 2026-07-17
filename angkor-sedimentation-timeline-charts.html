@@ -642,13 +642,13 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   const y = d3.scaleLinear().domain([0, 1.0]).range([ih, 0]);
 
   // Drought bands
-  droughts.forEach(d => {
+  droughts.forEach((d, i) => {
     g.append('rect')
       .attr('x', x(d.start)).attr('width', x(d.end) - x(d.start))
       .attr('y', 0).attr('height', ih)
       .attr('fill', C.red).attr('opacity', 0.09);
     g.append('text')
-      .attr('x', x((d.start + d.end) / 2)).attr('y', 13)
+      .attr('x', x((d.start + d.end) / 2)).attr('y', i === 0 ? 13 : 27)
       .attr('text-anchor', 'middle')
       .attr('fill', C.redSoft).attr('font-size', '9px')
       .attr('font-family', "'JetBrains Mono', monospace")
@@ -675,7 +675,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     .attr('stroke', C.orange).attr('stroke-width', 1.2)
     .attr('stroke-dasharray', '6,4').attr('opacity', 0.65);
   g.append('text')
-    .attr('x', x(1431) + 7).attr('y', 28)
+    .attr('x', x(1431) + 7).attr('y', 42)
     .attr('fill', C.orange).attr('font-family', "'Cormorant Garamond', serif")
     .attr('font-size', '12px').attr('font-style', 'italic')
     .text('1431 · Siamese Sack');
@@ -991,7 +991,7 @@ tabFns['capacity'] = function() {
   });
 
   // Legend
-  const leg = g.append('g').attr('transform', `translate(${iw - 170}, 10)`);
+  const leg = g.append('g').attr('transform', `translate(10, 10)`);
   keys.forEach((k, i) => {
     leg.append('rect').attr('x', 0).attr('y', i * 20).attr('width', 12).attr('height', 12)
       .attr('rx', 2).attr('fill', colors[k]).attr('opacity', 0.8);
