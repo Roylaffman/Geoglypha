@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Reading Room &mdash; Geoglypha</title>
+	<meta name="description" content="Books on collapse, survival, and landscape. What they argue, where they disagree, and which ones survive the move to audio.">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link rel="stylesheet" href="assets/css/design-system.css">
+	<style>
+		.reading-hero {
+			min-height: 60vh;
+			padding: 60px 8vw;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			position: relative;
+		}
+		.reading-hero::before {
+			content: "";
+			position: absolute;
+			top: 40px;
+			left: 8vw;
+			right: 8vw;
+			height: 1px;
+			background: var(--rule);
+		}
+		.reading-hero::after {
+			content: "";
+			position: absolute;
+			bottom: 40px;
+			left: 8vw;
+			right: 8vw;
+			height: 1px;
+			background: var(--rule);
+		}
+
+		.reading-deck {
+			font-family: 'Cormorant Garamond', serif;
+			font-style: italic;
+			font-size: clamp(18px, 2vw, 24px);
+			line-height: 1.5;
+			max-width: 58ch;
+			color: var(--ink);
+			opacity: 0.82;
+			margin-bottom: 44px;
+		}
+
+		/* Disclosure: must sit ABOVE the first affiliate link */
+		.disclosure-inline {
+			max-width: 720px;
+			margin: 0 auto;
+			padding: 20px 24px;
+			border-left: 3px solid var(--ochre-deep);
+			background: var(--paper-deep);
+		}
+		.disclosure-inline .lbl {
+			display: block;
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 10px;
+			letter-spacing: 0.18em;
+			text-transform: uppercase;
+			color: var(--ochre-deep);
+			opacity: 0.7;
+			margin-bottom: 8px;
+		}
+		.disclosure-inline p {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 10px;
+			letter-spacing: 0.08em;
+			line-height: 1.9;
+			color: var(--ink);
+			opacity: 0.55;
+			margin: 0;
+		}
+
+		/* Book entries */
+		.books-section {
+			max-width: 720px;
+			margin: 0 auto;
+			padding: 0 24px;
+		}
+
+		.books-section .section-header {
+			padding: 0;
+			margin-bottom: 36px;
+		}
+
+		.book-lede {
+			font-family: 'Cormorant Garamond', serif;
+			font-style: italic;
+			font-size: 19px;
+			color: var(--ink);
+			opacity: 0.7;
+			margin-bottom: 32px;
+		}
+
+		.book-entry {
+			padding: 28px 0;
+			border-top: 1px solid var(--rule);
+		}
+		.book-entry:first-of-type {
+			border-top: none;
+			padding-top: 0;
+		}
+
+		.book-entry h3 {
+			font-family: 'Cormorant Garamond', serif;
+			font-weight: 600;
+			font-size: 22px;
+			color: var(--rust);
+			margin-bottom: 4px;
+			line-height: 1.25;
+		}
+
+		.book-byline {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 10px;
+			letter-spacing: 0.1em;
+			color: var(--ink);
+			opacity: 0.55;
+			margin-bottom: 14px;
+			display: block;
+		}
+
+		.book-entry .prose {
+			margin-bottom: 14px;
+		}
+
+		.book-note {
+			font-family: 'Cormorant Garamond', serif;
+			font-style: italic;
+			color: var(--ink);
+			opacity: 0.55;
+			border-left: 2px solid var(--rule);
+			padding-left: 16px;
+			margin-bottom: 16px;
+			font-size: 17px;
+		}
+
+		.book-actions {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px 20px;
+		}
+		.book-actions a {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 10px;
+			letter-spacing: 0.18em;
+			text-transform: uppercase;
+			color: var(--ochre-deep);
+			text-decoration: none;
+			border-bottom: 1px solid var(--ochre-deep);
+			padding-bottom: 2px;
+			transition: color 0.2s, border-color 0.2s;
+		}
+		.book-actions a:hover {
+			color: var(--ochre);
+			border-color: var(--ochre);
+		}
+
+		/* Audio panel */
+		.audio-panel {
+			max-width: 720px;
+			margin: 0 auto;
+			background: var(--paper-deep);
+			padding: 36px 32px;
+		}
+		.audio-panel h2 {
+			margin-top: 0;
+			margin-bottom: 12px;
+		}
+		.audio-panel p {
+			font-size: 17px;
+			opacity: 0.78;
+		}
+
+		/* Disclosure footer */
+		.disclosure-block {
+			max-width: 720px;
+			margin: 0 auto;
+			padding: 48px 24px;
+			border-top: 1px solid var(--rule);
+		}
+		.disclosure-block p {
+			font-family: 'JetBrains Mono', monospace;
+			font-size: 10px;
+			letter-spacing: 0.08em;
+			line-height: 1.9;
+			color: var(--ink);
+			opacity: 0.45;
+			text-align: justify;
+			margin: 0;
+		}
+
+		@media (max-width: 700px) {
+			.reading-hero {
+				min-height: auto;
+				padding: 50px 24px;
+			}
+			.reading-hero::before { left: 24px; right: 24px; }
+			.reading-hero::after  { left: 24px; right: 24px; }
+			.audio-panel { padding: 28px 24px; }
+		}
+	</style>
+</head>
+<body>
+
+<nav class="site-nav">
+	<div class="nav-inner">
+		<a href="index.html" class="nav-logo">Geoglypha</a>
+		<button class="nav-mobile-btn" aria-label="Toggle navigation">&#9776;</button>
+		<ul class="nav-links">
+			<li><a href="index.html">Home</a></li>
+			<li><a href="geography.html">Geography</a></li>
+			<li><a href="history.html">History</a></li>
+			<li><a href="index.html#projects">Projects</a></li>
+			<li><a href="https://www.geoglypha1.org/weather">Weather</a></li>
+			<li><a href="graphita/">Gallery</a></li>
+			<li><a href="https://tools.geoglypha1.org">Tools</a></li>
+			<li><a href="supplies.html" class="nav-special-purple">Supplies</a></li>
+			<li><a href="reading.html">Reading</a></li>
+			<li><a href="stack.html" class="nav-special-green">Stack</a></li>
+			<li><a href="index.html#about">About</a></li>
+			<li><a href="index.html#contact">Contact</a></li>
+		</ul>
+	</div>
+</nav>
+
+<section class="reading-hero">
+	<div class="hero-masthead">
+		<span>Geoglypha &nbsp;/&nbsp; Reading Room</span>
+		<span>Collapse &middot; Survival &middot; Landscape</span>
+		<span>Vol. III</span>
+	</div>
+
+	<h1 class="hero-title">
+		Reading
+		<span class="hero-subtitle">Collapse, survival, and the shape of the land</span>
+	</h1>
+
+	<p class="reading-deck">
+		A short shelf of books behind the atlases. What they argue, where they disagree
+		with each other, and which ones survive the move to audio.
+	</p>
+
+	<div class="hero-meta">
+		<div class="hero-meta-item">
+			<span class="lbl">Category</span>
+			<span class="val">Bibliography</span>
+		</div>
+		<div class="hero-meta-item">
+			<span class="lbl">Entries</span>
+			<span class="val">9 Books</span>
+		</div>
+		<div class="hero-meta-item">
+			<span class="lbl">Via</span>
+			<span class="val">Amazon Associates</span>
+		</div>
+	</div>
+</section>
+
+<!-- Disclosure sits ABOVE the first affiliate link. Do not move it below. -->
+<div class="disclosure-inline">
+	<span class="lbl">Affiliate Disclosure</span>
+	<p>As an Amazon Associate, I earn from qualifying purchases. Links below are affiliate links, at no additional cost to you. I only recommend books I have actually read.</p>
+</div>
+
+<div class="ornament">
+	<span class="glyph">&#10022;</span>
+	<span>I</span>
+	<span class="glyph">&#10022;</span>
+</div>
+
+<section class="section books-section" id="collapse">
+	<div class="section-header">
+		<span class="section-num">&#167; 01 &nbsp;&mdash;&nbsp; Collapse and Continuity</span>
+		<h2>The Late Bronze Age, twice told</h2>
+	</div>
+
+	<p class="book-lede">Cline's two volumes are best read as one argument split across a decade. The first asks why an interconnected world came apart around 1177 B.C.; the second asks what happened to the people still standing afterward.</p>
+
+	<div class="book-entries" data-books="collapse"></div>
+</section>
+
+<div class="ornament">
+	<span class="glyph">&#10022;</span>
+	<span>II</span>
+	<span class="glyph">&#10022;</span>
+</div>
+
+<section class="section books-section" id="landscape">
+	<div class="section-header">
+		<span class="section-num">&#167; 02 &nbsp;&mdash;&nbsp; Ground Truth</span>
+		<h2>Landscape as argument</h2>
+	</div>
+
+	<p class="book-lede">A different mode entirely: not the reconstruction of a vanished system, but the record of walking through what's left of one.</p>
+
+	<div class="book-entries" data-books="landscape"></div>
+</section>
+
+<div class="ornament">
+	<span class="glyph">&#10022;</span>
+	<span>III</span>
+	<span class="glyph">&#10022;</span>
+</div>
+
+<section class="section books-section" id="culture">
+	<div class="section-header">
+		<span class="section-num">&#167; 03 &nbsp;&mdash;&nbsp; Speculative Architecture</span>
+		<h2>The Culture, in three registers</h2>
+	</div>
+
+	<p class="book-lede">Banks built a post-scarcity civilization and then spent ten novels testing where it breaks. These three approach the same question from different angles: what does a society that has solved material want do with the civilizations that haven't?</p>
+
+	<div class="book-entries" data-books="culture"></div>
+</section>
+
+<div class="ornament">
+	<span class="glyph">&#10022;</span>
+	<span>IV</span>
+	<span class="glyph">&#10022;</span>
+</div>
+
+<section class="section books-section" id="myth">
+	<div class="section-header">
+		<span class="section-num">&#167; 04 &nbsp;&mdash;&nbsp; Myth and Navigation</span>
+		<h2>The voyage as spatial argument</h2>
+	</div>
+
+	<p class="book-lede">The Argonautica is a route. The Medea is what happens when the route ends and the alliances it built dissolve. Both are mapped on the <a href="https://www.geoglypha1.org/jason-argonauts.html" style="color: var(--ochre-deep);">Jason and the Argonauts atlas</a>.</p>
+
+	<div class="book-entries" data-books="myth"></div>
+</section>
+
+<div class="ornament">
+	<span class="glyph">&#10022;</span>
+	<span>V</span>
+	<span class="glyph">&#10022;</span>
+</div>
+
+<section class="section books-section" id="resources">
+	<div class="section-header">
+		<span class="section-num">&#167; 05 &nbsp;&mdash;&nbsp; Resource Geography</span>
+		<h2>What's under the map</h2>
+	</div>
+
+	<p class="book-lede">The spatial analysis shows where extraction happens. The book explains why it happens there, and what it costs. Read alongside the <a href="https://www.geoglypha1.org/lithium_analysis.html" style="color: var(--ochre-deep);">Geoglypha lithium report</a>.</p>
+
+	<div class="book-entries" data-books="resources"></div>
+</section>
+
+<div class="ornament">
+	<span class="glyph">&#10022;</span>
+	<span>VI</span>
+	<span class="glyph">&#10022;</span>
+</div>
+
+<section class="section">
+	<div class="audio-panel">
+		<span class="section-num">&#167; 06 &nbsp;&mdash;&nbsp; On Audio</span>
+		<h2>What survives the read-aloud</h2>
+		<p>Most of these exist as audiobooks, and they don't fare equally. Cline's volumes carry a real apparatus: site maps, chronological tables, a dense footnote layer, and audio strips it out. <em>1177 B.C.</em> holds up better than you'd expect because the argument is narrative and cumulative; <em>After 1177 B.C.</em> asks you to keep more places and polities in your head at once, and that's harder without the maps in front of you. Chatwin is the opposite case: the fragments are short, the prose is built for the ear, and it may be better heard than read.</p>
+		<p>The Banks novels are uniformly strong on audio. <em>The Player of Games</em> and <em>Use of Weapons</em> both benefit from a narrator who can hold the tonal shifts steady. <em>The State of the Art</em> is weaker in audio because the shorter pieces lose momentum between tracks. Scheyder's <em>The War Below</em> carries well as a listen. The Euripides is best read rather than heard: the Grene and Lattimore line breaks and stage directions matter.</p>
+		<p>If you don't already have an Audible membership, the trial covers a title from this list.</p>
+		<div class="book-actions">
+			<a href="https://www.amazon.com/hz/audible/mlp?tag=geoglypha-audible-20" rel="nofollow sponsored">Start an Audible free trial on Amazon</a>
+		</div>
+	</div>
+</section>
+
+<div class="disclosure-block">
+	<p>Geoglypha is a participant in the Amazon Services LLC Associates Program, an affiliate advertising program designed to provide a means for sites to earn advertising fees by advertising and linking to Amazon.com. As an Amazon Associate, I earn from qualifying purchases. This comes at no additional cost to you. I only recommend books I have actually read.</p>
+</div>
+
+<footer class="colophon">
+	<div class="colophon-ornament">&#10022; &nbsp; &#8297; &nbsp; &#10022;</div>
+	<nav class="colophon-nav">
+		<a href="index.html">Home</a>
+		<a href="geography.html">Geography</a>
+		<a href="history.html">History</a>
+		<a href="supplies.html">Supplies</a>
+		<a href="stack.html">Health Stack</a>
+		<a href="graphita/">Gallery</a>
+		<a href="index.html#contact">Contact</a>
+		<a href="privacy.html">Privacy</a>
+	</nav>
+	<div class="colophon-meta">
+		<div>&copy; <span id="year"></span> Geoglypha &nbsp;&middot;&nbsp; Ryan Lafferty</div>
+	</div>
+</footer>
+
+<script>
+	document.getElementById('year').textContent = new Date().getFullYear();
+	const mobileBtn = document.querySelector('.nav-mobile-btn');
+	const navLinks  = document.querySelector('.nav-links');
+	if (mobileBtn && navLinks) {
+		mobileBtn.addEventListener('click', () => navLinks.classList.toggle('open'));
+		document.addEventListener('click', (e) => {
+			if (!mobileBtn.contains(e.target) && !navLinks.contains(e.target)) navLinks.classList.remove('open');
+		});
+	}
+</script>
+
+<script>
+	// Amazon Associates — single source of truth: data/books.json
+	const AMZN_TAGS = {
+		"default": "geoglypha-20",
+		"atlas":   "geoglypha-atlas-20",
+		"gear":    "geoglypha-gear-20",
+		"books":   "geoglypha-books-20",
+		"social":  "geoglypha-social-20",
+		"audible": "geoglypha-audible-20"
+	};
+
+	function amzn(asin, channel) {
+		const tag = AMZN_TAGS[channel] || AMZN_TAGS["default"];
+		return "https://www.amazon.com/dp/" + asin + "/?tag=" + tag;
+	}
+
+	function esc(s) {
+		return String(s == null ? "" : s)
+			.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+	}
+
+	function renderBook(book) {
+		const byline = [book.author, book.publisher, book.edition].filter(Boolean).join(" &middot; ");
+		const note = book.personal_note ? '<p class="book-note">' + esc(book.personal_note) + '</p>' : "";
+		return '<article class="book-entry">' +
+			'<h3>' + esc(book.title) + '</h3>' +
+			'<span class="book-byline">' + esc(byline) + '</span>' +
+			'<p class="prose">' + esc(book.framing) + '</p>' +
+			note +
+			'<div class="book-actions">' +
+				'<a href="' + amzn(book.asin, book.channel) + '" rel="nofollow sponsored">Find it on Amazon</a>' +
+			'</div>' +
+		'</article>';
+	}
+
+	(function loadBooks() {
+		fetch("data/books.json")
+			.then(function (res) {
+				if (!res.ok) throw new Error("books.json HTTP " + res.status);
+				return res.json();
+			})
+			.then(function (data) {
+				const entries = Object.keys(data)
+					.filter(function (k) { return k !== "_schema"; })
+					.map(function (k) { return data[k]; });
+				// To publish only finished entries, filter by status === "live":
+				// entries = entries.filter(function (b) { return b.status === "live"; });
+				const containers = document.querySelectorAll("[data-books]");
+				Array.prototype.forEach.call(containers, function (container) {
+					const section = container.getAttribute("data-books");
+					const books = entries.filter(function (b) { return b.section === section; });
+					container.innerHTML = books.map(renderBook).join("");
+				});
+			})
+			.catch(function (err) {
+				console.error("Failed to load books.json:", err);
+			});
+	})();
+</script>
+</body>
+</html>
