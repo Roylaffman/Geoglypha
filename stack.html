@@ -68,6 +68,7 @@
 			<li><a href="graphita/">Gallery</a></li>
 			<li><a href="https://tools.geoglypha1.org">Tools</a></li>
 			<li><a href="supplies.html" class="nav-special-purple">Supplies</a></li>
+			<li><a href="reading.html">Reading</a></li>
 			<li><a href="stack.html" class="nav-special-green">Stack</a></li>
 			<li><a href="index.html#about">About</a></li>
 			<li><a href="index.html#contact">Contact</a></li>
@@ -120,107 +121,7 @@
 		<h2>Daily Stack</h2>
 	</div>
 
-	<div class="reading-list">
-		<a href="#" class="reading-item">
-			<span class="reading-num">I</span>
-			<div class="reading-body">
-				<span class="reading-meta">Strength</span>
-				<h3>Creatine Monohydrate</h3>
-				<p>5g daily, every day without fail. The most researched supplement on the market. Visible difference in strength output and muscle fullness within two weeks.</p>
-				<span class="btn-shop">Shop on Amazon &rarr;</span>
-			</div>
-		</a>
-
-		<a href="#" class="reading-item">
-			<span class="reading-num">II</span>
-			<div class="reading-body">
-				<span class="reading-meta">Foundational</span>
-				<h3>Whey Protein Isolate</h3>
-				<p>Fast-absorbing, low-lactose protein that fits easily into any meal plan. I use this post-workout and on days when whole-food protein sources fall short.</p>
-				<span class="btn-shop">Shop on Amazon &rarr;</span>
-			</div>
-		</a>
-
-		<a href="#" class="reading-item">
-			<span class="reading-num">III</span>
-			<div class="reading-body">
-				<span class="reading-meta">Recovery</span>
-				<h3>Omega-3 Fish Oil</h3>
-				<p>High-EPA/DHA formula for inflammation support and cardiovascular health. Joint soreness dropped noticeably after making this a consistent daily habit.</p>
-				<span class="btn-shop">Shop on Amazon &rarr;</span>
-			</div>
-		</a>
-
-		<a href="#" class="reading-item">
-			<span class="reading-num">IV</span>
-			<div class="reading-body">
-				<span class="reading-meta">Foundational</span>
-				<h3>Vitamin D3 + K2</h3>
-				<p>Most people are deficient and don't know it. D3 paired with K2 ensures calcium goes to your bones, not your arteries. Big mood and energy difference in winter months.</p>
-				<span class="btn-shop">Shop on Amazon &rarr;</span>
-			</div>
-		</a>
-
-		<a href="#" class="reading-item">
-			<span class="reading-num">V</span>
-			<div class="reading-body">
-				<span class="reading-meta">Sleep &amp; Recovery</span>
-				<h3>Magnesium Glycinate</h3>
-				<p>Taken before bed. The glycinate form is gentle on the gut and absorbs well. Noticeably better sleep quality and less muscle cramping after hard training days.</p>
-				<span class="btn-shop">Shop on Amazon &rarr;</span>
-			</div>
-		</a>
-
-		<a href="#" class="reading-item">
-			<span class="reading-num">VI</span>
-			<div class="reading-body">
-				<span class="reading-meta">Hydration</span>
-				<h3>Electrolytes</h3>
-				<p>Sodium, potassium, and magnesium in the right ratios. I mix a packet into my first glass of water every morning. Energy and focus before any caffeine.</p>
-				<span class="btn-shop">Shop on Amazon &rarr;</span>
-			</div>
-		</a>
-
-		<a href="#" class="reading-item">
-			<span class="reading-num">VII</span>
-			<div class="reading-body">
-				<span class="reading-meta">Stress &amp; Cognitive</span>
-				<h3>Ashwagandha (KSM-66)</h3>
-				<p>KSM-66 is the clinically studied extract. Took about three weeks to feel the cortisol-blunting effect. Clearer headed during high-stress stretches of work or travel.</p>
-				<span class="btn-shop">Shop on Amazon &rarr;</span>
-			</div>
-		</a>
-
-		<a href="#" class="reading-item">
-			<span class="reading-num">VIII</span>
-			<div class="reading-body">
-				<span class="reading-meta">Joints &amp; Skin</span>
-				<h3>Collagen Peptides</h3>
-				<p>Unflavored powder that dissolves in hot or cold liquids. Supports joint health, skin elasticity, and connective tissue. Goes straight into morning coffee undetected.</p>
-				<span class="btn-shop">Shop on Amazon &rarr;</span>
-			</div>
-		</a>
-
-		<a href="#" class="reading-item">
-			<span class="reading-num">IX</span>
-			<div class="reading-body">
-				<span class="reading-meta">Daily Nutrition</span>
-				<h3>Greens Powder</h3>
-				<p>Insurance for the days when vegetables take a back seat. Not a replacement for real food but a solid baseline for micronutrients, probiotics, and adaptogens.</p>
-				<span class="btn-shop">Shop on Amazon &rarr;</span>
-			</div>
-		</a>
-
-		<a href="#" class="reading-item">
-			<span class="reading-num">X</span>
-			<div class="reading-body">
-				<span class="reading-meta">Minerals</span>
-				<h3>Zinc + Copper</h3>
-				<p>Zinc supports immune function and testosterone production. Paired with copper to keep the ratio balanced. Take with food at night, not alongside other supplements.</p>
-				<span class="btn-shop">Shop on Amazon &rarr;</span>
-			</div>
-		</a>
-	</div>
+	<div class="reading-list" data-stack-products></div>
 </section>
 
 <div class="disclosure-block">
@@ -235,8 +136,10 @@
 		<a href="geography.html">Geography</a>
 		<a href="history.html">History</a>
 		<a href="supplies.html">Supplies</a>
+		<a href="reading.html">Reading</a>
 		<a href="graphita/">Gallery</a>
 		<a href="index.html#contact">Contact</a>
+		<a href="privacy.html">Privacy</a>
 	</nav>
 	<div class="colophon-meta">
 		<div>&copy; <span id="year"></span> Geoglypha &nbsp;&middot;&nbsp; Ryan Lafferty</div>
@@ -253,6 +156,73 @@
 			if (!mobileBtn.contains(e.target) && !navLinks.contains(e.target)) navLinks.classList.remove('open');
 		});
 	}
+</script>
+
+<script>
+	// Amazon Associates — single source of truth: data/stack-products.json
+	const AMZN_TAGS = {
+		"default": "geoglypha-20",
+		"atlas":   "geoglypha-atlas-20",
+		"gear":    "geoglypha-gear-20",
+		"books":   "geoglypha-books-20",
+		"social":  "geoglypha-social-20",
+		"audible": "geoglypha-audible-20",
+		"stack":   "geoglypha-stack-20"
+	};
+
+	function amzn(asin, channel) {
+		const tag = AMZN_TAGS[channel] || AMZN_TAGS["default"];
+		return "https://www.amazon.com/dp/" + asin + "/?tag=" + tag;
+	}
+
+	function esc(s) {
+		return String(s == null ? "" : s)
+			.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+	}
+
+	function toRoman(n) {
+		const map = [[10, "X"], [9, "IX"], [5, "V"], [4, "IV"], [1, "I"]];
+		let out = "";
+		for (let i = 0; i < map.length; i++) {
+			while (n >= map[i][0]) { out += map[i][1]; n -= map[i][0]; }
+		}
+		return out;
+	}
+
+	function renderProduct(product, index) {
+		const num = toRoman(index + 1);
+		const inner =
+			'<span class="reading-num">' + num + '</span>' +
+			'<div class="reading-body">' +
+				'<span class="reading-meta">' + esc(product.category) + '</span>' +
+				'<h3>' + esc(product.title) + '</h3>' +
+				'<p>' + esc(product.description) + '</p>';
+		if (product.asin) {
+			return '<a href="' + amzn(product.asin, product.channel) + '" class="reading-item" rel="nofollow sponsored" target="_blank">' +
+				inner + '<span class="btn-shop">Shop on Amazon &rarr;</span></div></a>';
+		}
+		return '<div class="reading-item">' + inner + '</div></div>';
+	}
+
+	(function loadProducts() {
+		fetch("data/stack-products.json")
+			.then(function (res) {
+				if (!res.ok) throw new Error("stack-products.json HTTP " + res.status);
+				return res.json();
+			})
+			.then(function (data) {
+				const entries = Object.keys(data)
+					.filter(function (k) { return k !== "_schema"; })
+					.map(function (k) { return data[k]; });
+				const container = document.querySelector("[data-stack-products]");
+				if (!container) return;
+				container.innerHTML = entries.map(function (p, i) { return renderProduct(p, i); }).join("");
+			})
+			.catch(function (err) {
+				console.error("Failed to load stack-products.json:", err);
+			});
+	})();
 </script>
 </body>
 </html>
