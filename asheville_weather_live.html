@@ -71,12 +71,11 @@ body { font-family: 'Inter', system-ui, sans-serif; background: var(--surface); 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-var map;
-(async function(){
-  var [d, femaData] = await Promise.all([
-    fetch('data/asheville_weather.json').then(function(r){return r.json();}),
-    fetch('data/asheville_fema.json').then(function(r){return r.json();})
-  ]);
+Promise.all([
+  fetch('data/asheville_weather.json').then(function(r){return r.json();}),
+  fetch('data/asheville_fema.json').then(function(r){return r.json();})
+]).then(function(results){
+  var d = results[0], femaData = results[1];
   document.getElementById('updateTime').textContent = 'updated ' + d.generated;
   document.getElementById('statTemp').textContent = d.latest.temp_c.toFixed(1) + '°';
   document.getElementById('statHum').textContent = d.latest.humidity_pct + '%';
@@ -84,7 +83,7 @@ var map;
   document.getElementById('statPressure').textContent = d.latest.pressure_hpa.toFixed(1);
   document.getElementById('statPrecip').textContent = d.latest.precip_mm.toFixed(1);
   document.getElementById('statRiverFt').textContent = d.river.latest_ft.toFixed(2) + ' ft';
-  document.getElementById('statRiverDetail').textContent = d.river.latest_cfs.toFixed(0) + ' cfs' + (d.river.water_temp_c ? ' · water ' + d.river.water_temp_c.toFixed(1) + '°C' : '');
+  document.getElementById('statRiverDetail').textContent = d.river.latest_cfs.toFixed(0) + ' cfs' + (d.river.latest_water_temp_c ? ' · water ' + d.river.latest_water_temp_c.toFixed(1) + '°C' : '');
   document.getElementById('footerDate').textContent = d.generated;
 
   var wL=d.weather.labels,tD=d.weather.temp_c,pD=d.weather.precip_mm,prD=d.weather.pressure_hpa;
@@ -135,18 +134,8 @@ var map;
   L.marker([35.6091,-82.5799],{icon:gi}).bindPopup('<b>USGS Gauge '+d.river.gauge+'</b><br>French Broad River<br>Stage: '+d.river.latest_ft.toFixed(2)+'ft · Flow: '+d.river.latest_cfs.toFixed(0)+'cfs').addTo(map);
   L.control.layers(null,{'FEMA Flood Zones (100yr)':floodLayer},{collapsed:false}).addTo(map);
   setTimeout(function(){map.invalidateSize()},250);
-})();
-
-function toggleFullscreen() {
-  var el = document.getElementById('map');
-  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-    if (el.requestFullscreen) { el.requestFullscreen(); }
-    else if (el.webkitRequestFullscreen) { el.webkitRequestFullscreen(); }
-  } else {
-    if (document.exitFullscreen) { document.exitFullscreen(); }
-    else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
-  }
-}
-document.addEventListener('fullscreenchange', function(){ map.invalidateSize(); });
-document.addEventListener('webkitfullscreenchange', function(){ map.invalidateSize(); });
+}).catch(function(e){
+  document.getElementById('updateTime').textContent = 'Error loading data: ' + e.message;
+  console.error(e);
+});
 </script>
